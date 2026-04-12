@@ -22,9 +22,3 @@ Agent flow:
 2. The harness resolves the named adapter from `harness/agents/registry.py`.
 3. The adapter subclass builds the concrete in-container command for that agent.
 4. The harness calls `adapter.run(...)` to execute the agent step in Docker.
-
-
-Examples:
-
-python3 run_task.py benchmarks/take_home_demo/tasks/uppercase_file --agent mini_deterministic --keep-run-dir
-python3 run_tasks.py --benchmark take_home_demo --agent mini_deterministic --num-trials 2 --n-parallel 2 --keep-run-dir
