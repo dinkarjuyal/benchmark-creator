@@ -1,5 +1,0 @@
-Scrapy AutoThrottle should preserve spider download-delay compatibility in the
-narrow cases covered by the hidden tests.
-
-Update the spider-opened behavior so AutoThrottle derives the values it needs
-without overwriting or creating `spider.download_delay` in the tested cases.

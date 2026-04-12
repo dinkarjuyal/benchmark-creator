@@ -1,5 +1,0 @@
-Scrapy should wait for asynchronous item pipeline work triggered by items yielded directly from `Spider.start()`.
-
-Right now the crawl can finish too early when `start()` yields an item and its pipeline processing is still in flight. Update the engine behavior so crawl completion waits for those pipeline tasks before the spider is considered idle.
-
-Make the provided regression tests pass without breaking the normal crawl lifecycle.

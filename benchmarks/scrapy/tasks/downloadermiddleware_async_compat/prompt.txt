@@ -1,6 +1,0 @@
-Scrapy's downloader middleware manager should support the narrow async
-compatibility behavior covered by the regression tests.
-
-Update the async middleware path so legacy Deferred-returning middleware and
-synchronous middleware behavior both continue to work in the tested cases,
-without breaking middleware ordering semantics.

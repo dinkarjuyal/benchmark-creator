@@ -1,5 +1,0 @@
-Scrapy should emit deprecation warnings for Deferred-returning item pipelines in
-the narrow cases covered by the hidden tests.
-
-Update the item pipeline processing path so Deferred-returning pipeline methods
-surface the expected deprecation warning while preserving the item result.

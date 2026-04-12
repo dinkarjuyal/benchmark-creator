@@ -1,5 +1,0 @@
-Scrapy should emit deprecation warnings for Deferred-returning spider callbacks
-and errbacks in the narrow cases covered by the hidden tests.
-
-Update the callback invocation path so these warnings are surfaced again while
-preserving the existing callback output behavior.

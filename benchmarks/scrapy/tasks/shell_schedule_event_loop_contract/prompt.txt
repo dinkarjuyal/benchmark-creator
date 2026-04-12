@@ -1,5 +1,0 @@
-Scrapy shell scheduling should avoid resetting or reinstalling the asyncio
-event loop in the narrow cases covered by the hidden tests.
-
-Update the shell scheduling path so it preserves the current loop context while
-still scheduling the request correctly and opening the spider when needed.

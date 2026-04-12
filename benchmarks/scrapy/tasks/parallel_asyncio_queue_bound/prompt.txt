@@ -1,5 +1,0 @@
-Scrapy's `_parallel_asyncio()` helper should keep queue growth bounded by the
-requested concurrency while preserving the existing processing behavior.
-
-Update the helper so it still processes every item exactly once, but does not
-allocate a larger queue than the narrow contract covered by the hidden tests.
