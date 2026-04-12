@@ -1,0 +1,20 @@
+{
+  "id": "dupefilter_always_seen",
+  "description": "request_seen should return True only for duplicates; regression always returns True",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 300,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template",
+  "_meta": {
+    "task_type": "invariant_recovery",
+    "family": "scheduler",
+    "difficulty": 3,
+    "is_noop": false,
+    "is_impossible": false,
+    "generation_recipe": "Counterfactual injection in scrapy/dupefilters.py: description: request_seen should return True only for duplicates; regression always returns True"
+  }
+}

@@ -61,7 +61,7 @@ def _step_status(context: dict, step_name: str) -> tuple[bool, str]:
 def _run_pytest_suite(test_code: str, run_dir: Path, label: str) -> tuple[int, int]:
     """Write test_code to a temp file, run pytest, return (passed, total)."""
     with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".py", dir=str(run_dir), delete=False, prefix=f"_val_{label}_"
+        mode="w", suffix=".py", dir=str(run_dir), delete=False, prefix=f"_val_{{label}}_"
     ) as f:
         f.write(test_code)
         tmp_path = f.name
@@ -70,7 +70,7 @@ def _run_pytest_suite(test_code: str, run_dir: Path, label: str) -> tuple[int, i
         [
             sys.executable, "-m", "pytest", tmp_path,
             "--tb=short", "-q",
-            "--json-report", f"--json-report-file=/tmp/pytest_{label}.json",
+            "--json-report", f"--json-report-file=/tmp/pytest_{{label}}.json",
             "-o", "addopts=",
         ],
         cwd=str(run_dir),

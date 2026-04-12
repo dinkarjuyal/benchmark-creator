@@ -1,0 +1,12 @@
+Scrapy's `UserAgentMiddleware` should set the `User-Agent` header
+only if the request doesn't already have one (using `setdefault`).
+This allows individual requests or spiders to override the global
+`USER_AGENT` setting.
+
+After a recent change the middleware always overwrites the header,
+even when the request already has a custom `User-Agent`.
+
+Fix the middleware to use `setdefault` so per-request User-Agent
+overrides are respected.
+
+Verify with: pytest tests/test_downloadermiddleware_useragent.py -q

@@ -1,0 +1,20 @@
+{
+  "id": "scheduler_has_pending_always_false",
+  "description": "has_pending_requests must return True when queue is non-empty",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 300,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template",
+  "_meta": {
+    "task_type": "invariant_recovery",
+    "family": "scheduler",
+    "difficulty": 2,
+    "is_noop": false,
+    "is_impossible": false,
+    "generation_recipe": "Structural mining in scrapy/core/scheduler.py: has_pending_requests must return True when queue is non-empty"
+  }
+}

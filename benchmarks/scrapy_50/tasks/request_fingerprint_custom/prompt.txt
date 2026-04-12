@@ -1,0 +1,11 @@
+Scrapy's `fingerprint()` function in `scrapy.utils.request` produces
+a hash of the request for deduplication.  Add an optional
+`include_headers` parameter (default `None`) that, when provided as
+a list of header names, includes those header values in the fingerprint.
+
+This allows spiders to deduplicate requests differently when, say,
+`Authorization` headers differ.
+
+Do not change the default behavior (no headers included by default).
+
+Verify with: pytest tests/test_utils_request.py -k fingerprint -q

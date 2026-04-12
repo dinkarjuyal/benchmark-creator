@@ -1,0 +1,5 @@
+Someone reported that Scrapy allows spiders with invalid names
+(containing spaces or special characters).  Check if `Spider.__init__`
+validates the `name` attribute and add validation if missing.
+
+Run: pytest tests/test_spiders.py -k name -q

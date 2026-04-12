@@ -1,0 +1,9 @@
+When `request.meta['handle_httpstatus_all'] = True`, all HTTP
+responses (including 4xx/5xx) should be passed to the spider's
+callback.  After a recent change this meta flag is always treated as
+`False`, so error responses are dropped regardless.
+
+Fix `HttpErrorMiddleware.process_response` so the
+`handle_httpstatus_all` meta flag is respected.
+
+Verify with: pytest tests/test_spidermiddleware_httperror.py -q

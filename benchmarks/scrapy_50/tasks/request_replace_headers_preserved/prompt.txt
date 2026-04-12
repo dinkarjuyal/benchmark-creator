@@ -1,0 +1,9 @@
+`Request.replace()` should carry over all original attributes except
+those explicitly overridden.  After a recent change, `replace()`
+ignores the original request's attributes entirely and uses the
+class defaults instead.
+
+Fix `Request.replace()` so that unspecified attributes are copied
+from the original request.
+
+Verify with: pytest tests/test_http_request.py -k replace -q

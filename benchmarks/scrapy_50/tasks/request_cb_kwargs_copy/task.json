@@ -1,0 +1,20 @@
+{
+  "id": "request_cb_kwargs_copy",
+  "description": "cb_kwargs must be copied on Request init to isolate from caller's dict",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 300,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template",
+  "_meta": {
+    "task_type": "invariant_recovery",
+    "family": "request",
+    "difficulty": 2,
+    "is_noop": false,
+    "is_impossible": false,
+    "generation_recipe": "Structural mining in scrapy/http/request/__init__.py: cb_kwargs must be copied on Request init to isolate from caller's dict"
+  }
+}

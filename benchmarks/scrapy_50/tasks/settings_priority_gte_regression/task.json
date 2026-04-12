@@ -1,0 +1,20 @@
+{
+  "id": "settings_priority_gte_regression",
+  "description": "Same-priority write should replace; regression makes it no-op",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 300,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template",
+  "_meta": {
+    "task_type": "invariant_recovery",
+    "family": "settings",
+    "difficulty": 2,
+    "is_noop": false,
+    "is_impossible": false,
+    "generation_recipe": "Counterfactual injection in scrapy/settings/__init__.py: description: Same-priority write should replace; regression makes it no-op"
+  }
+}

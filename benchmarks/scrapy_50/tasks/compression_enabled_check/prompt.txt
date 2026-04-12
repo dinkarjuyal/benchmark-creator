@@ -1,0 +1,8 @@
+Setting `COMPRESSION_ENABLED = False` should disable Scrapy's HTTP
+compression middleware (`HttpCompressionMiddleware`).  After a recent
+change this check was removed, so the middleware is always active.
+
+Restore the `NotConfigured` raise so `COMPRESSION_ENABLED = False`
+correctly disables the middleware.
+
+Verify with: pytest tests/test_downloadermiddleware_httpcompression.py -q

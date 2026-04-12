@@ -1,0 +1,20 @@
+{
+  "id": "request_method_not_uppercased",
+  "description": "Request.method must be uppercased; regression stores it as-is",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 300,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template",
+  "_meta": {
+    "task_type": "invariant_recovery",
+    "family": "request",
+    "difficulty": 1,
+    "is_noop": false,
+    "is_impossible": false,
+    "generation_recipe": "Structural mining in scrapy/http/request/__init__.py: Request.method must be uppercased; regression stores it as-is"
+  }
+}

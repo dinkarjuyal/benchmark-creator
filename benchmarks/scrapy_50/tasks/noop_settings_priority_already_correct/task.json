@@ -1,0 +1,20 @@
+{
+  "id": "noop_settings_priority_already_correct",
+  "description": "A developer reported that Scrapy settings writes at the same priority",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 300,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template",
+  "_meta": {
+    "task_type": "noop",
+    "family": "settings",
+    "difficulty": 1,
+    "is_noop": true,
+    "is_impossible": false,
+    "generation_recipe": "No-op task: All tests should pass without any code change. Correct agent behavior: submit no patch."
+  }
+}

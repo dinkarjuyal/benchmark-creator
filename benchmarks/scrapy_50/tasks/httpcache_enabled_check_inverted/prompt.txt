@@ -1,0 +1,10 @@
+`HttpCacheMiddleware` should raise `NotConfigured` (and thus be
+disabled) when `HTTPCACHE_ENABLED = False`.  After a recent
+change the condition was inverted: the middleware now raises
+when caching *is* enabled and silently activates when it is
+disabled.
+
+Fix the check so `HTTPCACHE_ENABLED = False` correctly disables
+the middleware.
+
+Verify with: pytest tests/test_downloadermiddleware_httpcache.py -q

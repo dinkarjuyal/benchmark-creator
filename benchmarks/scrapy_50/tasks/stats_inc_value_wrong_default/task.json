@@ -1,0 +1,20 @@
+{
+  "id": "stats_inc_value_wrong_default",
+  "description": "inc_value must start from 0 for new keys; regression crashes on None + int",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 300,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template",
+  "_meta": {
+    "task_type": "invariant_recovery",
+    "family": "pipeline",
+    "difficulty": 1,
+    "is_noop": false,
+    "is_impossible": false,
+    "generation_recipe": "Structural mining in scrapy/statscollectors.py: inc_value must start from 0 for new keys; regression crashes on None + int"
+  }
+}

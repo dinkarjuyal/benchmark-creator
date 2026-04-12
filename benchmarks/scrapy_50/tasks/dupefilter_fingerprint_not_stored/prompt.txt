@@ -1,0 +1,8 @@
+`RFPDupeFilter.request_seen()` should add each new request's
+fingerprint to its internal set so subsequent identical requests are
+filtered.  After a recent change the fingerprint is never stored,
+causing every request to appear new every time.
+
+Fix `request_seen` so fingerprints are correctly added to the set.
+
+Verify with: pytest tests/test_dupefilters.py -q

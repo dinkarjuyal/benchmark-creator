@@ -1,0 +1,9 @@
+The Scrapy feed exporter's `overwrite` option should default to
+`False` (append mode) to avoid accidentally overwriting existing
+export files.  After a recent change the default was flipped to
+`True`, causing feeds to overwrite existing files by default.
+
+Fix the feed exporter so `overwrite` defaults to `False` when not
+explicitly set.
+
+Verify with: pytest tests/test_feedexport.py -k overwrite -q

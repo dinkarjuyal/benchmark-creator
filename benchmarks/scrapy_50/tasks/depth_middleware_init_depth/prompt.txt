@@ -1,0 +1,8 @@
+The depth spider middleware initialises the crawl depth at `0` for
+the first (root) response.  After a recent change it starts at `1`,
+causing the `DEPTH_LIMIT` to be reached one hop earlier than
+configured.
+
+Fix the depth middleware so the root response is assigned depth `0`.
+
+Verify with: pytest tests/test_spidermiddleware_depth.py -q

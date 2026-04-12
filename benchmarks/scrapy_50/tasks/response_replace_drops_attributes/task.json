@@ -1,0 +1,20 @@
+{
+  "id": "response_replace_drops_attributes",
+  "description": "Response.replace() without kwargs should preserve all original attributes",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 300,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template",
+  "_meta": {
+    "task_type": "invariant_recovery",
+    "family": "response",
+    "difficulty": 2,
+    "is_noop": false,
+    "is_impossible": false,
+    "generation_recipe": "Structural mining in scrapy/http/response/__init__.py: Response.replace() without kwargs should preserve all original attributes"
+  }
+}

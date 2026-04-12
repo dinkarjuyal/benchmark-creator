@@ -1,0 +1,7 @@
+`Settings` objects have no `copy()` method. Add one that returns a
+deep copy of the settings so that modifications to the copy do not
+affect the original.
+
+The copy must preserve all set values and their priorities.
+
+Verify with: pytest tests/test_settings.py -k copy -q

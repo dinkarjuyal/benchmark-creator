@@ -1,0 +1,6 @@
+Make `Request.url` completely immutable after construction: any attempt
+to set or modify `request.url` (including via `replace()`) must raise
+an `AttributeError`, while keeping `Request.copy()` and the full
+download pipeline working exactly as before.
+
+Do NOT change the `replace()` method signature or the `copy()` method.

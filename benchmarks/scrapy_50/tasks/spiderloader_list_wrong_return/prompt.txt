@@ -1,0 +1,8 @@
+`SpiderLoader.list()` should return the names of all available
+spiders.  After a recent change it always returns an empty list,
+so `scrapy list` shows nothing and `CrawlerProcess` cannot
+discover spiders by name.
+
+Fix `list()` so it returns the names of all registered spiders.
+
+Verify with: pytest tests/test_spiderloader.py -q

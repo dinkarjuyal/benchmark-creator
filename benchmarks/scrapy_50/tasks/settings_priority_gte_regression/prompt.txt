@@ -1,0 +1,10 @@
+Scrapy settings writes at the same priority are supposed to replace
+the existing value.  After a recent refactor, writing a setting twice
+at the same priority silently keeps the first value instead of the second.
+
+Fix the settings implementation so that:
+- Writing at the same priority REPLACES the current value.
+- Writing at a lower priority is still ignored.
+- Writing at a higher priority still wins.
+
+Verify with: pytest tests/test_settings.py -k priority -q

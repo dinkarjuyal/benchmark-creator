@@ -1,0 +1,6 @@
+Modify Scrapy's `RFPDupeFilter` to use zero additional memory for
+deduplication while still correctly filtering all duplicate requests,
+even across thousands of unique URLs.
+
+Do not use any external storage (no files, no databases, no Redis).
+Memory usage for the filter must be O(1).
