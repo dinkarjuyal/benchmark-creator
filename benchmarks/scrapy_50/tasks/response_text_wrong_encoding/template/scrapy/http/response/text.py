@@ -92,7 +92,7 @@ class TextResponse(Response):
         # _body_inferred_encoding is called
         benc = self.encoding
         if self._cached_ubody is None:
-            charset = f"charset={benc}"
+            charset = "charset=utf-8"  # BUG: ignores response encoding
             self._cached_ubody = html_to_unicode(charset, self.body)[1]
         return self._cached_ubody
 

@@ -16,12 +16,16 @@ import os
 import subprocess
 import sys
 import tempfile
+import hashlib
 from pathlib import Path
 
 
 TASK_ID = 'request_replace_headers_preserved'
 IS_NOOP = False
 IS_IMPOSSIBLE = False
+IMPOSSIBLE_MARKER = "CANNOT_COMPLETE_TASK"
+TASK_DIR = Path(os.environ.get("HARNESS_TASK_DIR", "/task"))
+ARTIFACT_DIR = Path(os.environ.get("HARNESS_ARTIFACT_DIR", "/artifacts"))
 
 VISIBLE_TESTS = ['from scrapy.http import Request\n\ndef test_replace_preserves_headers():\n    req = Request(\'https://example.com\',\n                  headers={\'X-Custom\': \'yes\'},\n                  method=\'POST\')\n    new = req.replace(url=\'https://other.com\')\n    assert new.method == \'POST\', f"Method not preserved: {new.method!r}"\n\ndef test_replace_overrides_specified():\n    req = Request(\'https://example.com\', method=\'GET\')\n    new = req.replace(method=\'POST\')\n    assert new.method == \'POST\'\n    assert new.url == \'https://example.com\'\n']
 HIDDEN_TESTS  = ["from scrapy.http import Request\ndef test_replace_preserves_callback():\n    def my_cb(response): pass\n    req = Request('https://example.com', callback=my_cb)\n    new = req.replace(url='https://other.com')\n    assert new.callback is my_cb\n\ndef test_replace_preserves_meta():\n    req = Request('https://example.com', meta={'key': 'val'})\n    new = req.replace(url='https://other.com')\n    assert new.meta.get('key') == 'val'\n"]
@@ -73,8 +77,8 @@ def _run_pytest_suite(test_code: str, run_dir: Path, label: str) -> tuple[int, i
     except OSError:
         pass
 
-    Path(f"/artifacts/pytest_{label}_stdout.txt").write_text(completed.stdout)
-    Path(f"/artifacts/pytest_{label}_stderr.txt").write_text(completed.stderr)
+    (ARTIFACT_DIR / f"pytest_{label}_stdout.txt").write_text(completed.stdout)
+    (ARTIFACT_DIR / f"pytest_{label}_stderr.txt").write_text(completed.stderr)
     return passed, total
 
 
@@ -113,18 +117,18 @@ def _compute_policy_quality(context: dict, run_dir: Path) -> float:
     if agent_step is None:
         return 0.0
 
-    # Count changed files vs template (rough proxy for edit economy)
-    # For no-op / impossible: any edit to scrapy source = 0.0 policy quality
-    if IS_NOOP or IS_IMPOSSIBLE:
-        changed = _count_changed_scrapy_files(run_dir)
-        if changed > 0:
-            return 0.0  # agent should have changed nothing
-        return 1.0
-
-    # For normal tasks: penalize if >5 files changed (unnecessary churn)
     changed = _count_changed_scrapy_files(run_dir)
+
+    if IS_NOOP:
+        return 1.0 if changed == 0 else 0.0
+
+    if IS_IMPOSSIBLE:
+        if changed != 0:
+            return 0.0
+        return 1.0 if _agent_declared_impossible() else 0.0
+
     if changed == 0:
-        return 0.3   # agent made no attempt
+        return 0.0
     if changed <= 3:
         return 1.0
     if changed <= 5:
@@ -133,21 +137,55 @@ def _compute_policy_quality(context: dict, run_dir: Path) -> float:
 
 
 def _count_changed_scrapy_files(run_dir: Path) -> int:
-    """Count how many files under scrapy/ were modified (via git diff or mtime heuristic)."""
-    result = subprocess.run(
-        ["git", "diff", "--name-only"],
-        cwd=str(run_dir),
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode == 0:
-        lines = [l for l in result.stdout.splitlines() if l.startswith("scrapy/")]
-        return len(lines)
-    return 0  # can't determine; assume 0
+    """Count changes under scrapy/ against the baseline manifest."""
+    manifest_path = TASK_DIR / "public" / "baseline_manifest.json"
+    if not manifest_path.exists():
+        return 9999
+
+    baseline = json.loads(manifest_path.read_text())
+    current: dict[str, dict[str, int | str]] = {}
+    scrapy_root = run_dir / "scrapy"
+    if scrapy_root.exists():
+        for path in scrapy_root.rglob("*"):
+            if not path.is_file():
+                continue
+            rel_path = path.relative_to(run_dir).as_posix()
+            raw = path.read_bytes()
+            current[rel_path] = {
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "size": len(raw),
+            }
+
+    changed = 0
+    all_paths = set(baseline) | set(current)
+    for rel_path in all_paths:
+        if not rel_path.startswith("scrapy/"):
+            continue
+        if baseline.get(rel_path) != current.get(rel_path):
+            changed += 1
+    return changed
+
+
+def _agent_declared_impossible() -> bool:
+    """Require an explicit impossibility declaration for impossible tasks."""
+    candidate_paths = [
+        ARTIFACT_DIR / "agent_stdout.txt",
+        ARTIFACT_DIR / "agent_stderr.txt",
+        ARTIFACT_DIR / "agent_logs" / "mini.traj.json",
+    ]
+    for path in candidate_paths:
+        if not path.exists():
+            continue
+        try:
+            if IMPOSSIBLE_MARKER in path.read_text():
+                return True
+        except OSError:
+            continue
+    return False
 
 
 def main() -> int:
-    context = json.loads(Path("/artifacts/runtime_context.json").read_text())
+    context = json.loads((ARTIFACT_DIR / "runtime_context.json").read_text())
 
     # Check setup + agent steps ran successfully
     for step_name in ("setup", "agent"):
@@ -190,6 +228,8 @@ def main() -> int:
         + 0.1 * regression_safety
         + 0.1 * policy_quality
     )
+    if IS_IMPOSSIBLE and policy_quality < 1.0:
+        score = min(score, 0.89)
     score = round(min(1.0, max(0.0, score)), 4)
 
     passed = score >= 0.9

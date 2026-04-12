@@ -88,6 +88,9 @@ INJECTIONS: list[dict] = [
         "hidden_tests": [
             textwrap.dedent("""\
                 from scrapy.settings import Settings
+                def test_getint_none_default_hidden():
+                    s = Settings()
+                    assert s.getint('MISSING_NONE', default=None) is None
                 def test_getint_existing_key():
                     s = Settings({'NUM': '42'})
                     assert s.getint('NUM') == 42

@@ -16,12 +16,14 @@ import os
 import subprocess
 import sys
 import tempfile
+import hashlib
 from pathlib import Path
 
 
 TASK_ID = 'request_fingerprint_custom'
 IS_NOOP = False
 IS_IMPOSSIBLE = False
+IMPOSSIBLE_MARKER = "CANNOT_COMPLETE_TASK"
 
 VISIBLE_TESTS = ['from scrapy.http import Request\nfrom scrapy.utils.request import fingerprint\n\ndef test_fingerprint_with_include_headers_differs():\n    r1 = Request(\'https://example.com\', headers={\'Auth\': \'token-A\'})\n    r2 = Request(\'https://example.com\', headers={\'Auth\': \'token-B\'})\n    fp1 = fingerprint(r1, include_headers=[\'Auth\'])\n    fp2 = fingerprint(r2, include_headers=[\'Auth\'])\n    assert fp1 != fp2, "Different Auth headers should yield different fingerprints"\n\ndef test_fingerprint_default_ignores_headers():\n    r1 = Request(\'https://example.com\', headers={\'Auth\': \'token-A\'})\n    r2 = Request(\'https://example.com\', headers={\'Auth\': \'token-B\'})\n    assert fingerprint(r1) == fingerprint(r2), (\n        "Without include_headers, fingerprints should match"\n    )\n']
 HIDDEN_TESTS  = ["from scrapy.http import Request\nfrom scrapy.utils.request import fingerprint\n\ndef test_fingerprint_stable():\n    r = Request('https://example.com/page')\n    assert fingerprint(r) == fingerprint(r)\n\ndef test_fingerprint_include_headers_none_same_as_default():\n    r = Request('https://example.com', headers={'X-Token': 'abc'})\n    assert fingerprint(r, include_headers=None) == fingerprint(r)\n"]
@@ -113,18 +115,18 @@ def _compute_policy_quality(context: dict, run_dir: Path) -> float:
     if agent_step is None:
         return 0.0
 
-    # Count changed files vs template (rough proxy for edit economy)
-    # For no-op / impossible: any edit to scrapy source = 0.0 policy quality
-    if IS_NOOP or IS_IMPOSSIBLE:
-        changed = _count_changed_scrapy_files(run_dir)
-        if changed > 0:
-            return 0.0  # agent should have changed nothing
-        return 1.0
-
-    # For normal tasks: penalize if >5 files changed (unnecessary churn)
     changed = _count_changed_scrapy_files(run_dir)
+
+    if IS_NOOP:
+        return 1.0 if changed == 0 else 0.0
+
+    if IS_IMPOSSIBLE:
+        if changed != 0:
+            return 0.0
+        return 1.0 if _agent_declared_impossible() else 0.0
+
     if changed == 0:
-        return 0.3   # agent made no attempt
+        return 0.0
     if changed <= 3:
         return 1.0
     if changed <= 5:
@@ -133,17 +135,51 @@ def _compute_policy_quality(context: dict, run_dir: Path) -> float:
 
 
 def _count_changed_scrapy_files(run_dir: Path) -> int:
-    """Count how many files under scrapy/ were modified (via git diff or mtime heuristic)."""
-    result = subprocess.run(
-        ["git", "diff", "--name-only"],
-        cwd=str(run_dir),
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode == 0:
-        lines = [l for l in result.stdout.splitlines() if l.startswith("scrapy/")]
-        return len(lines)
-    return 0  # can't determine; assume 0
+    """Count changes under scrapy/ against the baseline manifest."""
+    manifest_path = Path("/task/public/baseline_manifest.json")
+    if not manifest_path.exists():
+        return 9999
+
+    baseline = json.loads(manifest_path.read_text())
+    current: dict[str, dict[str, int | str]] = {}
+    scrapy_root = run_dir / "scrapy"
+    if scrapy_root.exists():
+        for path in scrapy_root.rglob("*"):
+            if not path.is_file():
+                continue
+            rel_path = path.relative_to(run_dir).as_posix()
+            raw = path.read_bytes()
+            current[rel_path] = {
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "size": len(raw),
+            }
+
+    changed = 0
+    all_paths = set(baseline) | set(current)
+    for rel_path in all_paths:
+        if not rel_path.startswith("scrapy/"):
+            continue
+        if baseline.get(rel_path) != current.get(rel_path):
+            changed += 1
+    return changed
+
+
+def _agent_declared_impossible() -> bool:
+    """Require an explicit impossibility declaration for impossible tasks."""
+    candidate_paths = [
+        Path("/artifacts/agent_stdout.txt"),
+        Path("/artifacts/agent_stderr.txt"),
+        Path("/artifacts/agent_logs/mini.traj.json"),
+    ]
+    for path in candidate_paths:
+        if not path.exists():
+            continue
+        try:
+            if IMPOSSIBLE_MARKER in path.read_text():
+                return True
+        except OSError:
+            continue
+    return False
 
 
 def main() -> int:

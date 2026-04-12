@@ -22,4 +22,6 @@ def test_has_pending_after_enqueue(tmp_path):
     )
     spider = MagicMock()
     scheduler.open(spider)
-    assert not scheduler.has_pending_requests(), "Empty queue should return False"
+    request = Request("https://example.com")
+    assert scheduler.enqueue_request(request) is True
+    assert scheduler.has_pending_requests(), "Non-empty queue should return True"

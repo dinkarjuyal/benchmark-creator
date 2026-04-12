@@ -38,6 +38,7 @@
     "tasks/textresponse_follow_encoding_lost",
     "tasks/linkextractor_unique_not_enforced",
     "tasks/scheduler_has_pending_always_false",
+    "tasks/response_text_wrong_encoding",
     "tasks/settings_getlist_fallback_kwarg",
     "tasks/request_add_headers_method",
     "tasks/response_json_method",
@@ -52,8 +53,7 @@
     "tasks/settings_getwithbase_merge_order",
     "tasks/fingerprint_method_excluded",
     "tasks/scheduler_dont_filter_inverted",
-    "tasks/spider_middleware_short_circuit",
-    "tasks/request_fingerprint_custom"
+    "tasks/spider_middleware_short_circuit"
   ],
   "task_count": 50,
   "scoring": {

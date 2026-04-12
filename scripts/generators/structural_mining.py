@@ -1814,7 +1814,9 @@ STRUCTURAL_INJECTIONS: list[dict] = [
                 )
                 spider = MagicMock()
                 scheduler.open(spider)
-                assert not scheduler.has_pending_requests(), "Empty queue should return False"
+                request = Request("https://example.com")
+                assert scheduler.enqueue_request(request) is True
+                assert scheduler.has_pending_requests(), "Non-empty queue should return True"
         """),
         "hidden_tests": [
             textwrap.dedent("""\
@@ -1832,6 +1834,22 @@ STRUCTURAL_INJECTIONS: list[dict] = [
                     )
                     s.open(MagicMock())
                     assert s.has_pending_requests() == False
+
+                def test_scheduler_queue_reports_pending():
+                    from scrapy.http import Request
+                    crawler = get_crawler(settings_dict={
+                        'SCHEDULER_DEBUG': False,
+                        'JOBDIR': None,
+                        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+                    })
+                    s = Scheduler(
+                        dupefilter=RFPDupeFilter(), jobdir=None,
+                        dqclass=None, mqclass=None, logunser=False,
+                        stats=MagicMock(), pqclass=None, crawler=crawler,
+                    )
+                    s.open(MagicMock())
+                    assert s.enqueue_request(Request('https://example.com/pending')) is True
+                    assert s.has_pending_requests() is True
             """),
         ],
     },
@@ -1960,29 +1978,31 @@ STRUCTURAL_INJECTIONS: list[dict] = [
     # ------------------------------------------------------------------
     {
         "task_id": "response_text_wrong_encoding",
-        "source_file": "scrapy/http/response/__init__.py",
+        "source_file": "scrapy/http/response/text.py",
         "family": "response",
         "difficulty": 2,
         "description": "response.text must decode with response encoding; regression uses utf-8",
-        "find": "    def text(self):\n        \"\"\"For TextResponse, this is equivalent to response.css('*').getall().\n        For other Response types, this raises AttributeError.\n\n        .. seealso:: :attr:`TextResponse.text`\n        \"\"\"",
-        "replace": "    def text(self):\n        \"\"\"BUG MARKER — wrong encoding forced below.\n        For TextResponse, this is equivalent to response.css('*').getall().\n        \"\"\"",
+        "find": "            charset = f\"charset={benc}\"\n            self._cached_ubody = html_to_unicode(charset, self.body)[1]",
+        "replace": "            charset = \"charset=utf-8\"  # BUG: ignores response encoding\n            self._cached_ubody = html_to_unicode(charset, self.body)[1]",
         "prompt": textwrap.dedent("""\
-            Placeholder — this injection is intentionally a minor docstring
-            change to test that the validator and task pipeline work
-            end-to-end for a trivially-fixable task.
+            `TextResponse.text` should decode response bodies using the
+            response's declared encoding. After a recent change it always
+            decodes as UTF-8, which corrupts responses declared with a
+            different charset such as Latin-1.
 
-            Restore the original `text` property docstring in
-            `scrapy/http/response/__init__.py`.
+            Fix `TextResponse.text` so it honors the response encoding when
+            decoding the body.
         """),
         "visible_test": textwrap.dedent("""\
-            from scrapy.http import Response
-            def test_response_text_raises_attribute_error():
-                resp = Response('https://example.com', body=b'hello')
-                try:
-                    _ = resp.text
-                    assert False, "Should raise AttributeError on base Response"
-                except AttributeError:
-                    pass  # expected
+            from scrapy.http import TextResponse
+
+            def test_text_response_uses_declared_encoding():
+                resp = TextResponse(
+                    'https://example.com',
+                    body='héllo'.encode('latin-1'),
+                    encoding='latin-1',
+                )
+                assert resp.text == 'héllo'
         """),
         "hidden_tests": [
             textwrap.dedent("""\
@@ -1992,6 +2012,13 @@ STRUCTURAL_INJECTIONS: list[dict] = [
                                         body='héllo'.encode('latin-1'),
                                         encoding='latin-1')
                     assert resp.text == 'héllo'
+                def test_text_response_utf8_still_works():
+                    resp = TextResponse(
+                        'https://example.com',
+                        body='snowman ☃'.encode('utf-8'),
+                        encoding='utf-8',
+                    )
+                    assert resp.text == 'snowman ☃'
             """),
         ],
     },

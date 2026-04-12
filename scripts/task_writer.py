@@ -13,6 +13,7 @@ Task directory layout produced:
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 from pathlib import Path
@@ -53,6 +54,7 @@ def write_task(
     if template_dir.exists():
         shutil.rmtree(template_dir)
     _write_template(template_dir, scrapy_root, candidate)
+    _write_baseline_manifest(public_dir, template_dir)
 
     # ------------------------------------------------------------------
     # validator.py
@@ -87,6 +89,24 @@ def write_task(
     return task_dir
 
 
+_MINI_DETERMINISTIC_YAML = """\
+model:
+  outputs:
+    - role: assistant
+      content: "I will read the prompt and attempt the task."
+      extra:
+        cost: 0.0
+        actions:
+          - command: "cat /task/prompt.txt"
+    - role: assistant
+      content: "Task complete."
+      extra:
+        cost: 0.0
+        actions:
+          - command: "echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT"
+"""
+
+
 def _write_setup_py(public_dir: Path, patches: dict[str, str]) -> None:
     """Write a setup.py that applies file patches to /work at runtime."""
     if not patches:
@@ -95,14 +115,16 @@ def _write_setup_py(public_dir: Path, patches: dict[str, str]) -> None:
             "# No patches needed for this task — workspace is used as-is.\n"
             "print('Setup complete (no patches).')\n"
         )
+        (public_dir / "mini_deterministic.yaml").write_text(_MINI_DETERMINISTIC_YAML)
         return
 
     lines = [
         "#!/usr/bin/env python3",
         '"""Apply start-state patches to the workspace."""',
+        "import os",
         "from pathlib import Path",
         "",
-        "WORK = Path('/work')",
+        "WORK = Path(os.environ.get('HARNESS_WORK_DIR', '/work'))",
         "",
     ]
     for rel_path, content in patches.items():
@@ -114,6 +136,7 @@ def _write_setup_py(public_dir: Path, patches: dict[str, str]) -> None:
 
     lines.append("print('Setup complete: patches applied.')")
     (public_dir / "setup.py").write_text("\n".join(lines) + "\n")
+    (public_dir / "mini_deterministic.yaml").write_text(_MINI_DETERMINISTIC_YAML)
 
 
 def _write_template(
@@ -158,3 +181,23 @@ def _write_template(
         target = template_dir / rel_path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content)
+
+
+def _write_baseline_manifest(public_dir: Path, template_dir: Path) -> None:
+    """Write a hash manifest for workspace files used by validator diff checks."""
+    manifest: dict[str, dict[str, int | str]] = {}
+    for prefix in ("scrapy",):
+        base = template_dir / prefix
+        if not base.exists():
+            continue
+        for path in sorted(base.rglob("*")):
+            if not path.is_file():
+                continue
+            rel_path = path.relative_to(template_dir).as_posix()
+            raw = path.read_bytes()
+            manifest[rel_path] = {
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "size": len(raw),
+            }
+
+    (public_dir / "baseline_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

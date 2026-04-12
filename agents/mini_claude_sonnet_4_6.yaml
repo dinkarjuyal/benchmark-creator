@@ -1,0 +1,6 @@
+name: mini_claude_sonnet_4_6
+adapter: mini_swe_agent
+env_passthrough:
+  - ANTHROPIC_API_KEY
+adapter_config:
+  model: claude-sonnet-4-6
