@@ -1,0 +1,2097 @@
+Building agent config from specs: ['mini.yaml', 'environment.cwd=/work']
+
+System:
+You are a helpful assistant that can interact with a computer.
+
+User:
+Please solve this issue: `Request` stores its `meta` dict internally.  When a 
+caller passes a
+`meta` dict at construction time, the request should own an
+independent copy so that external mutations to the original dict
+don't affect the request.
+
+After a recent change `Request` stores a direct reference to the
+caller's dict instead of copying it, causing shared mutable state.
+
+Fix the `Request.__init__` so that the `meta` argument is copied on
+construction.
+
+Verify with: pytest tests/test_http_request.py -k meta -q
+
+
+You can execute bash commands and edit files to implement the necessary changes.
+
+## Recommended Workflow
+
+This workflow should be done step-by-step so that you can iterate on your 
+changes and any possible problems.
+
+1. Analyze the codebase by finding and reading relevant files
+2. Create a script to reproduce the issue
+3. Edit the source code to resolve the issue
+4. Verify your fix works by running your script again
+5. Test edge cases to ensure your fix is robust
+6. Submit your changes and finish your work by issuing the following command: 
+`echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`.
+   Do not combine it with any other command. <important>After this command, you 
+cannot continue working on this task.</important>
+
+## Command Execution Rules
+
+You are operating in an environment where
+
+1. You issue at least one command
+2. The system executes the command(s) in a subshell
+3. You see the result(s)
+4. You write your next command(s)
+
+Each response should include:
+
+1. **Reasoning text** where you explain your analysis and plan
+2. At least one tool call with your command
+
+**CRITICAL REQUIREMENTS:**
+
+- Your response SHOULD include reasoning text explaining what you're doing
+- Your response MUST include AT LEAST ONE bash tool call
+- Directory or environment variable changes are not persistent. Every action is 
+executed in a new subshell.
+- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd 
+/path/to/working/dir && ...` or write/load environment variables from files
+- Submit your changes and finish your work by issuing the following command: 
+`echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`.
+  Do not combine it with any other command. <important>After this command, you 
+cannot continue working on this task.</important>
+
+Example of a CORRECT response:
+<example_response>
+I need to understand the structure of the repository first. Let me check what 
+files are in the current directory to get a better understanding of the 
+codebase.
+
+[Makes bash tool call with {"command": "ls -la"} as arguments]
+</example_response>
+
+<system_information>
+Linux 6.10.14-linuxkit #1 SMP PREEMPT_DYNAMIC Sat May 17 08:29:19 UTC 2025 
+x86_64
+</system_information>
+
+## Useful command examples
+
+### Create a new file:
+
+```bash
+cat <<'EOF' > newfile.py
+import numpy as np
+hello = "world"
+print(hello)
+EOF
+```
+
+### Edit files with sed:```bash
+# Replace all occurrences
+sed -i 's/old_string/new_string/g' filename.py
+
+# Replace only first occurrence
+sed -i 's/old_string/new_string/' filename.py
+
+# Replace first occurrence on line 1
+sed -i '1s/old_string/new_string/' filename.py
+
+# Replace all occurrences in lines 1-10
+sed -i '1,10s/old_string/new_string/g' filename.py
+```
+
+### View file content:
+
+```bash
+# View specific lines with numbers
+nl -ba filename.py | sed -n '10,20p'
+```
+
+### Any other command you want to run
+
+```bash
+anything
+```
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 1, $0.00):
+I'll start by analyzing the codebase to understand the structure and locate the 
+`Request` class and related tests.
+
+```
+find . -type f -name "*.py" | grep -E "(request|http)" | head -20
+```
+
+Tool:
+<returncode>
+0
+<output>
+./scrapy/core/downloader/handlers/http.py
+./scrapy/core/downloader/handlers/http10.py
+./scrapy/core/downloader/handlers/http11.py
+./scrapy/core/downloader/handlers/http2.py
+./scrapy/core/http2/__init__.py
+./scrapy/core/http2/agent.py
+./scrapy/core/http2/protocol.py
+./scrapy/core/http2/stream.py
+./scrapy/downloadermiddlewares/httpauth.py
+./scrapy/downloadermiddlewares/httpcache.py
+./scrapy/downloadermiddlewares/httpcompression.py
+./scrapy/downloadermiddlewares/httpproxy.py
+./scrapy/extensions/httpcache.py
+./scrapy/http/__init__.py
+./scrapy/http/common.py
+./scrapy/http/cookies.py
+./scrapy/http/headers.py
+./scrapy/http/request/__init__.py
+./scrapy/http/request/form.py
+./scrapy/http/request/json_request.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 2, $0.00):
+Let me check the test file first to understand what we're testing:
+
+```
+find . -type f -name "test_http_request.py"
+```
+
+Tool:
+<returncode>
+0
+<output>
+./tests/test_http_request.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 3, $0.01):
+```
+cat ./tests/test_http_request.py
+```
+
+Tool:
+<returncode>
+0
+<output_head>
+import json
+import re
+import unittest
+import warnings
+import xmlrpc.client
+from unittest import mock
+from urllib.parse import parse_qs, unquote_to_bytes, urlparse
+
+from scrapy.http import (
+    FormRequest,
+    Headers,
+    HtmlResponse,
+    JsonRequest,
+    Request,
+    XmlRpcRequest,
+)
+from scrapy.http.request import NO_CALLBACK
+from scrapy.utils.python import to_bytes, to_unicode
+
+
+class RequestTest(unittest.TestCase):
+    request_class = Request
+    default_method = "GET"
+    default_headers = {}
+    default_meta = {}
+
+    def test_init(self):
+        # Request requires url in the __init__ method
+        self.assertRaises(Exception, self.request_class)
+
+        # url argument must be basestring
+        self.assertRaises(TypeError, self.request_class, 123)
+        r = self.request_class("http://www.example.com")
+
+        r = self.request_class("http://www.example.com")
+        assert isinstance(r.url, str)
+        self.assertEqual(r.url, "http://www.example.com")
+        self.assertEqual(r.method, self.default_method)
+
+        assert isinstance(r.headers, Headers)
+        self.assertEqual(r.headers, self.default_headers)
+        self.assertEqual(r.meta, self.default_meta)
+
+        meta = {"lala": "lolo"}
+        headers = {b"caca": b"coco"}
+        r = self.request_class(
+            "http://www.example.com", meta=meta, headers=headers, body="a body"
+        )
+
+        assert r.meta is not meta
+        self.assertEqual(r.meta, meta)
+        assert r.headers is not headers
+        self.assertEqual(r.headers[b"caca"], b"coco")
+
+    def test_url_scheme(self):
+        # This test passes by not raising any (ValueError) exception
+        self.request_class("http://example.org")
+        self.request_class("https://example.org")
+        self.request_class("s3://example.org")
+        self.request_class("ftp://example.org")
+        self.request_class("about:config")
+        self.request_class("data:,Hello%2C%20World!")
+
+    def test_url_no_scheme(self):
+        self.assertRaises(ValueError, self.request_class, "foo")
+        self.assertRaises(ValueError, self.request_class, "/foo/")
+        self.assertRaises(ValueError, self.request_class, "/foo:bar")
+
+    def test_headers(self):
+        # Different ways of setting headers attribute
+        url = "http://www.scrapy.org"
+        headers = {b"Accept": "gzip", b"Custom-Header": "nothing to tell you"}
+        r = self.request_class(url=url, headers=headers)
+        p = self.request_class(url=url, headers=r.headers)
+
+        self.assertEqual(r.headers, p.headers)
+        self.assertFalse(r.headers is headers)
+        self.assertFalse(p.headers is r.headers)
+
+        # headers must not be unicode
+        h = Headers({"key1": "val1", "key2": "val2"})
+        h["newkey"] = "newval"
+        for k, v in h.items():
+            self.assertIsInstance(k, bytes)
+            for s in v:
+                self.assertIsInstance(s, bytes)
+
+    def test_eq(self):
+        url = "http://www.scrapy.org"
+        r1 = self.request_class(url=url)
+        r2 = self.request_class(url=url)
+        self.assertNotEqual(r1, r2)
+
+        set_ = set()
+        set_.add(r1)
+        set_.add(r2)
+        self.assertEqual(len(set_), 2)
+
+    def test_url(self):
+        r = self.request_class(url="http://www.scrapy.org/path")
+        self.assertEqual(r.url, "http://www.scrapy.org/path")
+
+    def test_url_quoting(self):
+        r = self.request_class(url="http://www.scrapy.org/blank%20space")
+        self.assertEqual(r.url, "http://www.scrapy.org/blank%20space")
+        r = self.request_class(url="http://www.scrapy.org/blank space")
+        self.assertEqual(r.url, "http://www.scrapy.org/blank%20space")
+
+    def test_url_encoding(self):
+        r = self.request_class(url="http://www.scrapy.org/price/£")
+        self.assertEqual(r.url, "http://www.scrapy.org/price/%C2%A3")
+
+    def test_url_encoding_other(self):
+        # encoding affects only query part of URI, not path
+        # path part should always be UTF-8 encoded before percent-escaping
+        r = self.request_class(url="http://www.scrapy.org/price/£", 
+encoding="utf-8")
+        self.assertEqual(r.url, "http://www.scrapy.org/price/%C2%A3")
+
+        r = self.request_class(url="http://www.scrapy.org/price/£", 
+encoding="latin1")
+        self.assertEqual(r.url, "http://www.scrapy.org/price/%C2%A3")
+
+    def test_url_encoding_query(self):
+        r1 = self.request_class(url="http://www.scrapy.org/price/£?unit=µ")
+        self.assertEqual(r1.url, 
+"http://www.scrapy.org/price/%C2%A3?unit=%C2%B5")
+
+        # should be same as above
+        r2 = self.request_class(
+            url="http://www.scrapy.org/price/£?unit=µ", encoding="utf-8"
+        )
+        self.assertEqual(r2.url, 
+"http://www.scrapy.org/price/%C2%A3?unit=%C2%B5")
+
+    def test_url_encoding_query_latin1(self):
+        # encoding is used for encoding query-string before percent-escaping;
+        # path is still UTF-8 encoded before percent-escaping
+        r3 = self.request_class(
+            url=
+<output_tail>
+)
+        self.assertEqual(r2.method, "GET")
+
+        data = {
+            "name": "value",
+        }
+        r3 = self.request_class(url="http://www.example.com/", data=data)
+        self.assertEqual(r3.method, "POST")
+
+        # method passed explicitly
+        r4 = self.request_class(url="http://www.example.com/", data=data, 
+method="GET")
+        self.assertEqual(r4.method, "GET")
+
+        r5 = self.request_class(url="http://www.example.com/", data=[])
+        self.assertEqual(r5.method, "POST")
+
+    def test_body_data(self):
+        """passing both body and data should result a warning"""
+        body = b"body"
+        data = {
+            "name": "value",
+        }
+        with warnings.catch_warnings(record=True) as _warnings:
+            r5 = self.request_class(url="http://www.example.com/", body=body, 
+data=data)
+            self.assertEqual(r5.body, body)
+            self.assertEqual(r5.method, "GET")
+            self.assertEqual(len(_warnings), 1)
+            self.assertIn("data will be ignored", str(_warnings[0].message))
+
+    def test_empty_body_data(self):
+        """passing any body value and data should result a warning"""
+        data = {
+            "name": "value",
+        }
+        with warnings.catch_warnings(record=True) as _warnings:
+            r6 = self.request_class(url="http://www.example.com/", body=b"", 
+data=data)
+            self.assertEqual(r6.body, b"")
+            self.assertEqual(r6.method, "GET")
+            self.assertEqual(len(_warnings), 1)
+            self.assertIn("data will be ignored", str(_warnings[0].message))
+
+    def test_body_none_data(self):
+        data = {
+            "name": "value",
+        }
+        with warnings.catch_warnings(record=True) as _warnings:
+            r7 = self.request_class(url="http://www.example.com/", body=None, 
+data=data)
+            self.assertEqual(r7.body, to_bytes(json.dumps(data)))
+            self.assertEqual(r7.method, "POST")
+            self.assertEqual(len(_warnings), 0)
+
+    def test_body_data_none(self):
+        with warnings.catch_warnings(record=True) as _warnings:
+            r8 = self.request_class(url="http://www.example.com/", body=None, 
+data=None)
+            self.assertEqual(r8.method, "GET")
+            self.assertEqual(len(_warnings), 0)
+
+    def test_dumps_sort_keys(self):
+        """Test that sort_keys=True is passed to json.dumps by default"""
+        data = {
+            "name": "value",
+        }
+        with mock.patch("json.dumps", return_value=b"") as mock_dumps:
+            self.request_class(url="http://www.example.com/", data=data)
+            kwargs = mock_dumps.call_args[1]
+            self.assertEqual(kwargs["sort_keys"], True)
+
+    def test_dumps_kwargs(self):
+        """Test that dumps_kwargs are passed to json.dumps"""
+        data = {
+            "name": "value",
+        }
+        dumps_kwargs = {
+            "ensure_ascii": True,
+            "allow_nan": True,
+        }
+        with mock.patch("json.dumps", return_value=b"") as mock_dumps:
+            self.request_class(
+                url="http://www.example.com/", data=data, 
+dumps_kwargs=dumps_kwargs
+            )
+            kwargs = mock_dumps.call_args[1]
+            self.assertEqual(kwargs["ensure_ascii"], True)
+            self.assertEqual(kwargs["allow_nan"], True)
+
+    def test_replace_data(self):
+        data1 = {
+            "name1": "value1",
+        }
+        data2 = {
+            "name2": "value2",
+        }
+        r1 = self.request_class(url="http://www.example.com/", data=data1)
+        r2 = r1.replace(data=data2)
+        self.assertEqual(r2.body, to_bytes(json.dumps(data2)))
+
+    def test_replace_sort_keys(self):
+        """Test that replace provides sort_keys=True to json.dumps"""
+        data1 = {
+            "name1": "value1",
+        }
+        data2 = {
+            "name2": "value2",
+        }
+        r1 = self.request_class(url="http://www.example.com/", data=data1)
+        with mock.patch("json.dumps", return_value=b"") as mock_dumps:
+            r1.replace(data=data2)
+            kwargs = mock_dumps.call_args[1]
+            self.assertEqual(kwargs["sort_keys"], True)
+
+    def test_replace_dumps_kwargs(self):
+        """Test that dumps_kwargs are provided to json.dumps when replace is 
+called"""
+        data1 = {
+            "name1": "value1",
+        }
+        data2 = {
+            "name2": "value2",
+        }
+        dumps_kwargs = {
+            "ensure_ascii": True,
+            "allow_nan": True,
+        }
+        r1 = self.request_class(
+            url="http://www.example.com/", data=data1, dumps_kwargs=dumps_kwargs
+        )
+        with mock.patch("json.dumps", return_value=b"") as mock_dumps:
+            r1.replace(data=data2)
+            kwargs = mock_dumps.call_args[1]
+            self.assertEqual(kwargs["ensure_ascii"], True)
+            self.assertEqual(kwargs["allow_nan"], True)
+
+    def tearDown(self):
+        warnings.resetwarnings()
+        super().tearDown()
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+<elided_chars>
+55237
+<warning>
+Output too long.
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 4, $0.01):
+Now let me check the Request class implementation:
+
+```
+cat ./scrapy/http/request/__init__.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+"""
+This module implements the Request class which is used to represent HTTP
+requests in Scrapy.
+
+See documentation in docs/topics/request-response.rst
+"""
+import inspect
+from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
+
+from w3lib.url import safe_url_string
+
+import scrapy
+from scrapy.http.common import obsolete_setter
+from scrapy.http.headers import Headers
+from scrapy.utils.curl import curl_to_request_kwargs
+from scrapy.utils.python import to_bytes
+from scrapy.utils.trackref import object_ref
+from scrapy.utils.url import escape_ajax
+
+RequestTypeVar = TypeVar("RequestTypeVar", bound="Request")
+
+
+def NO_CALLBACK(*args, **kwargs):
+    """When assigned to the ``callback`` parameter of
+    :class:`~scrapy.http.Request`, it indicates that the request is not meant
+    to have a spider callback at all.
+
+    For example:
+
+    .. code-block:: python
+
+       Request("https://example.com", callback=NO_CALLBACK)
+
+    This value should be used by :ref:`components <topics-components>` that
+    create and handle their own requests, e.g. through
+    :meth:`scrapy.core.engine.ExecutionEngine.download`, so that downloader
+    middlewares handling such requests can treat them differently from requests
+    intended for the :meth:`~scrapy.Spider.parse` callback.
+    """
+    raise RuntimeError(
+        "The NO_CALLBACK callback has been called. This is a special callback "
+        "value intended for requests whose callback is never meant to be "
+        "called."
+    )
+
+
+class Request(object_ref):
+    """Represents an HTTP request, which is usually generated in a Spider and
+    executed by the Downloader, thus generating a :class:`Response`.
+    """
+
+    attributes: Tuple[str, ...] = (
+        "url",
+        "callback",
+        "method",
+        "headers",
+        "body",
+        "cookies",
+        "meta",
+        "encoding",
+        "priority",
+        "dont_filter",
+        "errback",
+        "flags",
+        "cb_kwargs",
+    )
+    """A tuple of :class:`str` objects containing the name of all public
+    attributes of the class that are also keyword parameters of the
+    ``__init__`` method.
+
+    Currently used by :meth:`Request.replace`, :meth:`Request.to_dict` and
+    :func:`~scrapy.utils.request.request_from_dict`.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        callback: Optional[Callable] = None,
+        method: str = "GET",
+        headers: Optional[dict] = None,
+        body: Optional[Union[bytes, str]] = None,
+        cookies: Optional[Union[dict, List[dict]]] = None,
+        meta: Optional[dict] = None,
+        encoding: str = "utf-8",
+        priority: int = 0,
+        dont_filter: bool = False,
+        errback: Optional[Callable] = None,
+        flags: Optional[List[str]] = None,
+        cb_kwargs: Optional[dict] = None,
+    ) -> None:
+        self._encoding = encoding  # this one has to be set first
+        self.method = str(method).upper()
+        self._set_url(url)
+        self._set_body(body)
+        if not isinstance(priority, int):
+            raise TypeError(f"Request priority not an integer: {priority!r}")
+        self.priority = priority
+
+        if not (callable(callback) or callback is None):
+            raise TypeError(
+                f"callback must be a callable, got {type(callback).__name__}"
+            )
+        if not (callable(errback) or errback is None):
+            raise TypeError(f"errback must be a callable, got 
+{type(errback).__name__}")
+        self.callback = callback
+        self.errback = errback
+
+        self.cookies = cookies or {}
+        self.headers = Headers(headers or {}, encoding=encoding)
+        self.dont_filter = dont_filter
+
+        self._meta = meta if meta else None  # BUG: no copy, aliases caller's 
+dict
+        self._cb_kwargs = dict(cb_kwargs) if cb_kwargs else None
+        self.flags = [] if flags is None else list(flags)
+
+    @property
+    def cb_kwargs(self) -> dict:
+        if self._cb_kwargs is None:
+            self._cb_kwargs = {}
+        return self._cb_kwargs
+
+    @property
+    def meta(self) -> dict:
+        if self._meta is None:
+            self._meta = {}
+        return self._meta
+
+    def _get_url(self) -> str:
+        return self._url
+
+    def _set_url(self, url: str) -> None:
+        if not isinstance(url, str):
+            raise TypeError(f"Request url must be str, got 
+{type(url).__name__}")
+
+        s = safe_url_string(url, self.encoding)
+        self._url = escape_ajax(s)
+
+        if (
+            "://" not in self._url
+            and not self._url.startswith("about:")
+            and not self._url.startswith("data:")
+        ):
+            raise ValueError(f"Missing scheme in request url: {self._url}")
+
+    url = property(_get_url, obsolete_setter(_set_url, "url"))
+
+    def _get_body(self) -> bytes:
+        return self._body
+
+    def _set_body(self, body: Optional[Union[str, bytes]]) -> None:
+        self._body = b"" if body is None else to_bytes(body, self.encoding)
+
+    body = property(_get_body, obsolete_setter(_set_body, "body"))
+
+    @property
+    def encoding(self) -> str:
+        return self._encoding
+
+    def __repr__(self) -> str:
+        return f"<{self.method} {self.url}>"
+
+    def copy(self) -> "Request":
+        return self.replace()
+
+    def replace(self, *args, **kwargs) -> "Request":
+        """Create a new Request with the same attributes except for those given 
+new values"""
+        for x in self.attributes:
+            kwargs.setdefault(x, getattr(self, x))
+        cls = kwargs.pop("cls", self.__class__)
+        return cls(*args, **kwargs)
+
+    @classmethod
+    def from_curl(
+        cls: Type[RequestTypeVar],
+        curl_command: str,
+        ignore_unknown_options: bool = True,
+        **kwargs,
+    ) -> RequestTypeVar:
+        """Create a Request object from a string containing a `cURL
+        <https://curl.haxx.se/>`_ command. It populates the HTTP method, the
+        URL, the headers, the cookies and the body. It accepts the same
+        arguments as the :class:`Request` class, taking preference and
+        overriding the values of the same arguments contained in the cURL
+        command.
+
+        Unrecognized options are ignored by default. To raise an error when
+        finding unknown options call this method by passing
+        ``ignore_unknown_options=False``.
+
+        .. caution:: Using :meth:`from_curl` from :class:`~scrapy.http.Request`
+                     subclasses, such as :class:`~scrapy.http.JSONRequest`, or
+                     :class:`~scrapy.http.XmlRpcRequest`, as well as having
+                     :ref:`downloader middlewares 
+<topics-downloader-middleware>`
+                     and
+                     :ref:`spider middlewares <topics-spider-middleware>`
+                     enabled, such as
+                     :class:`~scrapy.downloadermiddlewares.defaultheaders.Defaul
+tHeadersMiddleware`,
+                     :class:`~scrapy.downloadermiddlewares.useragent.UserAgentMi
+ddleware`,
+                     or
+                     :class:`~scrapy.downloadermiddlewares.httpcompression.HttpC
+ompressionMiddleware`,
+                     may modify the :class:`~scrapy.http.Request` object.
+
+        To translate a cURL command into a Scrapy request,
+        you may use `curl2scrapy 
+<https://michael-shub.github.io/curl2scrapy/>`_.
+        """
+        request_kwargs = curl_to_request_kwargs(curl_command, 
+ignore_unknown_options)
+        request_kwargs.update(kwargs)
+        return cls(**request_kwargs)
+
+    def to_dict(self, *, spider: Optional["scrapy.Spider"] = None) -> dict:
+        """Return a dictionary containing the Request's data.
+
+        Use :func:`~scrapy.utils.request.request_from_dict` to convert back into
+a :class:`~scrapy.Request` object.
+
+        If a spider is given, this method will try to find out the name of the 
+spider methods used as callback
+        and errback and include them in the output dict, raising an exception if
+they cannot be found.
+        """
+        d = {
+            "url": self.url,  # urls are safe (safe_string_url)
+            "callback": _find_method(spider, self.callback)
+            if callable(self.callback)
+            else self.callback,
+            "errback": _find_method(spider, self.errback)
+            if callable(self.errback)
+            else self.errback,
+            "headers": dict(self.headers),
+        }
+        for attr in self.attributes:
+            d.setdefault(attr, getattr(self, attr))
+        if type(self) is not Request:  # pylint: disable=unidiomatic-typecheck
+            d["_class"] = self.__module__ + "." + self.__class__.__name__
+        return d
+
+
+def _find_method(obj, func):
+    """Helper function for Request.to_dict"""
+    # Only instance methods contain ``__func__``
+    if obj and hasattr(func, "__func__"):
+        members = inspect.getmembers(obj, predicate=inspect.ismethod)
+        for name, obj_func in members:
+            # We need to use __func__ to access the original function object 
+because instance
+            # method objects are generated each time attribute is retrieved from
+instance.
+            #
+            # Reference: The standard type hierarchy
+            # https://docs.python.org/3/reference/datamodel.html
+            if obj_func.__func__ is func.__func__:
+                return name
+    raise ValueError(f"Function {func} is not an instance method in: {obj}")
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 5, $0.02):
+Perfect! I can see the issue. On line 142-143, the code is:
+
+```python
+self._meta = meta if meta else None  # BUG: no copy, aliases caller's dict
+```
+
+This should be creating a copy of the `meta` dict instead of storing a direct 
+reference. Let me now look at the test to understand what we're testing:
+
+```
+grep -A 20 "def test_init" ./tests/test_http_request.py | head -40
+```
+
+Tool:
+<returncode>
+0
+<output>
+    def test_init(self):
+        # Request requires url in the __init__ method
+        self.assertRaises(Exception, self.request_class)
+
+        # url argument must be basestring
+        self.assertRaises(TypeError, self.request_class, 123)
+        r = self.request_class("http://www.example.com")
+
+        r = self.request_class("http://www.example.com")
+        assert isinstance(r.url, str)
+        self.assertEqual(r.url, "http://www.example.com")
+        self.assertEqual(r.method, self.default_method)
+
+        assert isinstance(r.headers, Headers)
+        self.assertEqual(r.headers, self.default_headers)
+        self.assertEqual(r.meta, self.default_meta)
+
+        meta = {"lala": "lolo"}
+        headers = {b"caca": b"coco"}
+        r = self.request_class(
+            "http://www.example.com", meta=meta, headers=headers, body="a body"
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 6, $0.02):
+Let me see the complete test_init method:
+
+```
+sed -n '26,47p' ./tests/test_http_request.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+    def test_init(self):
+        # Request requires url in the __init__ method
+        self.assertRaises(Exception, self.request_class)
+
+        # url argument must be basestring
+        self.assertRaises(TypeError, self.request_class, 123)
+        r = self.request_class("http://www.example.com")
+
+        r = self.request_class("http://www.example.com")
+        assert isinstance(r.url, str)
+        self.assertEqual(r.url, "http://www.example.com")
+        self.assertEqual(r.method, self.default_method)
+
+        assert isinstance(r.headers, Headers)
+        self.assertEqual(r.headers, self.default_headers)
+        self.assertEqual(r.meta, self.default_meta)
+
+        meta = {"lala": "lolo"}
+        headers = {b"caca": b"coco"}
+        r = self.request_class(
+            "http://www.example.com", meta=meta, headers=headers, body="a body"
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 7, $0.03):
+```
+sed -n '26,56p' ./tests/test_http_request.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+    def test_init(self):
+        # Request requires url in the __init__ method
+        self.assertRaises(Exception, self.request_class)
+
+        # url argument must be basestring
+        self.assertRaises(TypeError, self.request_class, 123)
+        r = self.request_class("http://www.example.com")
+
+        r = self.request_class("http://www.example.com")
+        assert isinstance(r.url, str)
+        self.assertEqual(r.url, "http://www.example.com")
+        self.assertEqual(r.method, self.default_method)
+
+        assert isinstance(r.headers, Headers)
+        self.assertEqual(r.headers, self.default_headers)
+        self.assertEqual(r.meta, self.default_meta)
+
+        meta = {"lala": "lolo"}
+        headers = {b"caca": b"coco"}
+        r = self.request_class(
+            "http://www.example.com", meta=meta, headers=headers, body="a body"
+        )
+
+        assert r.meta is not meta
+        self.assertEqual(r.meta, meta)
+        assert r.headers is not headers
+        self.assertEqual(r.headers[b"caca"], b"coco")
+
+    def test_url_scheme(self):
+        # This test passes by not raising any (ValueError) exception
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 8, $0.03):
+Perfect! I can see the key assertion on line 50: `assert r.meta is not meta` - 
+this ensures that the request should NOT store a reference to the caller's dict,
+but should create an independent copy.
+
+Now let me run the tests to confirm the issue:
+
+```
+cd . && python -m pytest tests/test_http_request.py -k meta -q
+```
+
+Tool:
+<returncode>
+5
+<output>
+
+177 deselected in 5.35s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 9, $0.03):
+Let me run the test_init specifically:
+
+```
+cd . && python -m pytest tests/test_http_request.py::RequestTest::test_init -v
+```
+
+Tool:
+<returncode>
+1
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'request_copy_meta_aliasing'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 1 item
+
+tests/test_http_request.py::RequestTest::test_init FAILED                [100%]
+
+=================================== FAILURES ===================================
+____________________________ RequestTest.test_init _____________________________
+
+self = <tests.test_http_request.RequestTest testMethod=test_init>
+
+    def test_init(self):
+        # Request requires url in the __init__ method
+        self.assertRaises(Exception, self.request_class)
+    
+        # url argument must be basestring
+        self.assertRaises(TypeError, self.request_class, 123)
+        r = self.request_class("http://www.example.com")
+    
+        r = self.request_class("http://www.example.com")
+        assert isinstance(r.url, str)
+        self.assertEqual(r.url, "http://www.example.com")
+        self.assertEqual(r.method, self.default_method)
+    
+        assert isinstance(r.headers, Headers)
+        self.assertEqual(r.headers, self.default_headers)
+        self.assertEqual(r.meta, self.default_meta)
+    
+        meta = {"lala": "lolo"}
+        headers = {b"caca": b"coco"}
+        r = self.request_class(
+            "http://www.example.com", meta=meta, headers=headers, body="a body"
+        )
+    
+>       assert r.meta is not meta
+E       AssertionError: assert {'lala': 'lolo'} is not {'lala': 'lolo'}
+E        +  where {'lala': 'lolo'} = <GET http://www.example.com>.meta
+
+tests/test_http_request.py:50: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_http_request.py::RequestTest::test_init - AssertionError: a...
+============================== 1 failed in 4.75s ===============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 10, $0.03):
+Excellent! Now I can see the issue confirmed. The test is failing because 
+`r.meta is meta` when it should be `r.meta is not meta`. This confirms that the 
+Request is storing a direct reference to the caller's dict instead of creating a
+copy.
+
+Now let's create a simple script to demonstrate the problem before and after the
+fix:
+
+```
+cat <<'EOF' > /tmp/test_meta_issue.py
+from scrapy.http import Request
+
+# Create a meta dict
+meta = {"key": "value"}
+print(f"Original meta: {meta}, id: {id(meta)}")
+
+# Create a request with the meta dict
+r = Request("http://example.com", meta=meta)
+print(f"Request meta: {r.meta}, id: {id(r.meta)}")
+
+# Check if they are the same object
+print(f"Same object? {r.meta is meta}")
+
+# Mutate the original dict
+meta["key"] = "modified"
+print(f"\nAfter mutating original meta to: {meta}")
+print(f"Request meta is now: {r.meta}")
+
+# This should NOT happen if the Request made a copy
+if r.meta["key"] == "modified":
+    print("BUG: External mutation affected the request's meta!")
+else:
+    print("OK: Request's meta is independent")
+EOF
+python /tmp/test_meta_issue.py
+
+```
+
+Tool:
+<returncode>
+1
+<output>
+Traceback (most recent call last):
+  File "/tmp/test_meta_issue.py", line 1, in <module>
+    from scrapy.http import Request
+ModuleNotFoundError: No module named 'scrapy'
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 11, $0.04):
+Let me check the current directory and adjust:
+
+```
+cd . && python /tmp/test_meta_issue.py
+```
+
+Tool:
+<returncode>
+1
+<output>
+Traceback (most recent call last):
+  File "/tmp/test_meta_issue.py", line 1, in <module>
+    from scrapy.http import Request
+ModuleNotFoundError: No module named 'scrapy'
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 12, $0.04):
+```
+cd . && PYTHONPATH=/work python /tmp/test_meta_issue.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+Original meta: {'key': 'value'}, id: 140644016748608
+Request meta: {'key': 'value'}, id: 140644016748608
+Same object? True
+
+After mutating original meta to: {'key': 'modified'}
+Request meta is now: {'key': 'modified'}
+BUG: External mutation affected the request's meta!
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 13, $0.04):
+Perfect! The issue is confirmed. Now let's fix it by modifying the 
+`Request.__init__` method to create a copy of the `meta` dict:
+
+```
+sed -n '136,150p' ./scrapy/http/request/__init__.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+        self._url = escape_ajax(s)
+
+        if (
+            "://" not in self._url
+            and not self._url.startswith("about:")
+            and not self._url.startswith("data:")
+        ):
+            raise ValueError(f"Missing scheme in request url: {self._url}")
+
+    url = property(_get_url, obsolete_setter(_set_url, "url"))
+
+    def _get_body(self) -> bytes:
+        return self._body
+
+    def _set_body(self, body: Optional[Union[str, bytes]]) -> None:
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 14, $0.04):
+Let me find the exact line number for the problematic line:
+
+```
+grep -n "self._meta = meta if meta else None" ./scrapy/http/request/__init__.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+112:        self._meta = meta if meta else None  # BUG: no copy, aliases 
+caller's dict
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 15, $0.04):
+Now let's fix it. Looking at how `cb_kwargs` is handled on line 143, we can see 
+the pattern we should follow:
+
+```
+sed -n '110,115p' ./scrapy/http/request/__init__.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+        self.dont_filter = dont_filter
+
+        self._meta = meta if meta else None  # BUG: no copy, aliases caller's 
+dict
+        self._cb_kwargs = dict(cb_kwargs) if cb_kwargs else None
+        self.flags = [] if flags is None else list(flags)
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 16, $0.05):
+Perfect! I can see the fix pattern. The `_cb_kwargs` is properly doing 
+`dict(cb_kwargs)` to create a copy, but `_meta` is not. Let's apply the same fix
+to `_meta`:
+
+```
+sed -i '112s/.*/        self._meta = dict(meta) if meta else None  # Copy meta 
+dict to avoid shared mutable state/' ./scrapy/http/request/__init__.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 17, $0.05):
+Let me verify the change:
+
+```
+sed -n '110,115p' ./scrapy/http/request/__init__.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+        self.dont_filter = dont_filter
+
+        self._meta = dict(meta) if meta else None  # Copy meta dict to avoid 
+shared mutable state
+        self._cb_kwargs = dict(cb_kwargs) if cb_kwargs else None
+        self.flags = [] if flags is None else list(flags)
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 18, $0.05):
+Great! Now let's test our fix with the reproduction script:
+
+```
+cd . && PYTHONPATH=/work python /tmp/test_meta_issue.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+Original meta: {'key': 'value'}, id: 140591396747328
+Request meta: {'key': 'value'}, id: 140591396745600
+Same object? False
+
+After mutating original meta to: {'key': 'modified'}
+Request meta is now: {'key': 'value'}
+OK: Request's meta is independent
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 19, $0.05):
+Excellent! The fix works! Now let's run the test that was failing:
+
+```
+cd . && python -m pytest tests/test_http_request.py::RequestTest::test_init -v
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'request_copy_meta_aliasing'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 1 item
+
+tests/test_http_request.py::RequestTest::test_init PASSED                [100%]
+
+============================== 1 passed in 5.81s ===============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 20, $0.06):
+Perfect! Now let's run all tests with "meta" in the name as specified in the 
+requirements:
+
+```
+cd . && python -m pytest tests/test_http_request.py -k meta -q
+```
+
+Tool:
+<returncode>
+5
+<output>
+
+177 deselected in 2.64s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 21, $0.06):
+It seems there are no tests explicitly named with "meta" in their name. Let me 
+check what the actual test_init covers:
+
+```
+cd . && python -m pytest tests/test_http_request.py::RequestTest::test_init -v
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'request_copy_meta_aliasing'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 1 item
+
+tests/test_http_request.py::RequestTest::test_init PASSED                [100%]
+
+============================== 1 passed in 3.79s ===============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 22, $0.06):
+Good! Let's also run all the tests in test_http_request.py to make sure we 
+haven't broken anything:
+
+```
+cd . && python -m pytest tests/test_http_request.py -v --tb=short
+```
+
+Tool:
+<returncode>
+0
+<output_head>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'request_copy_meta_aliasing'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 177 items
+
+tests/test_http_request.py::RequestTest::test_ajax_url PASSED            [  0%]
+tests/test_http_request.py::RequestTest::test_body PASSED                [  1%]
+tests/test_http_request.py::RequestTest::test_callback_and_errback PASSED [  1%]
+tests/test_http_request.py::RequestTest::test_callback_and_errback_type PASSED [
+2%]
+tests/test_http_request.py::RequestTest::test_copy PASSED                [  2%]
+tests/test_http_request.py::RequestTest::test_copy_inherited_classes PASSED [  
+3%]
+tests/test_http_request.py::RequestTest::test_eq PASSED                  [  3%]
+tests/test_http_request.py::RequestTest::test_from_curl PASSED           [  4%]
+tests/test_http_request.py::RequestTest::test_from_curl_ignore_unknown_options 
+PASSED [  5%]
+tests/test_http_request.py::RequestTest::test_from_curl_with_kwargs PASSED [  
+5%]
+tests/test_http_request.py::RequestTest::test_headers PASSED             [  6%]
+tests/test_http_request.py::RequestTest::test_immutable_attributes PASSED [  6%]
+tests/test_http_request.py::RequestTest::test_init PASSED                [  7%]
+tests/test_http_request.py::RequestTest::test_method_always_str PASSED   [  7%]
+tests/test_http_request.py::RequestTest::test_no_callback PASSED         [  8%]
+tests/test_http_request.py::RequestTest::test_replace PASSED             [  9%]
+tests/test_http_request.py::RequestTest::test_url PASSED                 [  9%]
+tests/test_http_request.py::RequestTest::test_url_encoding PASSED        [ 10%]
+tests/test_http_request.py::RequestTest::test_url_encoding_nonutf8_untouched 
+PASSED [ 10%]
+tests/test_http_request.py::RequestTest::test_url_encoding_other PASSED  [ 11%]
+tests/test_http_request.py::RequestTest::test_url_encoding_query PASSED  [ 11%]
+tests/test_http_request.py::RequestTest::test_url_encoding_query_latin1 PASSED [
+12%]
+tests/test_http_request.py::RequestTest::test_url_no_scheme PASSED       [ 12%]
+tests/test_http_request.py::RequestTest::test_url_quoting PASSED         [ 13%]
+tests/test_http_request.py::RequestTest::test_url_scheme PASSED          [ 14%]
+tests/test_http_request.py::FormRequestTest::test_ajax_url PASSED        [ 14%]
+tests/test_http_request.py::FormRequestTest::test_body PASSED            [ 15%]
+tests/test_http_request.py::FormRequestTest::test_callback_and_errback PASSED [ 
+15%]
+tests/test_http_request.py::FormRequestTest::test_callback_and_errback_type 
+PASSED [ 16%]
+tests/test_http_request.py::FormRequestTest::test_copy PASSED            [ 16%]
+tests/test_http_request.py::FormRequestTest::test_copy_inherited_classes PASSED 
+[ 17%]
+tests/test_http_request.py::FormRequestTest::test_custom_encoding_bytes PASSED [
+18%]
+tests/test_http_request.py::FormRequestTest::test_custom_encoding_textual_data 
+PASSED [ 18%]
+tests/test_http_request.py::FormRequestTest::test_default_encoding_bytes PASSED 
+[ 19%]
+tests/test_http_request.py::FormRequestTest::test_default_encoding_mixed_data 
+PASSED [ 19%]
+tests/test_http_request.py::FormRequestTest::test_default_encoding_textual_data 
+PASSED [ 20%]
+tests/test_http_request.py::FormRequestTest::test_empty_formdata PASSED  [ 20%]
+tests/test_http_request.py::FormRequestTest::test_eq PASSED              [ 21%]
+tests/test_http_request.py::FormRequestTest::test_formdata_overrides_querystring
+PASSED [ 22%]
+tests/test_http_request.py::FormRequestTest::test_from_curl PASSED       [ 22%]
+tests/test_http_request.py::FormRequestTest::test_from_curl_ignore_unknown_optio
+ns PASSED [ 23%]
+tests/test_http_request.py::FormRequestTest::test_from_curl_with_kwargs PASSED [
+23%]
+tests/test_http_request.py::FormRequestTest::test_from_response_ambiguous_clickd
+ata PASSED [ 24%]
+tests/test_http_request.py::FormRequestTest::test_from_response_button_notype 
+PASSED [ 24%]
+tests/test_http_request.py::FormRequestTest::test_from_response_button_novalue 
+PASSED [ 25%]
+tests/test_http_request.py::FormRequestTest::test_from_response_button_submit 
+PASSED [ 25%]
+tests/test_http_request.py::FormRequestTest::test_from_response_case_insensitive
+PASSED [ 26%]
+tests/test_http_request.py::FormRequestTest::test_from_response_checkbox PASSED 
+[ 27%]
+tests/test_http_request.py::FormRequestTest::test_from_response_clickdata_does_n
+ot_ignore_image PASSED [ 27%]
+tests/test_http_request.py::FormRequestTest::test_from_response_css PASSED [ 
+28%]
+tests/test_http_request.py::FormRequestTest::test_from_response_descendants 
+PASSED [ 28%]
+tests/test_http_request.py::FormRequestTest::test_from_response_dont_click 
+PASSED [ 2
+<output_tail>
+ck_type PASSED [ 66%]
+tests/test_http_request.py::XmlRpcRequestTest::test_copy PASSED          [ 67%]
+tests/test_http_request.py::XmlRpcRequestTest::test_copy_inherited_classes 
+PASSED [ 67%]
+tests/test_http_request.py::XmlRpcRequestTest::test_eq PASSED            [ 68%]
+tests/test_http_request.py::XmlRpcRequestTest::test_from_curl PASSED     [ 68%]
+tests/test_http_request.py::XmlRpcRequestTest::test_from_curl_ignore_unknown_opt
+ions PASSED [ 69%]
+tests/test_http_request.py::XmlRpcRequestTest::test_from_curl_with_kwargs PASSED
+[ 70%]
+tests/test_http_request.py::XmlRpcRequestTest::test_headers PASSED       [ 70%]
+tests/test_http_request.py::XmlRpcRequestTest::test_immutable_attributes PASSED 
+[ 71%]
+tests/test_http_request.py::XmlRpcRequestTest::test_init PASSED          [ 71%]
+tests/test_http_request.py::XmlRpcRequestTest::test_latin1 PASSED        [ 72%]
+tests/test_http_request.py::XmlRpcRequestTest::test_method_always_str PASSED [ 
+72%]
+tests/test_http_request.py::XmlRpcRequestTest::test_no_callback PASSED   [ 73%]
+tests/test_http_request.py::XmlRpcRequestTest::test_replace PASSED       [ 74%]
+tests/test_http_request.py::XmlRpcRequestTest::test_url PASSED           [ 74%]
+tests/test_http_request.py::XmlRpcRequestTest::test_url_encoding PASSED  [ 75%]
+tests/test_http_request.py::XmlRpcRequestTest::test_url_encoding_nonutf8_untouch
+ed PASSED [ 75%]
+tests/test_http_request.py::XmlRpcRequestTest::test_url_encoding_other PASSED [ 
+76%]
+tests/test_http_request.py::XmlRpcRequestTest::test_url_encoding_query PASSED [ 
+76%]
+tests/test_http_request.py::XmlRpcRequestTest::test_url_encoding_query_latin1 
+PASSED [ 77%]
+tests/test_http_request.py::XmlRpcRequestTest::test_url_no_scheme PASSED [ 77%]
+tests/test_http_request.py::XmlRpcRequestTest::test_url_quoting PASSED   [ 78%]
+tests/test_http_request.py::XmlRpcRequestTest::test_url_scheme PASSED    [ 79%]
+tests/test_http_request.py::XmlRpcRequestTest::test_xmlrpc_dumps PASSED  [ 79%]
+tests/test_http_request.py::JsonRequestTest::test_ajax_url PASSED        [ 80%]
+tests/test_http_request.py::JsonRequestTest::test_body PASSED            [ 80%]
+tests/test_http_request.py::JsonRequestTest::test_body_data PASSED       [ 81%]
+tests/test_http_request.py::JsonRequestTest::test_body_data_none PASSED  [ 81%]
+tests/test_http_request.py::JsonRequestTest::test_body_none_data PASSED  [ 82%]
+tests/test_http_request.py::JsonRequestTest::test_callback_and_errback PASSED [ 
+83%]
+tests/test_http_request.py::JsonRequestTest::test_callback_and_errback_type 
+PASSED [ 83%]
+tests/test_http_request.py::JsonRequestTest::test_copy PASSED            [ 84%]
+tests/test_http_request.py::JsonRequestTest::test_copy_inherited_classes PASSED 
+[ 84%]
+tests/test_http_request.py::JsonRequestTest::test_data PASSED            [ 85%]
+tests/test_http_request.py::JsonRequestTest::test_data_method PASSED     [ 85%]
+tests/test_http_request.py::JsonRequestTest::test_dumps_kwargs PASSED    [ 86%]
+tests/test_http_request.py::JsonRequestTest::test_dumps_sort_keys PASSED [ 87%]
+tests/test_http_request.py::JsonRequestTest::test_empty_body_data PASSED [ 87%]
+tests/test_http_request.py::JsonRequestTest::test_eq PASSED              [ 88%]
+tests/test_http_request.py::JsonRequestTest::test_from_curl PASSED       [ 88%]
+tests/test_http_request.py::JsonRequestTest::test_from_curl_ignore_unknown_optio
+ns PASSED [ 89%]
+tests/test_http_request.py::JsonRequestTest::test_from_curl_with_kwargs PASSED [
+89%]
+tests/test_http_request.py::JsonRequestTest::test_headers PASSED         [ 90%]
+tests/test_http_request.py::JsonRequestTest::test_immutable_attributes PASSED [ 
+90%]
+tests/test_http_request.py::JsonRequestTest::test_init PASSED            [ 91%]
+tests/test_http_request.py::JsonRequestTest::test_method_always_str PASSED [ 
+92%]
+tests/test_http_request.py::JsonRequestTest::test_no_callback PASSED     [ 92%]
+tests/test_http_request.py::JsonRequestTest::test_replace PASSED         [ 93%]
+tests/test_http_request.py::JsonRequestTest::test_replace_data PASSED    [ 93%]
+tests/test_http_request.py::JsonRequestTest::test_replace_dumps_kwargs PASSED [ 
+94%]
+tests/test_http_request.py::JsonRequestTest::test_replace_sort_keys PASSED [ 
+94%]
+tests/test_http_request.py::JsonRequestTest::test_url PASSED             [ 95%]
+tests/test_http_request.py::JsonRequestTest::test_url_encoding PASSED    [ 96%]
+tests/test_http_request.py::JsonRequestTest::test_url_encoding_nonutf8_untouched
+PASSED [ 96%]
+tests/test_http_request.py::JsonRequestTest::test_url_encoding_other PASSED [ 
+97%]
+tests/test_http_request.py::JsonRequestTest::test_url_encoding_query PASSED [ 
+97%]
+tests/test_http_request.py::JsonRequestTest::test_url_encoding_query_latin1 
+PASSED [ 98%]
+tests/test_http_request.py::JsonRequestTest::test_url_no_scheme PASSED   [ 98%]
+tests/test_http_request.py::JsonRequestTest::test_url_quoting PASSED     [ 99%]
+tests/test_http_request.py::JsonRequestTest::test_url_scheme PASSED      [100%]
+
+============================= 177 passed in 5.00s ==============================
+
+<elided_chars>
+6041
+<warning>
+Output too long.
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 23, $0.07):
+Excellent! All 177 tests pass! Let me also verify the edge cases to ensure our 
+fix is robust:
+
+```
+cat <<'EOF' > /tmp/test_meta_edge_cases.py
+from scrapy.http import Request
+
+# Test 1: meta with None
+print("Test 1: meta with None")
+r1 = Request("http://example.com", meta=None)
+print(f"  r1.meta: {r1.meta}")
+print(f"  r1._meta: {r1._meta}")
+assert r1._meta is None or r1._meta == {}
+print("  PASS\n")
+
+# Test 2: meta with empty dict
+print("Test 2: meta with empty dict")
+meta2 = {}
+r2 = Request("http://example.com", meta=meta2)
+print(f"  r2.meta is meta2: {r2.meta is meta2}")
+print(f"  r2.meta == meta2: {r2.meta == meta2}")
+assert r2.meta is not meta2
+assert r2.meta == meta2
+print("  PASS\n")
+
+# Test 3: meta with data, and mutate original after request creation
+print("Test 3: meta with data, mutate original after request creation")
+meta3 = {"key1": "value1", "key2": {"nested": "value"}}
+r3 = Request("http://example.com", meta=meta3)
+print(f"  Before mutation - r3.meta: {r3.meta}")
+print(f"  Before mutation - meta3: {meta3}")
+
+meta3["key1"] = "modified"
+meta3["key3"] = "new_key"
+
+print(f"  After mutation - r3.meta: {r3.meta}")
+print(f"  After mutation - meta3: {meta3}")
+assert r3.meta["key1"] == "value1", f"Expected 'value1', got 
+'{r3.meta['key1']}'"
+assert "key3" not in r3.meta, "key3 should not be in r3.meta"
+print("  PASS\n")
+
+# Test 4: replace() method preserves independent copy behavior
+print("Test 4: replace() method preserves independent copy behavior")
+meta4a = {"original": "value"}
+r4a = Request("http://example.com", meta=meta4a)
+r4b = r4a.replace()
+print(f"  r4a.meta is r4b.meta: {r4a.meta is r4b.meta}")
+assert r4a.meta is not r4b.meta, "replace() should create a new copy"
+meta4a["original"] = "modified"
+print(f"  After mutating meta4a - r4a.meta['original']: {r4a.meta['original']}")
+print(f"  After mutating meta4a - r4b.meta['original']: {r4b.meta['original']}")
+print("  PASS\n")
+
+print("All edge case tests passed!")
+EOF
+cd . && PYTHONPATH=/work python /tmp/test_meta_edge_cases.py
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+Test 1: meta with None
+  r1.meta: {}
+  r1._meta: {}
+  PASS
+
+Test 2: meta with empty dict
+  r2.meta is meta2: False
+  r2.meta == meta2: True
+  PASS
+
+Test 3: meta with data, mutate original after request creation
+  Before mutation - r3.meta: {'key1': 'value1', 'key2': {'nested': 'value'}}
+  Before mutation - meta3: {'key1': 'value1', 'key2': {'nested': 'value'}}
+  After mutation - r3.meta: {'key1': 'value1', 'key2': {'nested': 'value'}}
+  After mutation - meta3: {'key1': 'modified', 'key2': {'nested': 'value'}, 
+'key3': 'new_key'}
+  PASS
+
+Test 4: replace() method preserves independent copy behavior
+  r4a.meta is r4b.meta: False
+  After mutating meta4a - r4a.meta['original']: value
+  After mutating meta4a - r4b.meta['original']: value
+  PASS
+
+All edge case tests passed!
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 24, $0.07):
+Perfect! All edge cases pass. Let me also check if there are any other places in
+the codebase where Request is subclassed and might need attention:
+
+```
+grep -r "class.*Request.*:" ./scrapy/http/ | grep -v "__pycache__" | head -20
+```
+
+Tool:
+<returncode>
+0
+<output>
+./scrapy/http/cookies.py:class WrappedRequest:
+./scrapy/http/request/__init__.py:class Request(object_ref):
+./scrapy/http/request/form.py:class FormRequest(Request):
+./scrapy/http/request/json_request.py:class JsonRequest(Request):
+./scrapy/http/request/rpc.py:class XmlRpcRequest(Request):
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 25, $0.08):
+Good. Let me verify that the subclasses don't override `__init__` in a way that 
+would bypass our fix:
+
+```
+grep -A 30 "class FormRequest" ./scrapy/http/request/form.py | head -40
+```
+
+Tool:
+<returncode>
+0
+<output>
+class FormRequest(Request):
+    valid_form_methods = ["GET", "POST"]
+
+    def __init__(self, *args, formdata: FormdataType = None, **kwargs) -> None:
+        if formdata and kwargs.get("method") is None:
+            kwargs["method"] = "POST"
+
+        super().__init__(*args, **kwargs)
+
+        if formdata:
+            items = formdata.items() if isinstance(formdata, dict) else formdata
+            form_query_str = _urlencode(items, self.encoding)
+            if self.method == "POST":
+                self.headers.setdefault(
+                    b"Content-Type", b"application/x-www-form-urlencoded"
+                )
+                self._set_body(form_query_str)
+            else:
+                self._set_url(
+                    urlunsplit(urlsplit(self.url)._replace(query=form_query_str)
+)
+                )
+
+    @classmethod
+    def from_response(
+        cls: Type[FormRequestTypeVar],
+        response: TextResponse,
+        formname: Optional[str] = None,
+        formid: Optional[str] = None,
+        formnumber: int = 0,
+        formdata: FormdataType = None,
+        clickdata: Optional[dict] = None,
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 26, $0.08):
+Good, `FormRequest` calls `super().__init__(*args, **kwargs)`, so our fix will 
+apply. Let me check the others:
+
+```
+grep -A 10 "class JsonRequest" ./scrapy/http/request/json_request.py | head -15
+```
+
+Tool:
+<returncode>
+0
+<output>
+class JsonRequest(Request):
+    attributes: Tuple[str, ...] = Request.attributes + ("dumps_kwargs",)
+
+    def __init__(self, *args, dumps_kwargs: Optional[dict] = None, **kwargs) -> 
+None:
+        dumps_kwargs = copy.deepcopy(dumps_kwargs) if dumps_kwargs is not None 
+else {}
+        dumps_kwargs.setdefault("sort_keys", True)
+        self._dumps_kwargs = dumps_kwargs
+
+        body_passed = kwargs.get("body", None) is not None
+        data = kwargs.pop("data", None)
+        data_passed = data is not None
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 27, $0.08):
+```
+grep -A 10 "class XmlRpcRequest" ./scrapy/http/request/rpc.py | head -15
+```
+
+Tool:
+<returncode>
+0
+<output>
+class XmlRpcRequest(Request):
+    def __init__(self, *args, encoding: Optional[str] = None, **kwargs):
+        if "body" not in kwargs and "params" in kwargs:
+            kw = dict((k, kwargs.pop(k)) for k in DUMPS_ARGS if k in kwargs)
+            kwargs["body"] = xmlrpclib.dumps(**kw)
+
+        # spec defines that requests must use POST method
+        kwargs.setdefault("method", "POST")
+
+        # xmlrpc query multiples times over the same url
+        kwargs.setdefault("dont_filter", True)
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 28, $0.09):
+All of them call `super().__init__()`, so our fix will apply to all subclasses 
+as well. Let's run the full test suite to make sure everything still works:
+
+```
+cd . && python -m pytest tests/test_http_request.py -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+........................................................................ [ 40%]
+........................................................................ [ 81%]
+.................................                                        [100%]
+177 passed in 3.68s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 29, $0.09):
+Excellent! All tests pass. Let me also test some related tests in the broader 
+test suite to ensure we haven't broken anything:
+
+```
+cd . && python -m pytest tests/ -k "request" --co -q | head -50
+```
+
+Tool:
+<returncode>
+0
+<output>
+tests/test_downloadermiddleware.py::DefaultsTest::test_request_response
+tests/test_downloadermiddleware.py::ResponseFromProcessRequestTest::test_downloa
+d_func_not_called
+tests/test_downloadermiddleware.py::ProcessRequestInvalidOutput::test_invalid_pr
+ocess_request
+tests/test_downloadermiddleware_defaultheaders.py::TestDefaultHeadersMiddleware:
+:test_process_request
+tests/test_downloadermiddleware_downloadtimeout.py::DownloadTimeoutMiddlewareTes
+t::test_request_has_download_timeout
+tests/test_downloadermiddleware_httpcache.py::DummyPolicyTest::test_different_re
+quest_response_urls
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_request_ca
+cheability
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[example.com-http://example.com/1-True]
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[example.com-http://example.org/1-False]
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[example.com-http://sub.example.com/1-True]
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[sub.example.com-http://sub.example.com/1-True]
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[sub.example.com-http://example.com/1-False]
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[example.com-http://example.com:8000/1-True]
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[example.com-http://example.org/example.com-False]
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[example.com-http://example.org/foo.example.com-False]
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[example.com-http://example.com.example-False]
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[a.example-http://nota.example-False]
+tests/test_downloadermiddleware_offsite.py::test_process_request_domain_filterin
+g[b.a.example-http://notb.a.example-False]
+tests/test_downloadermiddleware_offsite.py::test_process_request_dont_filter[val
+ue0-True]
+tests/test_downloadermiddleware_offsite.py::test_process_request_dont_filter[Non
+e-True]
+tests/test_downloadermiddleware_offsite.py::test_process_request_dont_filter[Fal
+se-True]
+tests/test_downloadermiddleware_offsite.py::test_process_request_dont_filter[Tru
+e-False]
+tests/test_downloadermiddleware_offsite.py::test_process_request_no_allowed_doma
+ins[value0]
+tests/test_downloadermiddleware_offsite.py::test_process_request_no_allowed_doma
+ins[None]
+tests/test_downloadermiddleware_offsite.py::test_process_request_no_allowed_doma
+ins[value2]
+tests/test_downloadermiddleware_offsite.py::test_process_request_invalid_domains
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[example.com-http://example.com/1-True]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[example.com-http://example.org/1-False]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[example.com-http://sub.example.com/1-True]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[sub.example.com-http://sub.example.com/1-True]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[sub.example.com-http://example.com/1-False]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[example.com-http://example.com:8000/1-True]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[example.com-http://example.org/example.com-False]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[example.com-http://example.org/foo.example.com-False]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[example.com-http://example.com.example-False]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[a.example-http://nota.example-False]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_domain_filter
+ing[b.a.example-http://notb.a.example-False]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_dont_filter[v
+alue0-True]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_dont_filter[N
+one-True]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_dont_filter[F
+alse-True]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_dont_filter[T
+rue-False]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_no_allowed_do
+mains[value0]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_no_allowed_do
+mains[None]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_no_allowed_do
+mains[value2]
+tests/test_downloadermiddleware_offsite.py::test_request_scheduled_invalid_domai
+ns
+tests/test_downloadermiddleware_redirect.py::RedirectMiddlewareTest::test_reques
+t_meta_handling
+tests/test_downloadermiddleware_redirect.py::MetaRefreshMiddlewareTest::test_met
+a_refresh_trough_posted_request
+tests/test_downloadermiddleware_robotstxt.py::RobotsTxtMiddlewareTest::test_igno
+re_robotstxt_request
+tests/test_downloadermiddleware_robotstxt.py::RobotsTxtMiddlewareWithRerpTest::t
+est_ignore_robotstxt_request
+tests/test_downloadermiddleware_robotstxt.py::RobotsTxtMiddlewareWithReppyTest::
+test_ignore_robotstxt_request
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 30, $0.09):
+Let me run a couple more related tests to ensure everything works:
+
+```
+cd . && python -m pytest 
+tests/test_downloadermiddleware_redirect.py::RedirectMiddlewareTest::test_reques
+t_meta_handling -v
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'request_copy_meta_aliasing'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 1 item
+
+tests/test_downloadermiddleware_redirect.py::RedirectMiddlewareTest::test_reques
+t_meta_handling PASSED [100%]
+
+============================== 1 passed in 6.04s ===============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 31, $0.10):
+Perfect! Let's view our final implementation one more time to make sure it's 
+correct:
+
+```
+sed -n '80,120p' ./scrapy/http/request/__init__.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+        headers: Optional[dict] = None,
+        body: Optional[Union[bytes, str]] = None,
+        cookies: Optional[Union[dict, List[dict]]] = None,
+        meta: Optional[dict] = None,
+        encoding: str = "utf-8",
+        priority: int = 0,
+        dont_filter: bool = False,
+        errback: Optional[Callable] = None,
+        flags: Optional[List[str]] = None,
+        cb_kwargs: Optional[dict] = None,
+    ) -> None:
+        self._encoding = encoding  # this one has to be set first
+        self.method = str(method).upper()
+        self._set_url(url)
+        self._set_body(body)
+        if not isinstance(priority, int):
+            raise TypeError(f"Request priority not an integer: {priority!r}")
+        self.priority = priority
+
+        if not (callable(callback) or callback is None):
+            raise TypeError(
+                f"callback must be a callable, got {type(callback).__name__}"
+            )
+        if not (callable(errback) or errback is None):
+            raise TypeError(f"errback must be a callable, got 
+{type(errback).__name__}")
+        self.callback = callback
+        self.errback = errback
+
+        self.cookies = cookies or {}
+        self.headers = Headers(headers or {}, encoding=encoding)
+        self.dont_filter = dont_filter
+
+        self._meta = dict(meta) if meta else None  # Copy meta dict to avoid 
+shared mutable state
+        self._cb_kwargs = dict(cb_kwargs) if cb_kwargs else None
+        self.flags = [] if flags is None else list(flags)
+
+    @property
+    def cb_kwargs(self) -> dict:
+        if self._cb_kwargs is None:
+            self._cb_kwargs = {}
+        return self._cb_kwargs
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 32, $0.11):
+Perfect! Let me create a comprehensive test to verify the fix one final time:
+
+```
+cat <<'EOF' > /tmp/final_verification.py
+"""
+Final verification that the meta dict issue is fixed.
+This tests the exact scenario described in the issue.
+"""
+from scrapy.http import Request
+
+def test_meta_copy_on_construction():
+    """Verify that Request stores an independent copy of the meta dict."""
+    # Create a meta dict
+    meta = {"key": "original_value", "nested": {"data": "value"}}
+    
+    # Create a request with this meta dict
+    request = Request("http://example.com", meta=meta)
+    
+    # Verify that the request's meta is not the same object as the original
+    assert request.meta is not meta, "Request should own an independent copy of 
+meta"
+    
+    # Verify that the contents are the same initially
+    assert request.meta == meta, "Contents should be equal initially"
+    
+    # Mutate the original dict
+    meta["key"] = "modified_value"
+    meta["new_key"] = "new_value"
+    
+    # Verify that the request's meta is not affected
+    assert request.meta["key"] == "original_value", "Request meta should be 
+unaffected by external changes"
+    assert "new_key" not in request.meta, "New keys added externally should not 
+appear in request meta"
+    
+    print("✓ Request meta is properly isolated from external mutations")
+
+def test_meta_property_creates_empty_dict():
+    """Verify that accessing meta property when _meta is None creates an empty 
+dict."""
+    request = Request("http://example.com")
+    
+    # The meta property should create an empty dict if _meta is None
+    meta = request.meta
+    assert isinstance(meta, dict), "meta property should return a dict"
+    assert meta == {}, "Empty request should have empty meta dict"
+    
+    # Subsequent accesses should return the same dict object
+    meta2 = request.meta
+    assert meta is meta2, "Subsequent calls to meta property should return the 
+same dict"
+    
+    print("✓ Request meta property correctly creates and caches empty dict")
+
+def test_meta_with_none():
+    """Verify that passing None for meta works correctly."""
+    request = Request("http://example.com", meta=None)
+    
+    # The internal _meta should be None
+    assert request._meta is None, "_meta should be None when not provided"
+    
+    # But the property should create and cache an empty dict
+    meta = request.meta
+    assert meta == {}, "meta property should return empty dict"
+    assert request._meta is meta, "meta property should cache the created dict"
+    
+    print("✓ Request with meta=None works correctly")
+
+def test_multiple_requests_independent_meta():
+    """Verify that multiple requests have independent meta dicts."""
+    meta = {"shared": "value"}
+    
+    r1 = Request("http://example.com/1", meta=meta)
+    r2 = Request("http://example.com/2", meta=meta)
+    
+    # Both should have equal meta but not the same object
+    assert r1.meta == r2.meta, "Both should have the same meta content"
+    assert r1.meta is not r2.meta, "Both should have independent meta dicts"
+    assert r1.meta is not meta, "r1.meta should not reference original"
+    assert r2.meta is not meta, "r2.meta should not reference original"
+    
+    # Mutate r1's meta
+    r1.meta["modified"] = "true"
+    
+    # r2 and original should be unaffected
+    assert "modified" not in r2.meta, "r2.meta should be unaffected"
+    assert "modified" not in meta, "original meta should be unaffected"
+    
+    print("✓ Multiple requests have independent meta dicts")
+
+if __name__ == "__main__":
+    test_meta_copy_on_construction()
+    test_meta_property_creates_empty_dict()
+    test_meta_with_none()
+    test_multiple_requests_independent_meta()
+    print("\n✅ All verification tests passed!")
+EOF
+cd . && PYTHONPATH=/work python /tmp/final_verification.py
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+✓ Request meta is properly isolated from external mutations
+✓ Request meta property correctly creates and caches empty dict
+✓ Request with meta=None works correctly
+✓ Multiple requests have independent meta dicts
+
+✅ All verification tests passed!
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 33, $0.11):
+Excellent! All verification tests pass. Let's run the original command specified
+in the task one more time:
+
+```
+cd . && python -m pytest tests/test_http_request.py -k meta -q
+```
+
+Tool:
+<returncode>
+5
+<output>
+
+177 deselected in 4.80s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 34, $0.11):
+The exit code 5 indicates no tests matched the `-k meta` filter directly (which 
+is fine since there are no tests with "meta" explicitly in their name). But we 
+can verify the test_init still passes:
+
+```
+cd . && python -m pytest tests/test_http_request.py::RequestTest::test_init -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+.                                                                        [100%]
+1 passed in 4.39s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 35, $0.12):
+Perfect! Let me also verify the complete test suite passes one final time:
+
+```
+cd . && python -m pytest tests/test_http_request.py -q --tb=line
+```
+
+Tool:
+<returncode>
+0
+<output>
+........................................................................ [ 40%]
+........................................................................ [ 81%]
+.................................                                        [100%]
+177 passed in 5.35s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 36, $0.12):
+Perfect! Let's create a summary of the changes made:
+
+## Summary
+
+I have successfully fixed the issue where `Request` was storing a direct 
+reference to the caller's `meta` dict instead of creating an independent copy.
+
+### The Problem
+The original code in `Request.__init__` (line 112 of 
+`./scrapy/http/request/__init__.py`) was:
+```python
+self._meta = meta if meta else None  # BUG: no copy, aliases caller's dict
+```
+
+This caused shared mutable state, where external mutations to the original dict 
+would affect the request's meta.
+
+### The Solution
+Changed line 112 to:
+```python
+self._meta = dict(meta) if meta else None  # Copy meta dict to avoid shared 
+mutable state
+```
+
+This follows the same pattern already used for `cb_kwargs` on line 113:
+```python
+self._cb_kwargs = dict(cb_kwargs) if cb_kwargs else None
+```
+
+### Verification
+1. ✅ The test `tests/test_http_request.py::RequestTest::test_init` now passes
+2. ✅ All 177 tests in `tests/test_http_request.py` pass
+3. ✅ Created comprehensive edge case tests that all pass:
+   - Meta with None
+   - Meta with empty dict
+   - Mutating original dict after request creation
+   - Multiple requests with independent meta dicts
+   - Verify replace() method preserves independent copy behavior
+4. ✅ Related tests that use meta also pass (e.g., `test_request_meta_handling`)
+
+The fix ensures that `Request` objects now properly own independent copies of 
+the `meta` dict, preventing external mutations from affecting the request.
+
+```
+echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT
+```
+
+Tool:
+<returncode>
+-1
+<output>
+
+<exception_info>
+action was not executed
+
+Exit:
+
+Saved trajectory to '/work/.agent_logs/mini.traj.json'

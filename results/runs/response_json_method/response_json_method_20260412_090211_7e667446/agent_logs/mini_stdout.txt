@@ -1,0 +1,1748 @@
+Building agent config from specs: ['mini.yaml', 'environment.cwd=/work']
+
+System:
+You are a helpful assistant that can interact with a computer.
+
+User:
+Please solve this issue: `scrapy.http.TextResponse` should have a `.json()` 
+method that parses
+the response body as JSON (similar to `requests.Response.json()`).
+
+Add `TextResponse.json()` so that:
+- It returns the parsed Python object (dict, list, etc.)
+- It raises `ValueError` (or `json.JSONDecodeError`) if the body is not valid 
+JSON
+- It does not change any existing behavior
+
+Verify with: pytest tests/test_http_response.py -k json -q
+
+
+You can execute bash commands and edit files to implement the necessary changes.
+
+## Recommended Workflow
+
+This workflow should be done step-by-step so that you can iterate on your 
+changes and any possible problems.
+
+1. Analyze the codebase by finding and reading relevant files
+2. Create a script to reproduce the issue
+3. Edit the source code to resolve the issue
+4. Verify your fix works by running your script again
+5. Test edge cases to ensure your fix is robust
+6. Submit your changes and finish your work by issuing the following command: 
+`echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`.
+   Do not combine it with any other command. <important>After this command, you 
+cannot continue working on this task.</important>
+
+## Command Execution Rules
+
+You are operating in an environment where
+
+1. You issue at least one command
+2. The system executes the command(s) in a subshell
+3. You see the result(s)
+4. You write your next command(s)
+
+Each response should include:
+
+1. **Reasoning text** where you explain your analysis and plan
+2. At least one tool call with your command
+
+**CRITICAL REQUIREMENTS:**
+
+- Your response SHOULD include reasoning text explaining what you're doing
+- Your response MUST include AT LEAST ONE bash tool call
+- Directory or environment variable changes are not persistent. Every action is 
+executed in a new subshell.
+- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd 
+/path/to/working/dir && ...` or write/load environment variables from files
+- Submit your changes and finish your work by issuing the following command: 
+`echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`.
+  Do not combine it with any other command. <important>After this command, you 
+cannot continue working on this task.</important>
+
+Example of a CORRECT response:
+<example_response>
+I need to understand the structure of the repository first. Let me check what 
+files are in the current directory to get a better understanding of the 
+codebase.
+
+[Makes bash tool call with {"command": "ls -la"} as arguments]
+</example_response>
+
+<system_information>
+Linux 6.10.14-linuxkit #1 SMP PREEMPT_DYNAMIC Sat May 17 08:29:19 UTC 2025 
+x86_64
+</system_information>
+
+## Useful command examples
+
+### Create a new file:
+
+```bash
+cat <<'EOF' > newfile.py
+import numpy as np
+hello = "world"
+print(hello)
+EOF
+```
+
+### Edit files with sed:```bash
+# Replace all occurrences
+sed -i 's/old_string/new_string/g' filename.py
+
+# Replace only first occurrence
+sed -i 's/old_string/new_string/' filename.py
+
+# Replace first occurrence on line 1
+sed -i '1s/old_string/new_string/' filename.py
+
+# Replace all occurrences in lines 1-10
+sed -i '1,10s/old_string/new_string/g' filename.py
+```
+
+### View file content:
+
+```bash
+# View specific lines with numbers
+nl -ba filename.py | sed -n '10,20p'
+```
+
+### Any other command you want to run
+
+```bash
+anything
+```
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 1, $0.00):
+I'll solve this step-by-step. Let me start by analyzing the codebase to 
+understand the structure and locate the relevant files.
+
+```
+find . -type f -name "*.py" | grep -E "(response|http)" | head -20
+```
+
+Tool:
+<returncode>
+0
+<output>
+./scrapy/core/downloader/handlers/http.py
+./scrapy/core/downloader/handlers/http10.py
+./scrapy/core/downloader/handlers/http11.py
+./scrapy/core/downloader/handlers/http2.py
+./scrapy/core/http2/__init__.py
+./scrapy/core/http2/agent.py
+./scrapy/core/http2/protocol.py
+./scrapy/core/http2/stream.py
+./scrapy/downloadermiddlewares/httpauth.py
+./scrapy/downloadermiddlewares/httpcache.py
+./scrapy/downloadermiddlewares/httpcompression.py
+./scrapy/downloadermiddlewares/httpproxy.py
+./scrapy/extensions/httpcache.py
+./scrapy/http/__init__.py
+./scrapy/http/common.py
+./scrapy/http/cookies.py
+./scrapy/http/headers.py
+./scrapy/http/request/__init__.py
+./scrapy/http/request/form.py
+./scrapy/http/request/json_request.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 2, $0.00):
+Let me find the response-related files:
+
+```
+find . -type f -name "*response*.py" | head -20
+```
+
+Tool:
+<returncode>
+0
+<output>
+./scrapy/responsetypes.py
+./scrapy/utils/response.py
+./tests/test_http_response.py
+./tests/test_responsetypes.py
+./tests/test_utils_response.py
+./tests/test_visible_response_json_method_0.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 3, $0.01):
+Now let me check the http module structure and find the TextResponse class:
+
+```
+ls -la scrapy/http/
+```
+
+Tool:
+<returncode>
+0
+<output>
+total 20
+drwxr-xr-x  8 root root  256 Apr 12 04:46 .
+drwxr-xr-x 44 root root 1408 Apr 12 04:46 ..
+-rw-r--r--  1 root root  600 Apr 12 04:46 __init__.py
+-rw-r--r--  1 root root  240 Apr 12 04:46 common.py
+-rw-r--r--  1 root root 5811 Apr 12 04:46 cookies.py
+-rw-r--r--  1 root root 2896 Apr 12 04:46 headers.py
+drwxr-xr-x  6 root root  192 Apr 12 04:46 request
+drwxr-xr-x  6 root root  192 Apr 12 04:46 response
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 4, $0.01):
+```
+ls -la scrapy/http/response/
+```
+
+Tool:
+<returncode>
+0
+<output>
+total 28
+drwxr-xr-x 6 root root   192 Apr 12 04:46 .
+drwxr-xr-x 8 root root   256 Apr 12 04:46 ..
+-rw-r--r-- 1 root root  7488 Apr 12 04:46 __init__.py
+-rw-r--r-- 1 root root   300 Apr 12 04:46 html.py
+-rw-r--r-- 1 root root 10244 Apr 12 04:46 text.py
+-rw-r--r-- 1 root root   297 Apr 12 04:46 xml.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 5, $0.01):
+Good! Now let me check the TextResponse class in text.py:
+
+```
+cat scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output_head>
+"""
+This module implements the TextResponse class which adds encoding handling and
+discovering (through HTTP headers) to base Response class.
+
+See documentation in docs/topics/request-response.rst
+"""
+from __future__ import annotations
+
+import json
+from contextlib import suppress
+from typing import TYPE_CHECKING, Any, Generator, Optional, Tuple
+from urllib.parse import urljoin
+
+import parsel
+from w3lib.encoding import (
+    html_body_declared_encoding,
+    html_to_unicode,
+    http_content_type_encoding,
+    read_bom,
+    resolve_encoding,
+)
+from w3lib.html import strip_html5_whitespace
+
+from scrapy.http import Request
+from scrapy.http.response import Response
+from scrapy.utils.python import memoizemethod_noargs, to_unicode
+from scrapy.utils.response import get_base_url
+
+if TYPE_CHECKING:
+    from scrapy.selector import Selector
+
+_NONE = object()
+
+
+class TextResponse(Response):
+    _DEFAULT_ENCODING = "ascii"
+    _cached_decoded_json = _NONE
+
+    attributes: Tuple[str, ...] = Response.attributes + ("encoding",)
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        self._encoding = kwargs.pop("encoding", None)
+        self._cached_benc: Optional[str] = None
+        self._cached_ubody: Optional[str] = None
+        self._cached_selector: Optional[Selector] = None
+        super().__init__(*args, **kwargs)
+
+    def _set_url(self, url):
+        if isinstance(url, str):
+            self._url = to_unicode(url, self.encoding)
+        else:
+            super()._set_url(url)
+
+    def _set_body(self, body):
+        self._body = b""  # used by encoding detection
+        if isinstance(body, str):
+            if self._encoding is None:
+                raise TypeError(
+                    "Cannot convert unicode body - "
+                    f"{type(self).__name__} has no encoding"
+                )
+            self._body = body.encode(self._encoding)
+        else:
+            super()._set_body(body)
+
+    @property
+    def encoding(self):
+        return self._declared_encoding() or self._body_inferred_encoding()
+
+    def _declared_encoding(self):
+        return (
+            self._encoding
+            or self._bom_encoding()
+            or self._headers_encoding()
+            or self._body_declared_encoding()
+        )
+
+    def json(self):
+        """
+        .. versionadded:: 2.2
+
+        Deserialize a JSON document to a Python object.
+        """
+        if self._cached_decoded_json is _NONE:
+            self._cached_decoded_json = json.loads(self.body)
+        return self._cached_decoded_json
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = f"charset={benc}"
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody
+
+    def urljoin(self, url):
+        """Join this Response's url with a possible relative url to form an
+        absolute interpretation of the latter."""
+        return urljoin(get_base_url(self), url)
+
+    @memoizemethod_noargs
+    def _headers_encoding(self):
+        content_type = self.headers.get(b"Content-Type", b"")
+        return http_content_type_encoding(to_unicode(content_type, 
+encoding="latin-1"))
+
+    def _body_inferred_encoding(self):
+        if self._cached_benc is None:
+            content_type = to_unicode(
+                self.headers.get(b"Content-Type", b""), encoding="latin-1"
+            )
+            benc, ubody = html_to_unicode(
+                content_type,
+                self.body,
+                auto_detect_fun=self._auto_detect_fun,
+                default_encoding=self._DEFAULT_ENCODING,
+            )
+            self._cached_benc = benc
+            self._cached_ubody = ubody
+        return self._cached_benc
+
+    def _auto_detect_fun(self, text):
+        for enc in (self._DEFAULT_ENCODING, "utf-8", "cp1252"):
+            try:
+                text.decode(enc)
+            except UnicodeError:
+                continue
+            return resolve_encoding(enc)
+
+    @memoizemethod_noargs
+    def _body_declared_encoding(self):
+        return html_body_declared_encoding(self.body)
+
+    @memoizemethod_noargs
+    def _bom_encoding(self):
+        return read_bom(self.body)[0]
+
+    @property
+    def selector(self):
+        from scrapy.selector import Selector
+
+        if self._cached_selector is None:
+            self._cached_selector = Selector(self)
+        return self._cached_selector
+
+    def jmespath(self, query, **kwargs):
+        if not hasattr(self.selector, "jmespath"):  # type: ignore[attr-defined]
+            raise AttributeError(
+                "Please install parsel >= 1.8.1 to get jmespath support"
+            )
+
+        return self.selector.jmespath(query, **kwargs)  # type: 
+ignore[attr-defined]
+
+    def xpath(self, query, **kwargs):
+        return self.selector.xpath(query, **kwargs)
+
+    def css(self, 
+<output_tail>
+      priority=0,
+        dont_filter=False,
+        errback=None,
+        cb_kwargs=None,
+        flags=None,
+    ) -> Request:
+        """
+        Return a :class:`~.Request` instance to follow a link ``url``.
+        It accepts the same arguments as ``Request.__init__`` method,
+        but ``url`` can be not only an absolute URL, but also
+
+        * a relative URL
+        * a :class:`~scrapy.link.Link` object, e.g. the result of
+          :ref:`topics-link-extractors`
+        * a :class:`~scrapy.selector.Selector` object for a ``<link>`` or 
+``<a>`` element, e.g.
+          ``response.css('a.my_link')[0]``
+        * an attribute :class:`~scrapy.selector.Selector` (not SelectorList), 
+e.g.
+          ``response.css('a::attr(href)')[0]`` or
+          ``response.xpath('//img/@src')[0]``
+
+        See :ref:`response-follow-example` for usage examples.
+        """
+        if isinstance(url, parsel.Selector):
+            url = _url_from_selector(url)
+        elif isinstance(url, parsel.SelectorList):
+            raise ValueError("SelectorList is not supported")
+        encoding = self.encoding if encoding is None else encoding
+        return super().follow(
+            url=url,
+            callback=callback,
+            method=method,
+            headers=headers,
+            body=body,
+            cookies=cookies,
+            meta=meta,
+            encoding=encoding,
+            priority=priority,
+            dont_filter=dont_filter,
+            errback=errback,
+            cb_kwargs=cb_kwargs,
+            flags=flags,
+        )
+
+    def follow_all(
+        self,
+        urls=None,
+        callback=None,
+        method="GET",
+        headers=None,
+        body=None,
+        cookies=None,
+        meta=None,
+        encoding=None,
+        priority=0,
+        dont_filter=False,
+        errback=None,
+        cb_kwargs=None,
+        flags=None,
+        css=None,
+        xpath=None,
+    ) -> Generator[Request, None, None]:
+        """
+        A generator that produces :class:`~.Request` instances to follow all
+        links in ``urls``. It accepts the same arguments as the 
+:class:`~.Request`'s
+        ``__init__`` method, except that each ``urls`` element does not need to 
+be
+        an absolute URL, it can be any of the following:
+
+        * a relative URL
+        * a :class:`~scrapy.link.Link` object, e.g. the result of
+          :ref:`topics-link-extractors`
+        * a :class:`~scrapy.selector.Selector` object for a ``<link>`` or 
+``<a>`` element, e.g.
+          ``response.css('a.my_link')[0]``
+        * an attribute :class:`~scrapy.selector.Selector` (not SelectorList), 
+e.g.
+          ``response.css('a::attr(href)')[0]`` or
+          ``response.xpath('//img/@src')[0]``
+
+        In addition, ``css`` and ``xpath`` arguments are accepted to perform the
+link extraction
+        within the ``follow_all`` method (only one of ``urls``, ``css`` and 
+``xpath`` is accepted).
+
+        Note that when passing a ``SelectorList`` as argument for the ``urls`` 
+parameter or
+        using the ``css`` or ``xpath`` parameters, this method will not produce 
+requests for
+        selectors from which links cannot be obtained (for instance, anchor tags
+without an
+        ``href`` attribute)
+        """
+        arguments = [x for x in (urls, css, xpath) if x is not None]
+        if len(arguments) != 1:
+            raise ValueError(
+                "Please supply exactly one of the following arguments: urls, 
+css, xpath"
+            )
+        if not urls:
+            if css:
+                urls = self.css(css)
+            if xpath:
+                urls = self.xpath(xpath)
+        if isinstance(urls, parsel.SelectorList):
+            selectors = urls
+            urls = []
+            for sel in selectors:
+                with suppress(_InvalidSelector):
+                    urls.append(_url_from_selector(sel))
+        return super().follow_all(
+            urls=urls,
+            callback=callback,
+            method=method,
+            headers=headers,
+            body=body,
+            cookies=cookies,
+            meta=meta,
+            encoding=encoding,
+            priority=priority,
+            dont_filter=dont_filter,
+            errback=errback,
+            cb_kwargs=cb_kwargs,
+            flags=flags,
+        )
+
+
+class _InvalidSelector(ValueError):
+    """
+    Raised when a URL cannot be obtained from a Selector
+    """
+
+
+def _url_from_selector(sel):
+    # type: (parsel.Selector) -> str
+    if isinstance(sel.root, str):
+        # e.g. ::attr(href) result
+        return strip_html5_whitespace(sel.root)
+    if not hasattr(sel.root, "tag"):
+        raise _InvalidSelector(f"Unsupported selector: {sel}")
+    if sel.root.tag not in ("a", "link"):
+        raise _InvalidSelector(
+            "Only <a> and <link> elements are supported; " f"got 
+<{sel.root.tag}>"
+        )
+    href = sel.root.get("href")
+    if href is None:
+        raise _InvalidSelector(f"<{sel.root.tag}> element has no href attribute:
+{sel}")
+    return strip_html5_whitespace(href)
+
+<elided_chars>
+244
+<warning>
+Output too long.
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 6, $0.02):
+Perfect! I can see that the `json()` method already exists in the TextResponse 
+class (lines 75-81). Now let me check the test file to understand what tests are
+expected:
+
+```
+cat tests/test_http_response.py | grep -A 30 "def test.*json"
+```
+
+Tool:
+<returncode>
+0
+<output>
+    def test_json_response(self):
+        json_body = b"""{"ip": "109.187.217.200"}"""
+        json_response = self.response_class("http://www.example.com", 
+body=json_body)
+        self.assertEqual(json_response.json(), {"ip": "109.187.217.200"})
+
+        text_body = b"""<html><body>text</body></html>"""
+        text_response = self.response_class("http://www.example.com", 
+body=text_body)
+        with self.assertRaises(ValueError):
+            text_response.json()
+
+    def test_cache_json_response(self):
+        json_valid_bodies = [b"""{"ip": "109.187.217.200"}""", b"""null"""]
+        for json_body in json_valid_bodies:
+            json_response = self.response_class(
+                "http://www.example.com", body=json_body
+            )
+
+            with mock.patch("json.loads") as mock_json:
+                for _ in range(2):
+                    json_response.json()
+                mock_json.assert_called_once_with(json_body)
+
+
+class HtmlResponseTest(TextResponseTest):
+    response_class = HtmlResponse
+
+    def test_html_encoding(self):
+        body = b"""<html><head><title>Some page</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+        </head><body>Price: \xa3100</body></html>'
+        """
+        r1 = self.response_class("http://www.example.com", body=body)
+        self._assert_response_values(r1, "iso-8859-1", body)
+
+        body = b"""<?xml version="1.0" encoding="iso-8859-1"?>
+        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" 
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+        Price: \xa3100
+        """
+        r2 = self.response_class("http://www.example.com", body=body)
+        self._assert_response_values(r2, "iso-8859-1", body)
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 7, $0.02):
+Good! Now let me see if there's a test file specifically for the visible 
+response json method:
+
+```
+cat tests/test_visible_response_json_method_0.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+from scrapy.http import TextResponse
+
+def test_response_json_dict():
+    r = TextResponse('https://api.example.com/', body=b'{"key": "value"}',
+                      encoding='utf-8')
+    data = r.json()
+    assert data == {'key': 'value'}
+
+def test_response_json_list():
+    r = TextResponse('https://api.example.com/', body=b'[1, 2, 3]',
+                      encoding='utf-8')
+    assert r.json() == [1, 2, 3]
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 8, $0.02):
+Now let me run the tests to see if they pass:
+
+```
+cd /tmp && python -m pytest 
+tests/test_http_response.py::TextResponseTest::test_json_response -xvs 2>&1 | 
+head -100
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'response_json_method'}
+rootdir: /tmp
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 0 items
+
+============================ no tests ran in 0.04s =============================
+ERROR: file or directory not found: 
+tests/test_http_response.py::TextResponseTest::test_json_response
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 9, $0.03):
+Let me find where the tests are located:
+
+```
+find . -name "test_http_response.py" -type f
+```
+
+Tool:
+<returncode>
+0
+<output>
+./tests/test_http_response.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 10, $0.03):
+```
+pwd
+```
+
+Tool:
+<returncode>
+0
+<output>
+/work
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 11, $0.03):
+```
+cd /work && python -m pytest tests/test_http_response.py -k json -v 2>&1 | head 
+-100
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'response_json_method'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 238 items / 230 deselected / 8 selected
+
+tests/test_http_response.py::TextResponseTest::test_cache_json_response PASSED [
+12%]
+tests/test_http_response.py::TextResponseTest::test_json_response PASSED [ 25%]
+tests/test_http_response.py::HtmlResponseTest::test_cache_json_response PASSED [
+37%]
+tests/test_http_response.py::HtmlResponseTest::test_json_response PASSED [ 50%]
+tests/test_http_response.py::XmlResponseTest::test_cache_json_response PASSED [ 
+62%]
+tests/test_http_response.py::XmlResponseTest::test_json_response PASSED  [ 75%]
+tests/test_http_response.py::CustomResponseTest::test_cache_json_response PASSED
+[ 87%]
+tests/test_http_response.py::CustomResponseTest::test_json_response PASSED 
+[100%]
+
+====================== 8 passed, 230 deselected in 4.42s =======================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 12, $0.03):
+Excellent! The tests are passing. Let me also check the visible test file:
+
+```
+cd /work && python -m pytest tests/test_visible_response_json_method_0.py -v
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'response_json_method'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 2 items
+
+tests/test_visible_response_json_method_0.py::test_response_json_dict PASSED [ 
+50%]
+tests/test_visible_response_json_method_0.py::test_response_json_list PASSED 
+[100%]
+
+============================== 2 passed in 1.54s ===============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 13, $0.03):
+Perfect! Let me review the current implementation in more detail:
+
+```
+cd /work && sed -n '70,85p' scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+    def _declared_encoding(self):
+        return (
+            self._encoding
+            or self._bom_encoding()
+            or self._headers_encoding()
+            or self._body_declared_encoding()
+        )
+
+    def json(self):
+        """
+        .. versionadded:: 2.2
+
+        Deserialize a JSON document to a Python object.
+        """
+        if self._cached_decoded_json is _NONE:
+            self._cached_decoded_json = json.loads(self.body)
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 14, $0.04):
+Now I notice there's an issue with the implementation! It returns the cached 
+value but doesn't have a return statement. Let me check the complete method:
+
+```
+cd /work && sed -n '78,85p' scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+    def json(self):
+        """
+        .. versionadded:: 2.2
+
+        Deserialize a JSON document to a Python object.
+        """
+        if self._cached_decoded_json is _NONE:
+            self._cached_decoded_json = json.loads(self.body)
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 15, $0.04):
+I see the issue - the method doesn't have a return statement. Let me check if 
+it's supposed to be returning something:
+
+```
+cd /work && sed -n '78,90p' scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+    def json(self):
+        """
+        .. versionadded:: 2.2
+
+        Deserialize a JSON document to a Python object.
+        """
+        if self._cached_decoded_json is _NONE:
+            self._cached_decoded_json = json.loads(self.body)
+        return self._cached_decoded_json
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 16, $0.04):
+Great! The implementation is already correct with the return statement. Let me 
+verify the whole implementation is complete and correct by testing it manually:
+
+```
+cd /work && python3 << 'EOF'
+from scrapy.http import TextResponse
+
+# Test 1: Valid JSON dict
+r1 = TextResponse('https://api.example.com/', body=b'{"key": "value"}', 
+encoding='utf-8')
+result1 = r1.json()
+print(f"Test 1 - Valid JSON dict: {result1}")
+assert result1 == {'key': 'value'}, "Failed to parse JSON dict"
+
+# Test 2: Valid JSON list
+r2 = TextResponse('https://api.example.com/', body=b'[1, 2, 3]', 
+encoding='utf-8')
+result2 = r2.json()
+print(f"Test 2 - Valid JSON list: {result2}")
+assert result2 == [1, 2, 3], "Failed to parse JSON list"
+
+# Test 3: Invalid JSON should raise ValueError
+r3 = TextResponse('https://api.example.com/', body=b'<html></html>', 
+encoding='utf-8')
+try:
+    r3.json()
+    print("Test 3 - FAILED: Should have raised ValueError")
+except ValueError as e:
+    print(f"Test 3 - Invalid JSON raises ValueError: {type(e).__name__}")
+
+# Test 4: Caching - call json() twice and verify same object returned
+r4 = TextResponse('https://api.example.com/', body=b'null', encoding='utf-8')
+result4a = r4.json()
+result4b = r4.json()
+print(f"Test 4 - Caching works: {result4a is result4b}")
+assert result4a is result4b, "Caching not working properly"
+
+print("\nAll manual tests passed!")
+EOF
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+Test 1 - Valid JSON dict: {'key': 'value'}
+Test 2 - Valid JSON list: [1, 2, 3]
+Test 3 - Invalid JSON raises ValueError: JSONDecodeError
+Test 4 - Caching works: True
+
+All manual tests passed!
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 17, $0.04):
+Perfect! The implementation is complete and working. Let me run all the tests 
+one more time to ensure everything is working correctly:
+
+```
+cd /work && python -m pytest tests/test_http_response.py -k json -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+........                                                                 [100%]
+8 passed, 230 deselected in 3.83s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 18, $0.04):
+Excellent! Let me also test the visible test file:
+
+```
+cd /work && python -m pytest tests/test_visible_response_json_method_0.py -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+..                                                                       [100%]
+2 passed in 2.89s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 19, $0.05):
+Perfect! Let me create a comprehensive test script to verify all the 
+requirements are met:
+
+```
+cd /work && python3 << 'EOF'
+"""
+Comprehensive test to verify the TextResponse.json() method implementation.
+"""
+from scrapy.http import TextResponse, HtmlResponse, XmlResponse
+import json as json_module
+
+print("=" * 80)
+print("Testing TextResponse.json() Method Implementation")
+print("=" * 80)
+
+# Requirement 1: Returns the parsed Python object
+print("\n1. Testing that json() returns parsed Python object:")
+print("-" * 80)
+
+# Test dict
+r = TextResponse('https://api.example.com/', body=b'{"key": "value"}', 
+encoding='utf-8')
+result = r.json()
+print(f"   ✓ Returns dict: {isinstance(result, dict)}")
+assert isinstance(result, dict) and result == {'key': 'value'}
+
+# Test list
+r = TextResponse('https://api.example.com/', body=b'[1, 2, 3]', 
+encoding='utf-8')
+result = r.json()
+print(f"   ✓ Returns list: {isinstance(result, list)}")
+assert isinstance(result, list) and result == [1, 2, 3]
+
+# Test null
+r = TextResponse('https://api.example.com/', body=b'null', encoding='utf-8')
+result = r.json()
+print(f"   ✓ Returns None for null: {result is None}")
+assert result is None
+
+# Test string
+r = TextResponse('https://api.example.com/', body=b'"hello"', encoding='utf-8')
+result = r.json()
+print(f"   ✓ Returns string: {isinstance(result, str)}")
+assert isinstance(result, str) and result == 'hello'
+
+# Test number
+r = TextResponse('https://api.example.com/', body=b'42', encoding='utf-8')
+result = r.json()
+print(f"   ✓ Returns number: {isinstance(result, int)}")
+assert isinstance(result, int) and result == 42
+
+# Requirement 2: Raises ValueError/JSONDecodeError for invalid JSON
+print("\n2. Testing that json() raises error for invalid JSON:")
+print("-" * 80)
+
+r = TextResponse('https://api.example.com/', body=b'<html></html>', 
+encoding='utf-8')
+try:
+    r.json()
+    print("   ✗ FAILED: Should have raised an error")
+    exit(1)
+except (ValueError, json_module.JSONDecodeError) as e:
+    print(f"   ✓ Raises {type(e).__name__} for invalid JSON")
+
+r = TextResponse('https://api.example.com/', body=b'{invalid json}', 
+encoding='utf-8')
+try:
+    r.json()
+    print("   ✗ FAILED: Should have raised an error")
+    exit(1)
+except (ValueError, json_module.JSONDecodeError) as e:
+    print(f"   ✓ Raises {type(e).__name__} for invalid JSON syntax")
+
+# Requirement 3: Does not change any existing behavior
+print("\n3. Testing that existing behavior is preserved:")
+print("-" * 80)
+
+# Test caching
+r = TextResponse('https://api.example.com/', body=b'{"test": 1}', 
+encoding='utf-8')
+result1 = r.json()
+result2 = r.json()
+print(f"   ✓ Caching works (same object): {result1 is result2}")
+assert result1 is result2
+
+# Test with different response types
+html_r = HtmlResponse('https://api.example.com/', body=b'{"test": 1}', 
+encoding='utf-8')
+html_result = html_r.json()
+print(f"   ✓ Works with HtmlResponse: {html_result == {'test': 1}}")
+assert html_result == {'test': 1}
+
+xml_r = XmlResponse('https://api.example.com/', body=b'{"test": 1}', 
+encoding='utf-8')
+xml_result = xml_r.json()
+print(f"   ✓ Works with XmlResponse: {xml_result == {'test': 1}}")
+assert xml_result == {'test': 1}
+
+# Test that other response properties still work
+r = TextResponse('https://api.example.com/', body=b'{"key": "value"}', 
+encoding='utf-8')
+_ = r.json()  # Call json first
+assert r.text == '{"key": "value"}', "text property broken"
+print(f"   ✓ Other properties still work (text property)")
+
+print("\n" + "=" * 80)
+print("✓ All tests passed successfully!")
+print("=" * 80)
+EOF
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+================================================================================
+Testing TextResponse.json() Method Implementation
+================================================================================
+
+1. Testing that json() returns parsed Python object:
+--------------------------------------------------------------------------------
+   ✓ Returns dict: True
+   ✓ Returns list: True
+   ✓ Returns None for null: True
+   ✓ Returns string: True
+   ✓ Returns number: True
+
+2. Testing that json() raises error for invalid JSON:
+--------------------------------------------------------------------------------
+   ✓ Raises JSONDecodeError for invalid JSON
+   ✓ Raises JSONDecodeError for invalid JSON syntax
+
+3. Testing that existing behavior is preserved:
+--------------------------------------------------------------------------------
+   ✓ Caching works (same object): True
+   ✓ Works with HtmlResponse: True
+   ✓ Works with XmlResponse: True
+   ✓ Other properties still work (text property)
+
+================================================================================
+✓ All tests passed successfully!
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 20, $0.06):
+Perfect! Let me run the final verification with the exact command requested:
+
+```
+cd /work && pytest tests/test_http_response.py -k json -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+........                                                                 [100%]
+8 passed, 230 deselected in 1.25s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 21, $0.06):
+Excellent! Let me also verify the implementation once more by looking at the 
+actual code:
+
+```
+cd /work && sed -n '1,100p' scrapy/http/response/text.py | tail -50
+```
+
+Tool:
+<returncode>
+0
+<output>
+        else:
+            super()._set_url(url)
+
+    def _set_body(self, body):
+        self._body = b""  # used by encoding detection
+        if isinstance(body, str):
+            if self._encoding is None:
+                raise TypeError(
+                    "Cannot convert unicode body - "
+                    f"{type(self).__name__} has no encoding"
+                )
+            self._body = body.encode(self._encoding)
+        else:
+            super()._set_body(body)
+
+    @property
+    def encoding(self):
+        return self._declared_encoding() or self._body_inferred_encoding()
+
+    def _declared_encoding(self):
+        return (
+            self._encoding
+            or self._bom_encoding()
+            or self._headers_encoding()
+            or self._body_declared_encoding()
+        )
+
+    def json(self):
+        """
+        .. versionadded:: 2.2
+
+        Deserialize a JSON document to a Python object.
+        """
+        if self._cached_decoded_json is _NONE:
+            self._cached_decoded_json = json.loads(self.body)
+        return self._cached_decoded_json
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = f"charset={benc}"
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody
+
+    def urljoin(self, url):
+        """Join this Response's url with a possible relative url to form an
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 22, $0.06):
+Perfect! Let me create one final comprehensive documentation of the 
+implementation:
+
+```
+cd /work && python3 << 'EOF'
+"""
+Final verification of TextResponse.json() implementation
+"""
+
+print("\n" + "=" * 80)
+print("IMPLEMENTATION SUMMARY: TextResponse.json() Method")
+print("=" * 80)
+
+print("""
+Location: scrapy/http/response/text.py
+
+Implementation Details:
+-----------------------
+1. Method: json()
+   - Returns: Parsed Python object (dict, list, str, number, None, bool)
+   - Raises: json.JSONDecodeError (subclass of ValueError) for invalid JSON
+   - Caching: Results are cached in _cached_decoded_json instance variable
+   - Encoding: Uses self.body which is already in bytes
+
+2. Features:
+   ✓ Returns parsed Python object from JSON string
+   ✓ Raises json.JSONDecodeError (which is a ValueError) on invalid JSON
+   ✓ Caches results to avoid re-parsing
+   ✓ Works with all Response subclasses (TextResponse, HtmlResponse, 
+XmlResponse)
+   ✓ Does not change any existing behavior
+
+3. Backward Compatibility:
+   ✓ No existing code is broken
+   ✓ Similar to requests.Response.json()
+   ✓ Introduced in Scrapy 2.2 (version marker in docstring)
+
+4. Test Coverage:
+   ✓ Valid JSON (dict, list, null, string, number)
+   ✓ Invalid JSON raises ValueError/JSONDecodeError
+   ✓ Caching works correctly
+   ✓ Works with different response types
+   ✓ All 8 json-related tests pass
+""")
+
+print("=" * 80)
+print("VERIFICATION STATUS: ✓ COMPLETE AND WORKING")
+print("=" * 80 + "\n")
+EOF
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+================================================================================
+IMPLEMENTATION SUMMARY: TextResponse.json() Method
+================================================================================
+
+Location: scrapy/http/response/text.py
+
+Implementation Details:
+-----------------------
+1. Method: json()
+   - Returns: Parsed Python object (dict, list, str, number, None, bool)
+   - Raises: json.JSONDecodeError (subclass of ValueError) for invalid JSON
+   - Caching: Results are cached in _cached_decoded_json instance variable
+   - Encoding: Uses self.body which is already in bytes
+
+2. Features:
+   ✓ Returns parsed Python object from JSON string
+   ✓ Raises json.JSONDecodeError (which is a ValueError) on invalid JSON
+   ✓ Caches results to avoid re-parsing
+   ✓ Works with all Response subclasses (TextResponse, HtmlResponse, 
+XmlResponse)
+   ✓ Does not change any existing behavior
+
+3. Backward Compatibility:
+   ✓ No existing code is broken
+   ✓ Similar to requests.Response.json()
+   ✓ Introduced in Scrapy 2.2 (version marker in docstring)
+
+4. Test Coverage:
+   ✓ Valid JSON (dict, list, null, string, number)
+   ✓ Invalid JSON raises ValueError/JSONDecodeError
+   ✓ Caching works correctly
+   ✓ Works with different response types
+   ✓ All 8 json-related tests pass
+
+================================================================================
+VERIFICATION STATUS: ✓ COMPLETE AND WORKING
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 23, $0.07):
+Perfect! Let me run one final comprehensive test to ensure everything is 
+working:
+
+```
+cd /work && python -m pytest tests/test_http_response.py 
+tests/test_visible_response_json_method_0.py -k json -v
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'response_json_method'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 240 items / 230 deselected / 10 selected
+
+tests/test_http_response.py::TextResponseTest::test_cache_json_response PASSED [
+10%]
+tests/test_http_response.py::TextResponseTest::test_json_response PASSED [ 20%]
+tests/test_http_response.py::HtmlResponseTest::test_cache_json_response PASSED [
+30%]
+tests/test_http_response.py::HtmlResponseTest::test_json_response PASSED [ 40%]
+tests/test_http_response.py::XmlResponseTest::test_cache_json_response PASSED [ 
+50%]
+tests/test_http_response.py::XmlResponseTest::test_json_response PASSED  [ 60%]
+tests/test_http_response.py::CustomResponseTest::test_cache_json_response PASSED
+[ 70%]
+tests/test_http_response.py::CustomResponseTest::test_json_response PASSED [ 
+80%]
+tests/test_visible_response_json_method_0.py::test_response_json_dict PASSED [ 
+90%]
+tests/test_visible_response_json_method_0.py::test_response_json_list PASSED 
+[100%]
+
+====================== 10 passed, 230 deselected in 1.56s ======================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 24, $0.07):
+Perfect! All tests pass. Let me verify the implementation one more time by 
+inspecting the actual code:
+
+```
+cd /work && python3 << 'EOF'
+import inspect
+from scrapy.http import TextResponse
+
+# Get the json method
+json_method = TextResponse.json
+
+print("TextResponse.json() Method Signature:")
+print(f"  {json_method.__name__}{inspect.signature(json_method)}")
+
+print("\nDocstring:")
+print(f"  {json_method.__doc__}")
+
+print("\nSource Code:")
+print(inspect.getsource(json_method))
+EOF
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+TextResponse.json() Method Signature:
+  json(self)
+
+Docstring:
+  
+        .. versionadded:: 2.2
+
+        Deserialize a JSON document to a Python object.
+        
+
+Source Code:
+    def json(self):
+        """
+        .. versionadded:: 2.2
+
+        Deserialize a JSON document to a Python object.
+        """
+        if self._cached_decoded_json is _NONE:
+            self._cached_decoded_json = json.loads(self.body)
+        return self._cached_decoded_json
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 25, $0.07):
+Excellent! Everything is working perfectly. Let me create a final summary 
+document:
+
+```
+cat > /tmp/implementation_summary.md << 'EOF'
+# TextResponse.json() Method Implementation Summary
+
+## Overview
+The `TextResponse` class in Scrapy now includes a `.json()` method that parses 
+the response body as JSON, similar to the `requests.Response.json()` method.
+
+## Implementation Details
+
+### Location
+- **File**: `scrapy/http/response/text.py`
+- **Class**: `TextResponse`
+- **Method**: `json()`
+
+### Code
+```python
+def json(self):
+    """
+    .. versionadded:: 2.2
+
+    Deserialize a JSON document to a Python object.
+    """
+    if self._cached_decoded_json is _NONE:
+        self._cached_decoded_json = json.loads(self.body)
+    return self._cached_decoded_json
+```
+
+## Features
+
+1. **Returns Parsed Python Object**
+   - Returns the parsed Python object (dict, list, str, number, None, bool)
+   - Works with all valid JSON types
+
+2. **Error Handling**
+   - Raises `json.JSONDecodeError` (which is a subclass of `ValueError`) for 
+invalid JSON
+   - Provides clear error messages for malformed JSON
+
+3. **Caching**
+   - Results are cached in the `_cached_decoded_json` instance variable
+   - Subsequent calls return the cached result without re-parsing
+
+4. **Inheritance**
+   - Works with all `TextResponse` subclasses:
+     - `HtmlResponse`
+     - `XmlResponse`
+     - Custom response classes
+
+5. **Backward Compatibility**
+   - No existing behavior is changed
+   - No breaking changes to the API
+
+## Testing
+
+All tests pass successfully:
+- `test_json_response`: Verifies parsing of valid JSON and error handling
+- `test_cache_json_response`: Verifies caching behavior
+- Tests cover: dict, list, null, string, number, and invalid JSON
+
+### Test Results
+```
+8 passed in test_http_response.py (json-related tests)
+2 passed in test_visible_response_json_method_0.py
+```
+
+## Usage Examples
+
+```python
+from scrapy.http import TextResponse
+
+# Parse JSON dict
+response = TextResponse('https://api.example.com/', 
+                       body=b'{"key": "value"}',
+                       encoding='utf-8')
+data = response.json()  # {'key': 'value'}
+
+# Parse JSON list
+response = TextResponse('https://api.example.com/',
+                       body=b'[1, 2, 3]',
+                       encoding='utf-8')
+data = response.json()  # [1, 2, 3]
+
+# Invalid JSON raises error
+response = TextResponse('https://api.example.com/',
+                       body=b'<html></html>',
+                       encoding='utf-8')
+try:
+    data = response.json()
+except ValueError:  # json.JSONDecodeError
+    print("Invalid JSON")
+```
+
+## Verification Status
+✓ Implementation complete and tested
+✓ All test cases passing
+✓ No existing behavior changed
+✓ Full backward compatibility maintained
+EOF
+cat /tmp/implementation_summary.md
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+# TextResponse.json() Method Implementation Summary
+
+## Overview
+The `TextResponse` class in Scrapy now includes a `.json()` method that parses 
+the response body as JSON, similar to the `requests.Response.json()` method.
+
+## Implementation Details
+
+### Location
+- **File**: `scrapy/http/response/text.py`
+- **Class**: `TextResponse`
+- **Method**: `json()`
+
+### Code
+```python
+def json(self):
+    """
+    .. versionadded:: 2.2
+
+    Deserialize a JSON document to a Python object.
+    """
+    if self._cached_decoded_json is _NONE:
+        self._cached_decoded_json = json.loads(self.body)
+    return self._cached_decoded_json
+```
+
+## Features
+
+1. **Returns Parsed Python Object**
+   - Returns the parsed Python object (dict, list, str, number, None, bool)
+   - Works with all valid JSON types
+
+2. **Error Handling**
+   - Raises `json.JSONDecodeError` (which is a subclass of `ValueError`) for 
+invalid JSON
+   - Provides clear error messages for malformed JSON
+
+3. **Caching**
+   - Results are cached in the `_cached_decoded_json` instance variable
+   - Subsequent calls return the cached result without re-parsing
+
+4. **Inheritance**
+   - Works with all `TextResponse` subclasses:
+     - `HtmlResponse`
+     - `XmlResponse`
+     - Custom response classes
+
+5. **Backward Compatibility**
+   - No existing behavior is changed
+   - No breaking changes to the API
+
+## Testing
+
+All tests pass successfully:
+- `test_json_response`: Verifies parsing of valid JSON and error handling
+- `test_cache_json_response`: Verifies caching behavior
+- Tests cover: dict, list, null, string, number, and invalid JSON
+
+### Test Results
+```
+8 passed in test_http_response.py (json-related tests)
+2 passed in test_visible_response_json_method_0.py
+```
+
+## Usage Examples
+
+```python
+from scrapy.http import TextResponse
+
+# Parse JSON dict
+response = TextResponse('https://api.example.com/', 
+                       body=b'{"key": "value"}',
+                       encoding='utf-8')
+data = response.json()  # {'key': 'value'}
+
+# Parse JSON list
+response = TextResponse('https://api.example.com/',
+                       body=b'[1, 2, 3]',
+                       encoding='utf-8')
+data = response.json()  # [1, 2, 3]
+
+# Invalid JSON raises error
+response = TextResponse('https://api.example.com/',
+                       body=b'<html></html>',
+                       encoding='utf-8')
+try:
+    data = response.json()
+except ValueError:  # json.JSONDecodeError
+    print("Invalid JSON")
+```
+
+## Verification Status
+✓ Implementation complete and tested
+✓ All test cases passing
+✓ No existing behavior changed
+✓ Full backward compatibility maintained
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 26, $0.08):
+Perfect! The implementation is complete and all tests are passing. Let me run 
+the final verification command as requested:
+
+```
+cd /work && pytest tests/test_http_response.py -k json -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+........                                                                 [100%]
+8 passed, 230 deselected in 2.22s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 27, $0.09):
+Perfect! All requirements have been met. Let me create a final comprehensive 
+verification:
+
+```
+cd /work && python3 << 'EOF'
+print("\n" + "=" * 80)
+print("FINAL VERIFICATION REPORT")
+print("=" * 80 + "\n")
+
+from scrapy.http import TextResponse, HtmlResponse, XmlResponse
+import json as json_module
+
+# Requirement 1: Returns parsed Python object
+print("✓ Requirement 1: Returns parsed Python object")
+r = TextResponse('https://api.example.com/', body=b'{"key": "value"}', 
+encoding='utf-8')
+assert isinstance(r.json(), dict)
+assert r.json() == {'key': 'value'}
+print("  - Returns dict objects")
+
+r = TextResponse('https://api.example.com/', body=b'[1, 2, 3]', 
+encoding='utf-8')
+assert isinstance(r.json(), list)
+assert r.json() == [1, 2, 3]
+print("  - Returns list objects")
+
+r = TextResponse('https://api.example.com/', body=b'null', encoding='utf-8')
+assert r.json() is None
+print("  - Returns None for JSON null")
+
+r = TextResponse('https://api.example.com/', body=b'"string"', encoding='utf-8')
+assert isinstance(r.json(), str)
+print("  - Returns string objects")
+
+r = TextResponse('https://api.example.com/', body=b'42', encoding='utf-8')
+assert isinstance(r.json(), int)
+print("  - Returns number objects")
+
+# Requirement 2: Raises ValueError/JSONDecodeError for invalid JSON
+print("\n✓ Requirement 2: Raises error for invalid JSON")
+r = TextResponse('https://api.example.com/', body=b'<html></html>', 
+encoding='utf-8')
+try:
+    r.json()
+    print("  ✗ FAILED")
+    exit(1)
+except (ValueError, json_module.JSONDecodeError):
+    print("  - Raises JSONDecodeError (subclass of ValueError)")
+
+# Requirement 3: Does not change existing behavior
+print("\n✓ Requirement 3: Does not change existing behavior")
+
+# Test caching
+r = TextResponse('https://api.example.com/', body=b'{"test": 1}', 
+encoding='utf-8')
+result1 = r.json()
+result2 = r.json()
+assert result1 is result2
+print("  - Caching behavior preserved")
+
+# Test inheritance
+html_r = HtmlResponse('https://api.example.com/', body=b'{"test": 1}', 
+encoding='utf-8')
+assert html_r.json() == {'test': 1}
+print("  - Works with HtmlResponse")
+
+xml_r = XmlResponse('https://api.example.com/', body=b'{"test": 1}', 
+encoding='utf-8')
+assert xml_r.json() == {'test': 1}
+print("  - Works with XmlResponse")
+
+# Test other properties
+r = TextResponse('https://api.example.com/', body=b'{"key": "value"}', 
+encoding='utf-8')
+_ = r.json()
+assert r.text == '{"key": "value"}'
+assert r.encoding == 'utf-8'
+print("  - Other properties still work correctly")
+
+# Test that the method signature is correct
+import inspect
+sig = inspect.signature(TextResponse.json)
+params = list(sig.parameters.keys())
+assert params == ['self'], f"Expected ['self'], got {params}"
+print("  - Method signature is correct")
+
+print("\n" + "=" * 80)
+print("ALL REQUIREMENTS MET ✓")
+print("=" * 80)
+print("\nImplementation Summary:")
+print("- File: scrapy/http/response/text.py")
+print("- Method: TextResponse.json()")
+print("- Status: Complete and fully tested")
+print("- All 8 json-related tests passing")
+print("=" * 80 + "\n")
+EOF
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+================================================================================
+FINAL VERIFICATION REPORT
+================================================================================
+
+✓ Requirement 1: Returns parsed Python object
+  - Returns dict objects
+  - Returns list objects
+  - Returns None for JSON null
+  - Returns string objects
+  - Returns number objects
+
+✓ Requirement 2: Raises error for invalid JSON
+  - Raises JSONDecodeError (subclass of ValueError)
+
+✓ Requirement 3: Does not change existing behavior
+  - Caching behavior preserved
+  - Works with HtmlResponse
+  - Works with XmlResponse
+  - Other properties still work correctly
+  - Method signature is correct
+
+================================================================================
+ALL REQUIREMENTS MET ✓
+================================================================================
+
+Implementation Summary:
+- File: scrapy/http/response/text.py
+- Method: TextResponse.json()
+- Status: Complete and fully tested
+- All 8 json-related tests passing
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 28, $0.09):
+Excellent! All requirements have been successfully verified. The implementation 
+of `TextResponse.json()` method is complete, working correctly, and all tests 
+pass. Let me now submit the work:
+
+```
+echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT
+```
+
+Tool:
+<returncode>
+-1
+<output>
+
+<exception_info>
+action was not executed
+
+Exit:
+
+Saved trajectory to '/work/.agent_logs/mini.traj.json'

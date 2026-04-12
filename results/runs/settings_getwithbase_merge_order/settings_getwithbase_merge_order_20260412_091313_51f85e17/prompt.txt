@@ -1,0 +1,9 @@
+`Settings.getwithbase('ITEM_PIPELINES')` merges the base dict
+(`ITEM_PIPELINES_BASE`) with the user dict (`ITEM_PIPELINES`),
+applying BASE first so user entries can override it.  After a
+recent change the order was swapped: the base is applied last
+and silently overwrites user-configured values.
+
+Fix `getwithbase` so user entries take priority over BASE entries.
+
+Verify with: pytest tests/test_settings.py -k getwithbase -q

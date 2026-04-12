@@ -1,0 +1,33 @@
+{
+  "task_id": "settings_getbool_int_string",
+  "description": "getbool should convert string '0' to False; regression removes int conversion",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/settings_getbool_int_string",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getbool_int_string_m5h8drhc",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getbool_int_string/settings_getbool_int_string_20260412_082819_15d13b45",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`Settings.getbool()` should correctly interpret the strings `'0'` as\n`False` and `'1'` as `True`.  After a recent change, the intermediate\n`int()` conversion was removed, causing `bool('0')` to return `True`\n(since `bool` of a non-empty string is always `True`).\n\nFix `getbool` so that string representations of integers are handled\ncorrectly.\n\nVerify with: pytest tests/test_settings.py -k getbool -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_settings_getbool_int_string_setup_6280d74b66",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 5.027,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getbool_int_string/settings_getbool_int_string_20260412_082819_15d13b45/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getbool_int_string/settings_getbool_int_string_20260412_082819_15d13b45/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_settings_getbool_int_string_agent_6ad9d8fcc1",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 303.388,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getbool_int_string/settings_getbool_int_string_20260412_082819_15d13b45/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getbool_int_string/settings_getbool_int_string_20260412_082819_15d13b45/agent_stderr.txt"
+    }
+  ]
+}

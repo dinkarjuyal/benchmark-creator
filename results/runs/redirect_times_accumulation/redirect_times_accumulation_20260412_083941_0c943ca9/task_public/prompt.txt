@@ -1,0 +1,9 @@
+Scrapy's redirect middleware tracks the number of redirects followed
+in `request.meta['redirect_times']`.  After a recent change this
+counter is always reset to `1` instead of accumulating, so the
+`REDIRECT_MAX_TIMES` limit is never enforced correctly.
+
+Fix the redirect middleware so `redirect_times` correctly increments
+on each hop.
+
+Verify with: pytest tests/test_downloadermiddleware_redirect.py -q

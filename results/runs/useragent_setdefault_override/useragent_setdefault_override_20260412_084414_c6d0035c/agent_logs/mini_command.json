@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "Scrapy's `UserAgentMiddleware` should set the `User-Agent` header\nonly if the request doesn't already have one (using `setdefault`).\nThis allows individual requests or spiders to override the global\n`USER_AGENT` setting.\n\nAfter a recent change the middleware always overwrites the header,\neven when the request already has a custom `User-Agent`.\n\nFix the middleware to use `setdefault` so per-request User-Agent\noverrides are respected.\n\nVerify with: pytest tests/test_downloadermiddleware_useragent.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

@@ -1,0 +1,7 @@
+`TextResponse.text` should decode response bodies using the
+response's declared encoding. After a recent change it always
+decodes as UTF-8, which corrupts responses declared with a
+different charset such as Latin-1.
+
+Fix `TextResponse.text` so it honors the response encoding when
+decoding the body.

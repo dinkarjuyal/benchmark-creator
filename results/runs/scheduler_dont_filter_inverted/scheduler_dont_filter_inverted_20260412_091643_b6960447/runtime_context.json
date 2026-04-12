@@ -1,0 +1,33 @@
+{
+  "task_id": "scheduler_dont_filter_inverted",
+  "description": "dont_filter=True must skip dupefilter; regression inverts the logic",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/scheduler_dont_filter_inverted",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_dont_filter_inverted_h0joazhd",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_dont_filter_inverted/scheduler_dont_filter_inverted_20260412_091643_b6960447",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "When `request.dont_filter = True`, the scheduler should bypass\nthe dupefilter entirely and always enqueue the request.  After a\nrecent change the condition was inverted: `dont_filter=True`\nrequests are now filtered (dropped) while `dont_filter=False`\nrequests always pass through.\n\nFix `enqueue_request` so `dont_filter=True` correctly bypasses\nduplicate filtering.\n\nVerify with: pytest tests/test_scheduler.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_scheduler_dont_filter_inverted_setup_7884f3dc70",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.641,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_dont_filter_inverted/scheduler_dont_filter_inverted_20260412_091643_b6960447/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_dont_filter_inverted/scheduler_dont_filter_inverted_20260412_091643_b6960447/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_scheduler_dont_filter_inverted_agent_9e0c1fb2d8",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 235.191,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_dont_filter_inverted/scheduler_dont_filter_inverted_20260412_091643_b6960447/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_dont_filter_inverted/scheduler_dont_filter_inverted_20260412_091643_b6960447/agent_stderr.txt"
+    }
+  ]
+}

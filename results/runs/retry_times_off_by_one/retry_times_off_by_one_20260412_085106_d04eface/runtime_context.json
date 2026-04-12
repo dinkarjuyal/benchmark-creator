@@ -1,0 +1,33 @@
+{
+  "task_id": "retry_times_off_by_one",
+  "description": "retry should allow up to max_retry_times attempts; regression uses < so last retry is skipped",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/retry_times_off_by_one",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one_dotkwd_0",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "Scrapy's retry middleware should retry a request up to\n`RETRY_TIMES` times (inclusive).  After a recent change the\ncomparison was changed from `<=` to `<`, so one fewer retry\nis performed than configured.\n\nFix the condition so requests are retried up to and including\n`RETRY_TIMES` attempts.\n\nVerify with: pytest tests/test_downloadermiddleware_retry.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_retry_times_off_by_one_setup_8e0fd51e6c",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.309,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_retry_times_off_by_one_agent_8fcfa7a116",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 151.862,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/agent_stderr.txt"
+    }
+  ]
+}

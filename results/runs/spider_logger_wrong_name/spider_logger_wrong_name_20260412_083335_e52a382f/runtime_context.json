@@ -1,0 +1,33 @@
+{
+  "task_id": "spider_logger_wrong_name",
+  "description": "spider.logger must use spider.name not class name",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/spider_logger_wrong_name",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spider_logger_wrong_name_omwshkhm",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spider_logger_wrong_name/spider_logger_wrong_name_20260412_083335_e52a382f",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "Each spider's `logger` property should return a logger named\nafter `spider.name` so log records can be filtered by spider\nname at runtime.  After a recent change it uses\n`self.__class__.__name__` instead, breaking log filtering for\nspiders whose class name differs from their `name` attribute.\n\nFix the `logger` property to use `self.name`.\n\nVerify with: pytest tests/test_spider.py -k logger -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_spider_logger_wrong_name_setup_8e4534af6a",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 5.552,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spider_logger_wrong_name/spider_logger_wrong_name_20260412_083335_e52a382f/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spider_logger_wrong_name/spider_logger_wrong_name_20260412_083335_e52a382f/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_spider_logger_wrong_name_agent_df377da235",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 259.227,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spider_logger_wrong_name/spider_logger_wrong_name_20260412_083335_e52a382f/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spider_logger_wrong_name/spider_logger_wrong_name_20260412_083335_e52a382f/agent_stderr.txt"
+    }
+  ]
+}

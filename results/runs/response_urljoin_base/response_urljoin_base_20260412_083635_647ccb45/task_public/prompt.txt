@@ -1,0 +1,8 @@
+`Response.urljoin(url)` should resolve `url` relative to the
+response's own URL.  After a recent change it always uses an empty
+string as the base, so relative URLs are returned unchanged instead
+of being fully resolved.
+
+Fix `Response.urljoin` so it correctly uses `self.url` as the base.
+
+Verify with: pytest tests/test_http_response.py -k urljoin -q

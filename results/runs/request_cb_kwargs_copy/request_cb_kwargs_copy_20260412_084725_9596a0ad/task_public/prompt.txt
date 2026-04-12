@@ -1,0 +1,10 @@
+`Request` should own an independent copy of `cb_kwargs` so that
+external mutations to the dict passed at construction don't affect
+the request.
+
+After a recent change, `cb_kwargs` is stored by reference, creating
+shared mutable state between the caller and the request.
+
+Fix `Request.__init__` to copy the `cb_kwargs` argument.
+
+Verify with: pytest tests/test_http_request.py -k cb_kwargs -q

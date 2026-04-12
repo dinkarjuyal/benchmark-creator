@@ -1,0 +1,33 @@
+{
+  "task_id": "httpcache_enabled_check_inverted",
+  "description": "HTTPCACHE_ENABLED=False should raise NotConfigured; regression does the opposite",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/httpcache_enabled_check_inverted",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httpcache_enabled_check_inverted_jl3v1ttp",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httpcache_enabled_check_inverted/httpcache_enabled_check_inverted_20260412_085325_a00db1c2",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`HttpCacheMiddleware` should raise `NotConfigured` (and thus be\ndisabled) when `HTTPCACHE_ENABLED = False`.  After a recent\nchange the condition was inverted: the middleware now raises\nwhen caching *is* enabled and silently activates when it is\ndisabled.\n\nFix the check so `HTTPCACHE_ENABLED = False` correctly disables\nthe middleware.\n\nVerify with: pytest tests/test_downloadermiddleware_httpcache.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_httpcache_enabled_check_inverted_setup_36c841aa0c",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.507,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httpcache_enabled_check_inverted/httpcache_enabled_check_inverted_20260412_085325_a00db1c2/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httpcache_enabled_check_inverted/httpcache_enabled_check_inverted_20260412_085325_a00db1c2/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_httpcache_enabled_check_inverted_agent_f3d30a6c8d",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 155.914,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httpcache_enabled_check_inverted/httpcache_enabled_check_inverted_20260412_085325_a00db1c2/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httpcache_enabled_check_inverted/httpcache_enabled_check_inverted_20260412_085325_a00db1c2/agent_stderr.txt"
+    }
+  ]
+}

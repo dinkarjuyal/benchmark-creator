@@ -1,0 +1,33 @@
+{
+  "task_id": "response_replace_drops_attributes",
+  "description": "Response.replace() without kwargs should preserve all original attributes",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/response_replace_drops_attributes",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes_us0qpzqq",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`Response.replace()` should copy all attributes from the original\nresponse except those explicitly overridden in the call.  After\na recent change none of the original attributes are preserved \u2014\ncalling `resp.replace(status=404)` produces a response with\ndefault values for url, headers, body, etc.\n\nFix `Response.replace()` so unspecified attributes are preserved.\n\nVerify with: pytest tests/test_http_response.py -k replace -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_response_replace_drops_attributes_setup_4f25b4700e",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.701,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_response_replace_drops_attributes_agent_0dbfb40ce1",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 200.764,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/agent_stderr.txt"
+    }
+  ]
+}

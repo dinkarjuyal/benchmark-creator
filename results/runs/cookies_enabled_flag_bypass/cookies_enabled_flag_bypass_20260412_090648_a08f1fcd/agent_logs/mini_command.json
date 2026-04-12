@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "Setting `COOKIES_ENABLED = False` in Scrapy should disable the cookies\nmiddleware entirely (it raises `NotConfigured` at startup so the\nmiddleware is never registered).  After a recent change this check was\nremoved, so the cookies middleware is always active regardless of\nthe setting.\n\nRestore the check so that `COOKIES_ENABLED = False` causes the\nmiddleware to raise `NotConfigured`.\n\nVerify with: pytest tests/test_downloadermiddleware_cookies.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

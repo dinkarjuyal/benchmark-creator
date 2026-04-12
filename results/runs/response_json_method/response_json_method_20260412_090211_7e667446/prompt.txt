@@ -1,0 +1,9 @@
+`scrapy.http.TextResponse` should have a `.json()` method that parses
+the response body as JSON (similar to `requests.Response.json()`).
+
+Add `TextResponse.json()` so that:
+- It returns the parsed Python object (dict, list, etc.)
+- It raises `ValueError` (or `json.JSONDecodeError`) if the body is not valid JSON
+- It does not change any existing behavior
+
+Verify with: pytest tests/test_http_response.py -k json -q

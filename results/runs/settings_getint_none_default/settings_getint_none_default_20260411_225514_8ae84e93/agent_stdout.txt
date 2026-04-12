@@ -1,0 +1,2 @@
+Building agent config from specs: ['mini.yaml', 'environment.cwd=/work', 
+'/task/public/mini_deterministic.yaml']

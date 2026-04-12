@@ -1,0 +1,57 @@
+{
+  "task_id": "request_add_headers_method",
+  "trial_index": 0,
+  "agent_name": "mini_claude_haiku_4_5",
+  "description": "`scrapy.http.Request` has `headers` as a dict-like attribute but no",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method_l8fjtmch",
+  "public_task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/task_public",
+  "agent_config_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/agents/mini_claude_haiku_4_5.yaml",
+  "agent_config_redacted_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/agent_config.redacted.yaml",
+  "agent_env_vars": [
+    "ANTHROPIC_API_KEY"
+  ],
+  "prompt_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/prompt.txt",
+  "agent_logs_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/agent_logs",
+  "runtime_context_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/runtime_context.json",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_request_add_headers_method_setup_79dae6ff29",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.418,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_request_add_headers_method_agent_7f2966f163",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 303.281,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/agent_stderr.txt"
+    },
+    {
+      "step": "validator",
+      "command": "python /task/validator.py",
+      "container_name": "harness_request_add_headers_method_validator_8d34d8b65c",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 4.66,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/validator_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/validator_stderr.txt"
+    }
+  ],
+  "validation": {
+    "score": 0.0,
+    "passed": false,
+    "message": "agent step timed out.",
+    "metrics": {
+      "failing_step": "agent"
+    }
+  }
+}

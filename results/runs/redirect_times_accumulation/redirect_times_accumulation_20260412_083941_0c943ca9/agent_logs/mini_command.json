@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "Scrapy's redirect middleware tracks the number of redirects followed\nin `request.meta['redirect_times']`.  After a recent change this\ncounter is always reset to `1` instead of accumulating, so the\n`REDIRECT_MAX_TIMES` limit is never enforced correctly.\n\nFix the redirect middleware so `redirect_times` correctly increments\non each hop.\n\nVerify with: pytest tests/test_downloadermiddleware_redirect.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

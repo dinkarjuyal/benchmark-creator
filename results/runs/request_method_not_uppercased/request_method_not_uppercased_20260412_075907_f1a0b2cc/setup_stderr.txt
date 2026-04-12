@@ -1,0 +1,3 @@
+docker: Error response from daemon: No such container: 4cda9d5ac25fc795cbf2bdcccd9c821d6233014a5c59cccb8a7216368061f108
+
+Run 'docker run --help' for more information

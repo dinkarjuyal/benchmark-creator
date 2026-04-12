@@ -1,0 +1,33 @@
+{
+  "task_id": "dupefilter_fingerprint_not_stored",
+  "description": "request_seen must add fingerprint to set; regression never stores it",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/dupefilter_fingerprint_not_stored",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_fingerprint_not_stored_rvbelrq0",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_fingerprint_not_stored/dupefilter_fingerprint_not_stored_20260412_085025_cebec6cc",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`RFPDupeFilter.request_seen()` should add each new request's\nfingerprint to its internal set so subsequent identical requests are\nfiltered.  After a recent change the fingerprint is never stored,\ncausing every request to appear new every time.\n\nFix `request_seen` so fingerprints are correctly added to the set.\n\nVerify with: pytest tests/test_dupefilters.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_dupefilter_fingerprint_not_stored_setup_f2abc14e61",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.3,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_fingerprint_not_stored/dupefilter_fingerprint_not_stored_20260412_085025_cebec6cc/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_fingerprint_not_stored/dupefilter_fingerprint_not_stored_20260412_085025_cebec6cc/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_dupefilter_fingerprint_not_stored_agent_a3de432453",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 152.526,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_fingerprint_not_stored/dupefilter_fingerprint_not_stored_20260412_085025_cebec6cc/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_fingerprint_not_stored/dupefilter_fingerprint_not_stored_20260412_085025_cebec6cc/agent_stderr.txt"
+    }
+  ]
+}

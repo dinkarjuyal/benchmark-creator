@@ -1,0 +1,9 @@
+`CoreStats` records `elapsed_time_seconds` in spider stats by
+subtracting `start_time` from `finish_time`.  After a recent
+change this is always set to `0.0` regardless of how long the
+crawl took.
+
+Fix `spider_closed` so `elapsed_time_seconds` reflects the
+actual crawl duration.
+
+Verify with: pytest tests/test_extension_corestats.py -q

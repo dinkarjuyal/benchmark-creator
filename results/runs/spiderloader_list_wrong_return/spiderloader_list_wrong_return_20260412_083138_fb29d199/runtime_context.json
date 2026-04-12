@@ -1,0 +1,33 @@
+{
+  "task_id": "spiderloader_list_wrong_return",
+  "description": "SpiderLoader.list() must return all spider names; regression returns empty",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/spiderloader_list_wrong_return",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spiderloader_list_wrong_return_22zs3xd1",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spiderloader_list_wrong_return/spiderloader_list_wrong_return_20260412_083138_fb29d199",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`SpiderLoader.list()` should return the names of all available\nspiders.  After a recent change it always returns an empty list,\nso `scrapy list` shows nothing and `CrawlerProcess` cannot\ndiscover spiders by name.\n\nFix `list()` so it returns the names of all registered spiders.\n\nVerify with: pytest tests/test_spiderloader.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_spiderloader_list_wrong_return_setup_426c0cc2c0",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 3.568,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spiderloader_list_wrong_return/spiderloader_list_wrong_return_20260412_083138_fb29d199/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spiderloader_list_wrong_return/spiderloader_list_wrong_return_20260412_083138_fb29d199/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_spiderloader_list_wrong_return_agent_6941416a12",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 302.161,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spiderloader_list_wrong_return/spiderloader_list_wrong_return_20260412_083138_fb29d199/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/spiderloader_list_wrong_return/spiderloader_list_wrong_return_20260412_083138_fb29d199/agent_stderr.txt"
+    }
+  ]
+}

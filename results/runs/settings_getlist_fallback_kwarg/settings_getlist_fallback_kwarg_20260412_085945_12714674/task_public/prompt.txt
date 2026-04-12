@@ -1,0 +1,13 @@
+`Settings.getbool()` and `Settings.getfloat()` both accept an optional
+`default` keyword argument.  `Settings.getlist()` does not, making it
+inconsistent with its siblings.
+
+Add a `default` keyword argument to `Settings.getlist()` so that:
+- `s.getlist('MISSING_KEY', default=['a', 'b'])` returns `['a', 'b']`
+- `s.getlist('EXISTING_KEY')` behaves exactly as before
+- The default value for `default` is `None` (existing behavior: raise or
+  return empty depending on Scrapy version — preserve whatever currently happens)
+
+Do not break any existing `getlist` tests.
+
+Verify with: pytest tests/test_settings.py -k getlist -q

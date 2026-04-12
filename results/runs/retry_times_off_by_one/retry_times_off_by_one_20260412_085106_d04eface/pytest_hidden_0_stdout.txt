@@ -1,0 +1,8 @@
+.                                                                        [100%]
+=============================== warnings summary ===============================
+_val_hidden_0_xvpvmr_z.py::test_no_retry_after_quota_exhausted
+  /work/scrapy/core/downloader/webclient.py:8: DeprecationWarning: twisted.web.http.HTTPClient was deprecated in Twisted 24.7.0: Use twisted.web.client.Agent instead.
+    from twisted.web.http import HTTPClient
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 5.00s

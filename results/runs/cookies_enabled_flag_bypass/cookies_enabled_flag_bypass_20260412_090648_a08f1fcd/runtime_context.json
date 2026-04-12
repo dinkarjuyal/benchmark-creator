@@ -1,0 +1,33 @@
+{
+  "task_id": "cookies_enabled_flag_bypass",
+  "description": "COOKIES_ENABLED=False must raise NotConfigured; regression removes the check",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/cookies_enabled_flag_bypass",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/cookies_enabled_flag_bypass_rlbd32kr",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/cookies_enabled_flag_bypass/cookies_enabled_flag_bypass_20260412_090648_a08f1fcd",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "Setting `COOKIES_ENABLED = False` in Scrapy should disable the cookies\nmiddleware entirely (it raises `NotConfigured` at startup so the\nmiddleware is never registered).  After a recent change this check was\nremoved, so the cookies middleware is always active regardless of\nthe setting.\n\nRestore the check so that `COOKIES_ENABLED = False` causes the\nmiddleware to raise `NotConfigured`.\n\nVerify with: pytest tests/test_downloadermiddleware_cookies.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_cookies_enabled_flag_bypass_setup_7c70ab1a02",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 5.609,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/cookies_enabled_flag_bypass/cookies_enabled_flag_bypass_20260412_090648_a08f1fcd/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/cookies_enabled_flag_bypass/cookies_enabled_flag_bypass_20260412_090648_a08f1fcd/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_cookies_enabled_flag_bypass_agent_e21fdf4b64",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 199.554,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/cookies_enabled_flag_bypass/cookies_enabled_flag_bypass_20260412_090648_a08f1fcd/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/cookies_enabled_flag_bypass/cookies_enabled_flag_bypass_20260412_090648_a08f1fcd/agent_stderr.txt"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "task_id": "redirect_ttl_not_decremented",
+  "description": "redirect_ttl must decrement on each hop; regression never decrements",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/redirect_ttl_not_decremented",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/redirect_ttl_not_decremented_051v7si_",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/redirect_ttl_not_decremented/redirect_ttl_not_decremented_20260412_091201_1f566e6d",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "The redirect middleware uses `redirect_ttl` in request meta as a\ncountdown to limit total redirects.  After a recent change the\nTTL is always reset to `REDIRECT_MAX_TIMES` on every hop instead\nof being carried over from the previous request's meta, so\ninfinite redirect chains are no longer detected.\n\nFix the TTL logic so it decrements across hops and redirects are\ncorrectly limited.\n\nVerify with: pytest tests/test_downloadermiddleware_redirect.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_redirect_ttl_not_decremented_setup_cc3054c427",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 1.682,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/redirect_ttl_not_decremented/redirect_ttl_not_decremented_20260412_091201_1f566e6d/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/redirect_ttl_not_decremented/redirect_ttl_not_decremented_20260412_091201_1f566e6d/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_redirect_ttl_not_decremented_agent_e486d0edef",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 257.934,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/redirect_ttl_not_decremented/redirect_ttl_not_decremented_20260412_091201_1f566e6d/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/redirect_ttl_not_decremented/redirect_ttl_not_decremented_20260412_091201_1f566e6d/agent_stderr.txt"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+When `request.dont_filter = True`, the scheduler should bypass
+the dupefilter entirely and always enqueue the request.  After a
+recent change the condition was inverted: `dont_filter=True`
+requests are now filtered (dropped) while `dont_filter=False`
+requests always pass through.
+
+Fix `enqueue_request` so `dont_filter=True` correctly bypasses
+duplicate filtering.
+
+Verify with: pytest tests/test_scheduler.py -q

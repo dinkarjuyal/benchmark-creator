@@ -1,0 +1,41 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_____________________ test_empty_scheduler_has_no_pending ______________________
+_val_hidden_0_ij_anqeg.py:13: in test_empty_scheduler_has_no_pending
+    s.open(MagicMock())
+scrapy/core/scheduler.py:219: in open
+    self.mqs = self._mq()
+               ^^^^^^^^^^
+scrapy/core/scheduler.py:319: in _mq
+    return create_instance(
+scrapy/utils/misc.py:194: in create_instance
+    instance = objcls(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not callable
+_____________________ test_scheduler_queue_reports_pending _____________________
+_val_hidden_0_ij_anqeg.py:28: in test_scheduler_queue_reports_pending
+    s.open(MagicMock())
+scrapy/core/scheduler.py:219: in open
+    self.mqs = self._mq()
+               ^^^^^^^^^^
+scrapy/core/scheduler.py:319: in _mq
+    return create_instance(
+scrapy/utils/misc.py:194: in create_instance
+    instance = objcls(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not callable
+=============================== warnings summary ===============================
+_val_hidden_0_ij_anqeg.py::test_empty_scheduler_has_no_pending
+_val_hidden_0_ij_anqeg.py::test_scheduler_queue_reports_pending
+  /work/scrapy/dupefilters.py:59: ScrapyDeprecationWarning: '2.6' is a deprecated value for the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting.
+  
+  It is also the default value. In other words, it is normal to get this warning if you have not defined a value for the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting. This is so for backward compatibility reasons, but it will change in a future version of Scrapy.
+  
+  See the documentation of the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting for information on how to handle this deprecation.
+    fingerprinter or RequestFingerprinter()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED _val_hidden_0_ij_anqeg.py::test_empty_scheduler_has_no_pending - TypeE...
+FAILED _val_hidden_0_ij_anqeg.py::test_scheduler_queue_reports_pending - Type...
+2 failed, 2 warnings in 6.68s

@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`MemoryStatsCollector.inc_value()` should initialise a missing\ncounter to `start` (default `0`) before incrementing.  After a\nrecent change it uses `dict.get(key, None)` which raises a\n`TypeError` the first time any new stat key is incremented.\n\nFix `inc_value` so missing keys are initialised to `start`\nbefore the increment.\n\nVerify with: pytest tests/test_stats.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

@@ -1,0 +1,1086 @@
+Building agent config from specs: ['mini.yaml', 'environment.cwd=/work']
+
+System:
+You are a helpful assistant that can interact with a computer.
+
+User:
+Please solve this issue: Scrapy's `UserAgentMiddleware` should set the 
+`User-Agent` header
+only if the request doesn't already have one (using `setdefault`).
+This allows individual requests or spiders to override the global
+`USER_AGENT` setting.
+
+After a recent change the middleware always overwrites the header,
+even when the request already has a custom `User-Agent`.
+
+Fix the middleware to use `setdefault` so per-request User-Agent
+overrides are respected.
+
+Verify with: pytest tests/test_downloadermiddleware_useragent.py -q
+
+
+You can execute bash commands and edit files to implement the necessary changes.
+
+## Recommended Workflow
+
+This workflow should be done step-by-step so that you can iterate on your 
+changes and any possible problems.
+
+1. Analyze the codebase by finding and reading relevant files
+2. Create a script to reproduce the issue
+3. Edit the source code to resolve the issue
+4. Verify your fix works by running your script again
+5. Test edge cases to ensure your fix is robust
+6. Submit your changes and finish your work by issuing the following command: 
+`echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`.
+   Do not combine it with any other command. <important>After this command, you 
+cannot continue working on this task.</important>
+
+## Command Execution Rules
+
+You are operating in an environment where
+
+1. You issue at least one command
+2. The system executes the command(s) in a subshell
+3. You see the result(s)
+4. You write your next command(s)
+
+Each response should include:
+
+1. **Reasoning text** where you explain your analysis and plan
+2. At least one tool call with your command
+
+**CRITICAL REQUIREMENTS:**
+
+- Your response SHOULD include reasoning text explaining what you're doing
+- Your response MUST include AT LEAST ONE bash tool call
+- Directory or environment variable changes are not persistent. Every action is 
+executed in a new subshell.
+- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd 
+/path/to/working/dir && ...` or write/load environment variables from files
+- Submit your changes and finish your work by issuing the following command: 
+`echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`.
+  Do not combine it with any other command. <important>After this command, you 
+cannot continue working on this task.</important>
+
+Example of a CORRECT response:
+<example_response>
+I need to understand the structure of the repository first. Let me check what 
+files are in the current directory to get a better understanding of the 
+codebase.
+
+[Makes bash tool call with {"command": "ls -la"} as arguments]
+</example_response>
+
+<system_information>
+Linux 6.10.14-linuxkit #1 SMP PREEMPT_DYNAMIC Sat May 17 08:29:19 UTC 2025 
+x86_64
+</system_information>
+
+## Useful command examples
+
+### Create a new file:
+
+```bash
+cat <<'EOF' > newfile.py
+import numpy as np
+hello = "world"
+print(hello)
+EOF
+```
+
+### Edit files with sed:```bash
+# Replace all occurrences
+sed -i 's/old_string/new_string/g' filename.py
+
+# Replace only first occurrence
+sed -i 's/old_string/new_string/' filename.py
+
+# Replace first occurrence on line 1
+sed -i '1s/old_string/new_string/' filename.py
+
+# Replace all occurrences in lines 1-10
+sed -i '1,10s/old_string/new_string/g' filename.py
+```
+
+### View file content:
+
+```bash
+# View specific lines with numbers
+nl -ba filename.py | sed -n '10,20p'
+```
+
+### Any other command you want to run
+
+```bash
+anything
+```
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 1, $0.00):
+I'll help you fix the Scrapy `UserAgentMiddleware` issue. Let me start by 
+analyzing the codebase to understand the problem.
+
+```
+find . -type f -name "*.py" | grep -E "(useragent|middleware)" | head -20
+```
+
+Tool:
+<returncode>
+0
+<output>
+./scrapy/core/downloader/middleware.py
+./scrapy/downloadermiddlewares/__init__.py
+./scrapy/downloadermiddlewares/ajaxcrawl.py
+./scrapy/downloadermiddlewares/cookies.py
+./scrapy/downloadermiddlewares/defaultheaders.py
+./scrapy/downloadermiddlewares/downloadtimeout.py
+./scrapy/downloadermiddlewares/httpauth.py
+./scrapy/downloadermiddlewares/httpcache.py
+./scrapy/downloadermiddlewares/httpcompression.py
+./scrapy/downloadermiddlewares/httpproxy.py
+./scrapy/downloadermiddlewares/offsite.py
+./scrapy/downloadermiddlewares/redirect.py
+./scrapy/downloadermiddlewares/retry.py
+./scrapy/downloadermiddlewares/robotstxt.py
+./scrapy/downloadermiddlewares/stats.py
+./scrapy/downloadermiddlewares/useragent.py
+./scrapy/middleware.py
+./scrapy/spidermiddlewares/__init__.py
+./scrapy/spidermiddlewares/depth.py
+./scrapy/spidermiddlewares/httperror.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 2, $0.00):
+Good! I found the `useragent.py` file. Let me examine it:
+
+```
+cat ./scrapy/downloadermiddlewares/useragent.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+"""Set User-Agent header per spider or use a default value from settings"""
+
+from scrapy import signals
+
+
+class UserAgentMiddleware:
+    """This middleware allows spiders to override the user_agent"""
+
+    def __init__(self, user_agent="Scrapy"):
+        self.user_agent = user_agent
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        o = cls(crawler.settings["USER_AGENT"])
+        crawler.signals.connect(o.spider_opened, signal=signals.spider_opened)
+        return o
+
+    def spider_opened(self, spider):
+        self.user_agent = getattr(spider, "user_agent", self.user_agent)
+
+    def process_request(self, request, spider):
+        if self.user_agent:
+            request.headers[b"User-Agent"] = self.user_agent  # BUG: always 
+overrides spider UA
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 3, $0.01):
+Perfect! I can see the issue. The middleware is directly setting the 
+`User-Agent` header with `request.headers[b"User-Agent"] =` instead of using 
+`setdefault` which would only set it if it doesn't already exist. Let me also 
+check the test file to understand the expected behavior:
+
+```
+find . -path "*tests*" -name "*useragent*" -type f
+```
+
+Tool:
+<returncode>
+0
+<output>
+./tests/test_downloadermiddleware_useragent.py
+./tests/test_visible_useragent_setdefault_override_0.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 4, $0.01):
+Let me examine the test files:
+
+```
+cat ./tests/test_downloadermiddleware_useragent.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+from unittest import TestCase
+
+from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
+from scrapy.http import Request
+from scrapy.spiders import Spider
+from scrapy.utils.test import get_crawler
+
+
+class UserAgentMiddlewareTest(TestCase):
+    def get_spider_and_mw(self, default_useragent):
+        crawler = get_crawler(Spider, {"USER_AGENT": default_useragent})
+        spider = crawler._create_spider("foo")
+        return spider, UserAgentMiddleware.from_crawler(crawler)
+
+    def test_default_agent(self):
+        spider, mw = self.get_spider_and_mw("default_useragent")
+        req = Request("http://scrapytest.org/")
+        assert mw.process_request(req, spider) is None
+        self.assertEqual(req.headers["User-Agent"], b"default_useragent")
+
+    def test_remove_agent(self):
+        # settings USER_AGENT to None should remove the user agent
+        spider, mw = self.get_spider_and_mw("default_useragent")
+        spider.user_agent = None
+        mw.spider_opened(spider)
+        req = Request("http://scrapytest.org/")
+        assert mw.process_request(req, spider) is None
+        assert req.headers.get("User-Agent") is None
+
+    def test_spider_agent(self):
+        spider, mw = self.get_spider_and_mw("default_useragent")
+        spider.user_agent = "spider_useragent"
+        mw.spider_opened(spider)
+        req = Request("http://scrapytest.org/")
+        assert mw.process_request(req, spider) is None
+        self.assertEqual(req.headers["User-Agent"], b"spider_useragent")
+
+    def test_header_agent(self):
+        spider, mw = self.get_spider_and_mw("default_useragent")
+        spider.user_agent = "spider_useragent"
+        mw.spider_opened(spider)
+        req = Request(
+            "http://scrapytest.org/", headers={"User-Agent": "header_useragent"}
+        )
+        assert mw.process_request(req, spider) is None
+        self.assertEqual(req.headers["User-Agent"], b"header_useragent")
+
+    def test_no_agent(self):
+        spider, mw = self.get_spider_and_mw(None)
+        spider.user_agent = None
+        mw.spider_opened(spider)
+        req = Request("http://scrapytest.org/")
+        assert mw.process_request(req, spider) is None
+        assert "User-Agent" not in req.headers
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 5, $0.01):
+Perfect! Now I understand the expected behavior. Looking at `test_header_agent`,
+it's clear that when a request already has a `User-Agent` header, the middleware
+should NOT override it. The test expects the header to remain as 
+`"header_useragent"` even though the spider has a different `user_agent` set.
+
+Let me also check the other test file:
+
+```
+cat ./tests/test_visible_useragent_setdefault_override_0.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+from scrapy.http import Request
+from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
+from scrapy.utils.test import get_crawler
+from unittest.mock import MagicMock
+
+def test_custom_ua_not_overridden():
+    crawler = get_crawler(settings_dict={'USER_AGENT': 'DefaultBot'})
+    mw = UserAgentMiddleware.from_crawler(crawler)
+    req = Request('https://example.com',
+                  headers={'User-Agent': 'CustomBot/1.0'})
+    spider = MagicMock()
+    mw.process_request(req, spider)
+    ua = req.headers.get(b'User-Agent', b'').decode()
+    assert 'CustomBot' in ua, (
+        f"Custom UA was overwritten. Got: {ua!r}"
+    )
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 6, $0.02):
+Excellent! This test also confirms that custom User-Agent headers should not be 
+overridden. Now let me run the tests to confirm they currently fail:
+
+```
+cd . && python -m pytest tests/test_downloadermiddleware_useragent.py -q
+```
+
+Tool:
+<returncode>
+1
+<output>
+.F...                                                                    [100%]
+=================================== FAILURES ===================================
+__________________ UserAgentMiddlewareTest.test_header_agent ___________________
+
+self = <tests.test_downloadermiddleware_useragent.UserAgentMiddlewareTest 
+testMethod=test_header_agent>
+
+    def test_header_agent(self):
+        spider, mw = self.get_spider_and_mw("default_useragent")
+        spider.user_agent = "spider_useragent"
+        mw.spider_opened(spider)
+        req = Request(
+            "http://scrapytest.org/", headers={"User-Agent": "header_useragent"}
+        )
+        assert mw.process_request(req, spider) is None
+>       self.assertEqual(req.headers["User-Agent"], b"header_useragent")
+E       AssertionError: b'spider_useragent' != b'header_useragent'
+
+tests/test_downloadermiddleware_useragent.py:46: AssertionError
+=========================== short test summary info ============================
+FAILED 
+tests/test_downloadermiddleware_useragent.py::UserAgentMiddlewareTest::test_head
+er_agent
+1 failed, 4 passed in 7.78s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 7, $0.02):
+Perfect! The test confirms the bug. The middleware is overwriting the 
+`User-Agent` header with `spider_useragent` even though the request already had 
+`header_useragent` set. Now let me check the Scrapy `Headers` object to 
+understand how to use `setdefault`:
+
+```
+grep -r "class Headers" --include="*.py" | head -5
+```
+
+Tool:
+<returncode>
+0
+<output>
+scrapy/http/headers.py:class Headers(CaselessDict):
+tests/spiders.py:class HeadersReceivedCallbackSpider(MetaSpider):
+tests/spiders.py:class 
+HeadersReceivedErrbackSpider(HeadersReceivedCallbackSpider):
+tests/test_engine_stop_download_headers.py:class 
+HeadersReceivedCrawlerRun(CrawlerRun):
+tests/test_engine_stop_download_headers.py:class 
+HeadersReceivedEngineTest(EngineTest):
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 8, $0.03):
+Let me check the Headers class to see if it has a setdefault method:
+
+```
+cat ./scrapy/http/headers.py | head -100
+```
+
+Tool:
+<returncode>
+0
+<output>
+from collections.abc import Mapping
+
+from w3lib.http import headers_dict_to_raw
+
+from scrapy.utils.datatypes import CaseInsensitiveDict, CaselessDict
+from scrapy.utils.python import to_unicode
+
+
+class Headers(CaselessDict):
+    """Case insensitive http headers dictionary"""
+
+    def __init__(self, seq=None, encoding="utf-8"):
+        self.encoding = encoding
+        super().__init__(seq)
+
+    def update(self, seq):
+        seq = seq.items() if isinstance(seq, Mapping) else seq
+        iseq = {}
+        for k, v in seq:
+            iseq.setdefault(self.normkey(k), []).extend(self.normvalue(v))
+        super().update(iseq)
+
+    def normkey(self, key):
+        """Normalize key to bytes"""
+        return self._tobytes(key.title())
+
+    def normvalue(self, value):
+        """Normalize values to bytes"""
+        if value is None:
+            value = []
+        elif isinstance(value, (str, bytes)):
+            value = [value]
+        elif not hasattr(value, "__iter__"):
+            value = [value]
+
+        return [self._tobytes(x) for x in value]
+
+    def _tobytes(self, x):
+        if isinstance(x, bytes):
+            return x
+        if isinstance(x, str):
+            return x.encode(self.encoding)
+        if isinstance(x, int):
+            return str(x).encode(self.encoding)
+        raise TypeError(f"Unsupported value type: {type(x)}")
+
+    def __getitem__(self, key):
+        try:
+            return super().__getitem__(key)[-1]
+        except IndexError:
+            return None
+
+    def get(self, key, def_val=None):
+        try:
+            return super().get(key, def_val)[-1]
+        except IndexError:
+            return None
+
+    def getlist(self, key, def_val=None):
+        try:
+            return super().__getitem__(key)
+        except KeyError:
+            if def_val is not None:
+                return self.normvalue(def_val)
+            return []
+
+    def setlist(self, key, list_):
+        self[key] = list_
+
+    def setlistdefault(self, key, default_list=()):
+        return self.setdefault(key, default_list)
+
+    def appendlist(self, key, value):
+        lst = self.getlist(key)
+        lst.extend(self.normvalue(value))
+        self[key] = lst
+
+    def items(self):
+        return ((k, self.getlist(k)) for k in self.keys())
+
+    def values(self):
+        return [self[k] for k in self.keys()]
+
+    def to_string(self):
+        return headers_dict_to_raw(self)
+
+    def to_unicode_dict(self):
+        """Return headers as a CaselessDict with unicode keys
+        and unicode values. Multiple values are joined with ','.
+        """
+        return CaseInsensitiveDict(
+            (
+                to_unicode(key, encoding=self.encoding),
+                to_unicode(b",".join(value), encoding=self.encoding),
+            )
+            for key, value in self.items()
+        )
+
+    def __copy__(self):
+        return self.__class__(self)
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 9, $0.03):
+Good! The Headers class inherits from `CaselessDict`, which should have a 
+`setdefault` method. Let me check the parent class:
+
+```
+grep -r "class CaselessDict" --include="*.py" -A 20
+```
+
+Tool:
+<returncode>
+0
+<output>
+scrapy/utils/datatypes.py:class CaselessDict(dict):
+scrapy/utils/datatypes.py-    __slots__ = ()
+scrapy/utils/datatypes.py-
+scrapy/utils/datatypes.py-    def __new__(cls, *args, **kwargs):
+scrapy/utils/datatypes.py-        from scrapy.http.headers import Headers
+scrapy/utils/datatypes.py-
+scrapy/utils/datatypes.py-        if issubclass(cls, CaselessDict) and not 
+issubclass(cls, Headers):
+scrapy/utils/datatypes.py-            warnings.warn(
+scrapy/utils/datatypes.py-                "scrapy.utils.datatypes.CaselessDict 
+is deprecated,"
+scrapy/utils/datatypes.py-                " please use 
+scrapy.utils.datatypes.CaseInsensitiveDict instead",
+scrapy/utils/datatypes.py-                category=ScrapyDeprecationWarning,
+scrapy/utils/datatypes.py-                stacklevel=2,
+scrapy/utils/datatypes.py-            )
+scrapy/utils/datatypes.py-        return super().__new__(cls, *args, **kwargs)
+scrapy/utils/datatypes.py-
+scrapy/utils/datatypes.py-    def __init__(self, seq=None):
+scrapy/utils/datatypes.py-        super().__init__()
+scrapy/utils/datatypes.py-        if seq:
+scrapy/utils/datatypes.py-            self.update(seq)
+scrapy/utils/datatypes.py-
+scrapy/utils/datatypes.py-    def __getitem__(self, key):
+--
+tests/test_utils_datatypes.py:class CaselessDictTest(CaseInsensitiveDictMixin, 
+unittest.TestCase):
+tests/test_utils_datatypes.py-    dict_class = CaselessDict
+tests/test_utils_datatypes.py-
+tests/test_utils_datatypes.py-    def test_deprecation_message(self):
+tests/test_utils_datatypes.py-        with warnings.catch_warnings(record=True) 
+as caught:
+tests/test_utils_datatypes.py-            self.dict_class({"foo": "bar"})
+tests/test_utils_datatypes.py-
+tests/test_utils_datatypes.py-            self.assertEqual(len(caught), 1)
+tests/test_utils_datatypes.py-            
+self.assertTrue(issubclass(caught[0].category, ScrapyDeprecationWarning))
+tests/test_utils_datatypes.py-            self.assertEqual(
+tests/test_utils_datatypes.py-                
+"scrapy.utils.datatypes.CaselessDict is deprecated,"
+tests/test_utils_datatypes.py-                " please use 
+scrapy.utils.datatypes.CaseInsensitiveDict instead",
+tests/test_utils_datatypes.py-                str(caught[0].message),
+tests/test_utils_datatypes.py-            )
+tests/test_utils_datatypes.py-
+tests/test_utils_datatypes.py-
+tests/test_utils_datatypes.py-class SequenceExcludeTest(unittest.TestCase):
+tests/test_utils_datatypes.py-    def test_list(self):
+tests/test_utils_datatypes.py-        seq = [1, 2, 3]
+tests/test_utils_datatypes.py-        d = SequenceExclude(seq)
+tests/test_utils_datatypes.py-        self.assertIn(0, d)
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 10, $0.03):
+Since `CaselessDict` extends `dict`, it should have the standard `setdefault` 
+method. Now I understand the fix. I need to use 
+`request.headers.setdefault(b"User-Agent", self.user_agent)` instead of directly
+assigning with `request.headers[b"User-Agent"] = self.user_agent`.
+
+Let me fix the middleware:
+
+```
+sed -i 's/request.headers\[b"User-Agent"\] = 
+self.user_agent/request.headers.setdefault(b"User-Agent", self.user_agent)/' 
+./scrapy/downloadermiddlewares/useragent.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 11, $0.03):
+Good! Now let me verify the fix:
+
+```
+cat ./scrapy/downloadermiddlewares/useragent.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+"""Set User-Agent header per spider or use a default value from settings"""
+
+from scrapy import signals
+
+
+class UserAgentMiddleware:
+    """This middleware allows spiders to override the user_agent"""
+
+    def __init__(self, user_agent="Scrapy"):
+        self.user_agent = user_agent
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        o = cls(crawler.settings["USER_AGENT"])
+        crawler.signals.connect(o.spider_opened, signal=signals.spider_opened)
+        return o
+
+    def spider_opened(self, spider):
+        self.user_agent = getattr(spider, "user_agent", self.user_agent)
+
+    def process_request(self, request, spider):
+        if self.user_agent:
+            request.headers.setdefault(b"User-Agent", self.user_agent)  # BUG: 
+always overrides spider UA
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 12, $0.03):
+Perfect! The fix is applied. However, I notice the comment still says "BUG: 
+always overrides spider UA", which is no longer accurate. Let me remove that 
+comment:
+
+```
+sed -i 's/  # BUG: always overrides spider UA//' 
+./scrapy/downloadermiddlewares/useragent.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 13, $0.04):
+```
+cat ./scrapy/downloadermiddlewares/useragent.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+"""Set User-Agent header per spider or use a default value from settings"""
+
+from scrapy import signals
+
+
+class UserAgentMiddleware:
+    """This middleware allows spiders to override the user_agent"""
+
+    def __init__(self, user_agent="Scrapy"):
+        self.user_agent = user_agent
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        o = cls(crawler.settings["USER_AGENT"])
+        crawler.signals.connect(o.spider_opened, signal=signals.spider_opened)
+        return o
+
+    def spider_opened(self, spider):
+        self.user_agent = getattr(spider, "user_agent", self.user_agent)
+
+    def process_request(self, request, spider):
+        if self.user_agent:
+            request.headers.setdefault(b"User-Agent", self.user_agent)
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 14, $0.04):
+Excellent! Now let me run the tests to verify the fix:
+
+```
+cd . && python -m pytest tests/test_downloadermiddleware_useragent.py -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+.....                                                                    [100%]
+5 passed in 3.72s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 15, $0.04):
+Perfect! All tests pass now. Let me also run the other test file to make sure 
+everything works:
+
+```
+cd . && python -m pytest tests/test_visible_useragent_setdefault_override_0.py 
+-q
+```
+
+Tool:
+<returncode>
+0
+<output>
+.                                                                        [100%]
+1 passed in 7.17s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 16, $0.05):
+Excellent! Both test files pass. Let me create a comprehensive test script to 
+verify all the edge cases work correctly:
+
+```
+cat <<'EOF' > test_fix.py
+"""
+Test script to verify the UserAgentMiddleware fix.
+This tests that setdefault is used so per-request User-Agent overrides are 
+respected.
+"""
+from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
+from scrapy.http import Request
+from scrapy.utils.test import get_crawler
+from scrapy.spiders import Spider
+from unittest.mock import MagicMock
+
+def test_case_1_default_agent():
+    """Test that default User-Agent from settings is set"""
+    print("Test 1: Default User-Agent from settings...")
+    crawler = get_crawler(Spider, {"USER_AGENT": "DefaultBot/1.0"})
+    spider = crawler._create_spider("test")
+    mw = UserAgentMiddleware.from_crawler(crawler)
+    
+    req = Request("http://example.com/")
+    mw.process_request(req, spider)
+    
+    assert req.headers[b"User-Agent"] == b"DefaultBot/1.0", f"Expected 
+DefaultBot/1.0, got {req.headers.get(b'User-Agent')}"
+    print("✓ Default User-Agent is set correctly")
+
+def test_case_2_spider_override():
+    """Test that spider-level user_agent overrides default"""
+    print("\nTest 2: Spider-level User-Agent override...")
+    crawler = get_crawler(Spider, {"USER_AGENT": "DefaultBot/1.0"})
+    spider = crawler._create_spider("test")
+    spider.user_agent = "SpiderBot/2.0"
+    
+    mw = UserAgentMiddleware.from_crawler(crawler)
+    mw.spider_opened(spider)
+    
+    req = Request("http://example.com/")
+    mw.process_request(req, spider)
+    
+    assert req.headers[b"User-Agent"] == b"SpiderBot/2.0", f"Expected 
+SpiderBot/2.0, got {req.headers.get(b'User-Agent')}"
+    print("✓ Spider-level User-Agent override works")
+
+def test_case_3_request_override():
+    """Test that request-level User-Agent is NOT overridden (the main fix)"""
+    print("\nTest 3: Request-level User-Agent (should NOT be overridden)...")
+    crawler = get_crawler(Spider, {"USER_AGENT": "DefaultBot/1.0"})
+    spider = crawler._create_spider("test")
+    spider.user_agent = "SpiderBot/2.0"
+    
+    mw = UserAgentMiddleware.from_crawler(crawler)
+    mw.spider_opened(spider)
+    
+    # This is the critical test - request has its own User-Agent
+    req = Request("http://example.com/", headers={"User-Agent": 
+"CustomBot/3.0"})
+    mw.process_request(req, spider)
+    
+    # Should remain as the custom value, NOT be overridden by spider or default
+    assert req.headers[b"User-Agent"] == b"CustomBot/3.0", f"Expected 
+CustomBot/3.0, got {req.headers.get(b'User-Agent')}"
+    print("✓ Request-level User-Agent is preserved (not overridden)")
+
+def test_case_4_none_user_agent():
+    """Test that None user_agent doesn't set header"""
+    print("\nTest 4: None User-Agent should not set header...")
+    crawler = get_crawler(Spider, {"USER_AGENT": None})
+    spider = crawler._create_spider("test")
+    spider.user_agent = None
+    
+    mw = UserAgentMiddleware.from_crawler(crawler)
+    mw.spider_opened(spider)
+    
+    req = Request("http://example.com/")
+    mw.process_request(req, spider)
+    
+    assert b"User-Agent" not in req.headers, f"User-Agent should not be set, but
+got {req.headers.get(b'User-Agent')}"
+    print("✓ None User-Agent doesn't set header")
+
+def test_case_5_multiple_scenarios():
+    """Test complex scenario with mixed overrides"""
+    print("\nTest 5: Complex scenario with request having custom UA and spider 
+override...")
+    crawler = get_crawler(Spider, {"USER_AGENT": "DefaultBot/1.0"})
+    spider = crawler._create_spider("test")
+    spider.user_agent = "SpiderBot/2.0"
+    
+    mw = UserAgentMiddleware.from_crawler(crawler)
+    mw.spider_opened(spider)
+    
+    # Request with custom User-Agent should override spider's user_agent
+    req = Request("http://example.com/", headers={"User-Agent": 
+"RequestBot/4.0"})
+    mw.process_request(req, spider)
+    
+    assert req.headers[b"User-Agent"] == b"RequestBot/4.0", f"Expected 
+RequestBot/4.0, got {req.headers.get(b'User-Agent')}"
+    print("✓ Request UA takes priority over spider UA")
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("Testing UserAgentMiddleware.setdefault() fix")
+    print("=" * 60)
+    
+    test_case_1_default_agent()
+    test_case_2_spider_override()
+    test_case_3_request_override()
+    test_case_4_none_user_agent()
+    test_case_5_multiple_scenarios()
+    
+    print("\n" + "=" * 60)
+    print("All tests passed! ✓")
+    print("=" * 60)
+EOF
+python test_fix.py
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================================================
+Testing UserAgentMiddleware.setdefault() fix
+============================================================
+Test 1: Default User-Agent from settings...
+✓ Default User-Agent is set correctly
+
+Test 2: Spider-level User-Agent override...
+✓ Spider-level User-Agent override works
+
+Test 3: Request-level User-Agent (should NOT be overridden)...
+✓ Request-level User-Agent is preserved (not overridden)
+
+Test 4: None User-Agent should not set header...
+✓ None User-Agent doesn't set header
+
+Test 5: Complex scenario with request having custom UA and spider override...
+✓ Request UA takes priority over spider UA
+
+============================================================
+All tests passed! ✓
+============================================================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 17, $0.05):
+Perfect! All comprehensive tests pass. Let me also run the original test command
+one more time to ensure everything is working:
+
+```
+cd . && python -m pytest tests/test_downloadermiddleware_useragent.py -q -v
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collected 5 items
+
+tests/test_downloadermiddleware_useragent.py .....                       [100%]
+
+============================== 5 passed in 2.80s ===============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 18, $0.05):
+Excellent! All tests pass. Let me verify the exact changes I made:
+
+```
+cat ./scrapy/downloadermiddlewares/useragent.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+"""Set User-Agent header per spider or use a default value from settings"""
+
+from scrapy import signals
+
+
+class UserAgentMiddleware:
+    """This middleware allows spiders to override the user_agent"""
+
+    def __init__(self, user_agent="Scrapy"):
+        self.user_agent = user_agent
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        o = cls(crawler.settings["USER_AGENT"])
+        crawler.signals.connect(o.spider_opened, signal=signals.spider_opened)
+        return o
+
+    def spider_opened(self, spider):
+        self.user_agent = getattr(spider, "user_agent", self.user_agent)
+
+    def process_request(self, request, spider):
+        if self.user_agent:
+            request.headers.setdefault(b"User-Agent", self.user_agent)
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 19, $0.06):
+Perfect! Let me create one more edge case test to ensure the fix is robust:
+
+```
+cat <<'EOF' > test_edge_cases.py
+"""
+Edge case tests for UserAgentMiddleware.setdefault() fix
+"""
+from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
+from scrapy.http import Request
+from scrapy.utils.test import get_crawler
+from scrapy.spiders import Spider
+
+def test_empty_string_ua():
+    """Test that empty string User-Agent in request is preserved"""
+    print("Test: Empty string User-Agent should be preserved...")
+    crawler = get_crawler(Spider, {"USER_AGENT": "DefaultBot/1.0"})
+    spider = crawler._create_spider("test")
+    
+    mw = UserAgentMiddleware.from_crawler(crawler)
+    
+    # Request with empty string User-Agent
+    req = Request("http://example.com/", headers={"User-Agent": ""})
+    mw.process_request(req, spider)
+    
+    # Empty string should be preserved (not replaced with default)
+    assert req.headers[b"User-Agent"] == b"", f"Expected empty string, got 
+{req.headers.get(b'User-Agent')}"
+    print("✓ Empty string User-Agent is preserved")
+
+def test_setdefault_behavior():
+    """Test that setdefault doesn't override existing values"""
+    print("\nTest: Verify setdefault behavior...")
+    
+    # Test with a regular dict to confirm setdefault behavior
+    d = {}
+    result1 = d.setdefault("key", "value1")
+    assert result1 == "value1" and d["key"] == "value1", "First setdefault 
+should set value"
+    
+    # Second setdefault should NOT override
+    result2 = d.setdefault("key", "value2")
+    assert result2 == "value1" and d["key"] == "value1", "Second setdefault 
+should NOT override"
+    
+    print("✓ setdefault behavior confirmed")
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("Testing Edge Cases for UserAgentMiddleware")
+    print("=" * 60)
+    
+    test_empty_string_ua()
+    test_setdefault_behavior()
+    
+    print("\n" + "=" * 60)
+    print("All edge case tests passed! ✓")
+    print("=" * 60)
+EOF
+python test_edge_cases.py
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================================================
+Testing Edge Cases for UserAgentMiddleware
+============================================================
+Test: Empty string User-Agent should be preserved...
+✓ Empty string User-Agent is preserved
+
+Test: Verify setdefault behavior...
+✓ setdefault behavior confirmed
+
+============================================================
+All edge case tests passed! ✓
+============================================================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 20, $0.06):
+Perfect! All edge cases pass as well. Let me clean up the test files I created:
+
+```
+rm -f test_fix.py test_edge_cases.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 21, $0.06):
+Now let me run the original test command one final time to confirm everything is
+working:
+
+```
+cd . && python -m pytest tests/test_downloadermiddleware_useragent.py -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+.....                                                                    [100%]
+5 passed in 5.23s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 22, $0.06):
+Perfect! Let me also verify the fix doesn't break other tests by running a 
+broader test suite:
+
+```
+cd . && python -m pytest tests/test_visible_useragent_setdefault_override_0.py 
+tests/test_downloadermiddleware_useragent.py -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+......                                                                   [100%]
+6 passed in 6.73s
+
+────────────────────────────────────────────────────────────────────────────────
+
+User:
+Tool call error:
+
+<error>
+No tool calls found in the response. Every response MUST include at least one 
+tool call.
+</error>
+
+Here is general guidance on how to submit correct toolcalls:
+
+Every response needs to use the 'bash' tool at least once to execute commands.
+
+Call the bash tool with your command as the argument:
+- Tool: bash
+- Arguments: {"command": "your_command_here"}
+
+If you want to end the task, please issue the following command: `echo 
+COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`
+without any other command.
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 24, $0.07):
+Let me issue the final command to submit my work:
+
+```
+echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT
+```
+
+Tool:
+<returncode>
+-1
+<output>
+
+<exception_info>
+action was not executed
+
+Exit:
+
+Saved trajectory to '/work/.agent_logs/mini.traj.json'

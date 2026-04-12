@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`Request.replace()` should carry over all original attributes except\nthose explicitly overridden.  After a recent change, `replace()`\nignores the original request's attributes entirely and uses the\nclass defaults instead.\n\nFix `Request.replace()` so that unspecified attributes are copied\nfrom the original request.\n\nVerify with: pytest tests/test_http_request.py -k replace -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

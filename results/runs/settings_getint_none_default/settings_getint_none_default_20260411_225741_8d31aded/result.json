@@ -1,0 +1,64 @@
+{
+  "task_id": "settings_getint_none_default",
+  "trial_index": 0,
+  "agent_name": "mini_deterministic",
+  "description": "getint with default=None should return None not raise TypeError",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default_3o4wz6jh",
+  "public_task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/task_public",
+  "agent_config_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/agents/mini_deterministic.yaml",
+  "agent_config_redacted_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/agent_config.redacted.yaml",
+  "agent_env_vars": [],
+  "prompt_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/prompt.txt",
+  "agent_logs_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/agent_logs",
+  "runtime_context_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/runtime_context.json",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_settings_getint_none_default_setup_3556c389f8",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.663,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model deterministic --model-class deterministic --config /task/public/mini_deterministic.yaml",
+      "container_name": "harness_settings_getint_none_default_agent_fddea948e0",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 6.753,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/agent_stderr.txt"
+    },
+    {
+      "step": "validator",
+      "command": "python /task/validator.py",
+      "container_name": "harness_settings_getint_none_default_validator_423108cc97",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 37.321,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/validator_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225741_8d31aded/validator_stderr.txt"
+    }
+  ],
+  "validation": {
+    "score": 0.6967,
+    "passed": false,
+    "message": "score=0.697 | hidden=1.00 visible=0.00 regression=0.67 policy=0.30",
+    "metrics": {
+      "hidden_test_fraction": 1.0,
+      "visible_test_fraction": 0.0,
+      "regression_safety": 0.6667,
+      "policy_quality": 0.3,
+      "hidden_passed": 2,
+      "hidden_total": 2,
+      "visible_passed": 0,
+      "visible_total": 1,
+      "is_noop": false,
+      "is_impossible": false
+    }
+  }
+}

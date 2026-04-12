@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`Response.urljoin(url)` should resolve `url` relative to the\nresponse's own URL.  After a recent change it always uses an empty\nstring as the base, so relative URLs are returned unchanged instead\nof being fully resolved.\n\nFix `Response.urljoin` so it correctly uses `self.url` as the base.\n\nVerify with: pytest tests/test_http_response.py -k urljoin -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

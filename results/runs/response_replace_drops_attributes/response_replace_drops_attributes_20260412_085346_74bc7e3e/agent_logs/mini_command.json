@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`Response.replace()` should copy all attributes from the original\nresponse except those explicitly overridden in the call.  After\na recent change none of the original attributes are preserved \u2014\ncalling `resp.replace(status=404)` produces a response with\ndefault values for url, headers, body, etc.\n\nFix `Response.replace()` so unspecified attributes are preserved.\n\nVerify with: pytest tests/test_http_response.py -k replace -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

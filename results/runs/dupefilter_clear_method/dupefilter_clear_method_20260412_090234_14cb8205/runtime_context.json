@@ -1,0 +1,33 @@
+{
+  "task_id": "dupefilter_clear_method",
+  "description": "`RFPDupeFilter` accumulates fingerprints in memory but provides no way",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/dupefilter_clear_method",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_clear_method_qll5jquq",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_clear_method/dupefilter_clear_method_20260412_090234_14cb8205",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`RFPDupeFilter` accumulates fingerprints in memory but provides no way\nto reset the filter without creating a new instance.\n\nAdd a `clear()` method to `RFPDupeFilter` that empties the seen-fingerprint\nset so that previously-seen URLs are treated as new again.\n\nDo not break any existing deduplication behavior.\n\nVerify with: pytest tests/test_dupefilters.py -k clear -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_dupefilter_clear_method_setup_508b4d156e",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.093,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_clear_method/dupefilter_clear_method_20260412_090234_14cb8205/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_clear_method/dupefilter_clear_method_20260412_090234_14cb8205/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_dupefilter_clear_method_agent_3e0b1078e1",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 262.013,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_clear_method/dupefilter_clear_method_20260412_090234_14cb8205/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/dupefilter_clear_method/dupefilter_clear_method_20260412_090234_14cb8205/agent_stderr.txt"
+    }
+  ]
+}

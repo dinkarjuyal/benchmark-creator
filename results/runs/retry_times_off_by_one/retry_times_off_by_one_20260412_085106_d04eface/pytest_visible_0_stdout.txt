@@ -1,0 +1,8 @@
+.                                                                        [100%]
+=============================== warnings summary ===============================
+_val_visible_0_tpeenbhv.py::test_retry_uses_full_quota
+  /work/scrapy/core/downloader/webclient.py:8: DeprecationWarning: twisted.web.http.HTTPClient was deprecated in Twisted 24.7.0: Use twisted.web.client.Agent instead.
+    from twisted.web.http import HTTPClient
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 7.94s

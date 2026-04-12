@@ -1,0 +1,9 @@
+`RFPDupeFilter` accumulates fingerprints in memory but provides no way
+to reset the filter without creating a new instance.
+
+Add a `clear()` method to `RFPDupeFilter` that empties the seen-fingerprint
+set so that previously-seen URLs are treated as new again.
+
+Do not break any existing deduplication behavior.
+
+Verify with: pytest tests/test_dupefilters.py -k clear -q

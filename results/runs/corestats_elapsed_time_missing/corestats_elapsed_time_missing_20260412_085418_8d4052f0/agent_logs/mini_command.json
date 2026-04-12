@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`CoreStats` records `elapsed_time_seconds` in spider stats by\nsubtracting `start_time` from `finish_time`.  After a recent\nchange this is always set to `0.0` regardless of how long the\ncrawl took.\n\nFix `spider_closed` so `elapsed_time_seconds` reflects the\nactual crawl duration.\n\nVerify with: pytest tests/test_extension_corestats.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

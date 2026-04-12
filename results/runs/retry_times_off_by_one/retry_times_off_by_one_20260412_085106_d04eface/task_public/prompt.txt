@@ -1,0 +1,9 @@
+Scrapy's retry middleware should retry a request up to
+`RETRY_TIMES` times (inclusive).  After a recent change the
+comparison was changed from `<=` to `<`, so one fewer retry
+is performed than configured.
+
+Fix the condition so requests are retried up to and including
+`RETRY_TIMES` attempts.
+
+Verify with: pytest tests/test_downloadermiddleware_retry.py -q

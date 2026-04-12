@@ -1,0 +1,9 @@
+The robots.txt middleware should raise `IgnoreRequest` only for
+URLs that are *not* allowed by the rules.  After a recent change
+the condition was inverted: requests that are allowed are now
+blocked and vice versa.
+
+Fix the robots.txt check so disallowed URLs are ignored and
+allowed URLs pass through.
+
+Verify with: pytest tests/test_downloadermiddleware_robotstxt.py -q

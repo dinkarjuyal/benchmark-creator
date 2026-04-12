@@ -1,0 +1,10 @@
+Setting `COOKIES_ENABLED = False` in Scrapy should disable the cookies
+middleware entirely (it raises `NotConfigured` at startup so the
+middleware is never registered).  After a recent change this check was
+removed, so the cookies middleware is always active regardless of
+the setting.
+
+Restore the check so that `COOKIES_ENABLED = False` causes the
+middleware to raise `NotConfigured`.
+
+Verify with: pytest tests/test_downloadermiddleware_cookies.py -q

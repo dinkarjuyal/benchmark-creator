@@ -1,0 +1,9 @@
+`scrapy.utils.request.fingerprint()` must include the HTTP method
+in the hash so that a GET and a POST to the same URL produce
+different fingerprints.  After a recent change the method is no
+longer hashed, causing GET and POST requests to the same URL to
+be incorrectly identified as duplicates.
+
+Fix `fingerprint()` so the HTTP method is included in the hash.
+
+Verify with: pytest tests/test_utils_request.py -k fingerprint -q

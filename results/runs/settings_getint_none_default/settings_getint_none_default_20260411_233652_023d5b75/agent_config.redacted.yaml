@@ -1,0 +1,6 @@
+name: mini_deterministic
+adapter: mini_swe_agent
+adapter_config:
+  model: deterministic
+  model_class: deterministic
+  config_specs: /task/public/mini_deterministic.yaml

@@ -1,0 +1,33 @@
+{
+  "task_id": "fingerprint_method_excluded",
+  "description": "fingerprint() must include HTTP method; regression omits it so GET/POST collide",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/fingerprint_method_excluded",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded_6es1f_2r",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`scrapy.utils.request.fingerprint()` must include the HTTP method\nin the hash so that a GET and a POST to the same URL produce\ndifferent fingerprints.  After a recent change the method is no\nlonger hashed, causing GET and POST requests to the same URL to\nbe incorrectly identified as duplicates.\n\nFix `fingerprint()` so the HTTP method is included in the hash.\n\nVerify with: pytest tests/test_utils_request.py -k fingerprint -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_fingerprint_method_excluded_setup_4165715c87",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 1.341,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_fingerprint_method_excluded_agent_c4d125a342",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 301.232,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/agent_stderr.txt"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "fingerprint_method_excluded",
+  "trial_index": 0,
+  "agent_name": "mini_claude_haiku_4_5",
+  "description": "fingerprint() must include HTTP method; regression omits it so GET/POST collide",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded_6es1f_2r",
+  "public_task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/task_public",
+  "agent_config_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/agents/mini_claude_haiku_4_5.yaml",
+  "agent_config_redacted_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/agent_config.redacted.yaml",
+  "agent_env_vars": [
+    "ANTHROPIC_API_KEY"
+  ],
+  "prompt_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/prompt.txt",
+  "agent_logs_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/agent_logs",
+  "runtime_context_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/runtime_context.json",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_fingerprint_method_excluded_setup_4165715c87",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 1.341,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_fingerprint_method_excluded_agent_c4d125a342",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 301.232,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/agent_stderr.txt"
+    },
+    {
+      "step": "validator",
+      "command": "python /task/validator.py",
+      "container_name": "harness_fingerprint_method_excluded_validator_aa7c849286",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.743,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/validator_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/fingerprint_method_excluded/fingerprint_method_excluded_20260412_091352_ebc6643c/validator_stderr.txt"
+    }
+  ],
+  "validation": {
+    "score": 0.0,
+    "passed": false,
+    "message": "agent step timed out.",
+    "metrics": {
+      "failing_step": "agent"
+    }
+  }
+}

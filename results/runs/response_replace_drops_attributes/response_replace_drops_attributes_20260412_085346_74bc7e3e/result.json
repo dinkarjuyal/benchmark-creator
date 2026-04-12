@@ -1,0 +1,66 @@
+{
+  "task_id": "response_replace_drops_attributes",
+  "trial_index": 0,
+  "agent_name": "mini_claude_haiku_4_5",
+  "description": "Response.replace() without kwargs should preserve all original attributes",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes_us0qpzqq",
+  "public_task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/task_public",
+  "agent_config_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/agents/mini_claude_haiku_4_5.yaml",
+  "agent_config_redacted_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/agent_config.redacted.yaml",
+  "agent_env_vars": [
+    "ANTHROPIC_API_KEY"
+  ],
+  "prompt_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/prompt.txt",
+  "agent_logs_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/agent_logs",
+  "runtime_context_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/runtime_context.json",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_response_replace_drops_attributes_setup_4f25b4700e",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.701,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_response_replace_drops_attributes_agent_0dbfb40ce1",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 200.764,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/agent_stderr.txt"
+    },
+    {
+      "step": "validator",
+      "command": "python /task/validator.py",
+      "container_name": "harness_response_replace_drops_attributes_validator_98c9c836fa",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 41.653,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/validator_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_replace_drops_attributes/response_replace_drops_attributes_20260412_085346_74bc7e3e/validator_stderr.txt"
+    }
+  ],
+  "validation": {
+    "score": 0.9667,
+    "passed": true,
+    "message": "score=0.967 | hidden=1.00 visible=1.00 regression=0.67 policy=1.00",
+    "metrics": {
+      "hidden_test_fraction": 1.0,
+      "visible_test_fraction": 1.0,
+      "regression_safety": 0.6667,
+      "policy_quality": 1.0,
+      "hidden_passed": 1,
+      "hidden_total": 1,
+      "visible_passed": 2,
+      "visible_total": 2,
+      "is_noop": false,
+      "is_impossible": false
+    }
+  }
+}

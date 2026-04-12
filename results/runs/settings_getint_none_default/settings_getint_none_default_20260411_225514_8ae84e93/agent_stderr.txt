@@ -1,0 +1,41 @@
+Warning: Input is not a terminal (fd=0).
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /usr/local/lib/python3.12/site-packages/minisweagent/run/mini.py:72 in main  │
+│                                                                              │
+│    69 │                                                                      │
+│    70 │   # Build the config from the command line arguments                 │
+│    71 │   console.print(f"Building agent config from specs: [bold green]{con │
+│ ❱  72 │   configs = [get_config_from_spec(spec) for spec in config_spec]     │
+│    73 │   configs.append({                                                   │
+│    74 │   │   "run": {                                                       │
+│    75 │   │   │   "task": task or UNSET,                                     │
+│                                                                              │
+│ /usr/local/lib/python3.12/site-packages/minisweagent/config/__init__.py:58   │
+│ in get_config_from_spec                                                      │
+│                                                                              │
+│   55 │   """Get a config from a config spec."""                              │
+│   56 │   if isinstance(config_spec, str) and "=" in config_spec:             │
+│   57 │   │   return _key_value_spec_to_nested_dict(config_spec)              │
+│ ❱ 58 │   path = get_config_path(config_spec)                                 │
+│   59 │   return yaml.safe_load(path.read_text())                             │
+│   60                                                                         │
+│   61                                                                         │
+│                                                                              │
+│ /usr/local/lib/python3.12/site-packages/minisweagent/config/__init__.py:28   │
+│ in get_config_path                                                           │
+│                                                                              │
+│   25 │   │   if candidate.exists():                                          │
+│   26 │   │   │   return candidate                                            │
+│   27 │                                                                       │
+│ ❱ 28 │   raise FileNotFoundError(f"Could not find config file for {config_sp │
+│   29                                                                         │
+│   30                                                                         │
+│   31 def _key_value_spec_to_nested_dict(config_spec: str) -> dict:           │
+╰──────────────────────────────────────────────────────────────────────────────╯
+FileNotFoundError: Could not find config file for 
+/task/public/mini_deterministic.yaml (tried: 
+[PosixPath('/task/public/mini_deterministic.yaml'), 
+PosixPath('/task/public/mini_deterministic.yaml'), 
+PosixPath('/task/public/mini_deterministic.yaml'), 
+PosixPath('/task/public/mini_deterministic.yaml'), 
+PosixPath('/task/public/mini_deterministic.yaml')])

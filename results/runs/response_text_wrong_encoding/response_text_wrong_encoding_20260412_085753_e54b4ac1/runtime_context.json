@@ -1,0 +1,33 @@
+{
+  "task_id": "response_text_wrong_encoding",
+  "description": "response.text must decode with response encoding; regression uses utf-8",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/response_text_wrong_encoding",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_text_wrong_encoding_1h1iurur",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_text_wrong_encoding/response_text_wrong_encoding_20260412_085753_e54b4ac1",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`TextResponse.text` should decode response bodies using the\nresponse's declared encoding. After a recent change it always\ndecodes as UTF-8, which corrupts responses declared with a\ndifferent charset such as Latin-1.\n\nFix `TextResponse.text` so it honors the response encoding when\ndecoding the body.\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_response_text_wrong_encoding_setup_7df9323420",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.657,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_text_wrong_encoding/response_text_wrong_encoding_20260412_085753_e54b4ac1/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_text_wrong_encoding/response_text_wrong_encoding_20260412_085753_e54b4ac1/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_response_text_wrong_encoding_agent_6930a41c4e",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 205.269,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_text_wrong_encoding/response_text_wrong_encoding_20260412_085753_e54b4ac1/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_text_wrong_encoding/response_text_wrong_encoding_20260412_085753_e54b4ac1/agent_stderr.txt"
+    }
+  ]
+}

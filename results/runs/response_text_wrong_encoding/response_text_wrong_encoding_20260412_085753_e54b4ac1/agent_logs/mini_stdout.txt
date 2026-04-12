@@ -1,0 +1,2923 @@
+Building agent config from specs: ['mini.yaml', 'environment.cwd=/work']
+
+System:
+You are a helpful assistant that can interact with a computer.
+
+User:
+Please solve this issue: `TextResponse.text` should decode response bodies using
+the
+response's declared encoding. After a recent change it always
+decodes as UTF-8, which corrupts responses declared with a
+different charset such as Latin-1.
+
+Fix `TextResponse.text` so it honors the response encoding when
+decoding the body.
+
+
+You can execute bash commands and edit files to implement the necessary changes.
+
+## Recommended Workflow
+
+This workflow should be done step-by-step so that you can iterate on your 
+changes and any possible problems.
+
+1. Analyze the codebase by finding and reading relevant files
+2. Create a script to reproduce the issue
+3. Edit the source code to resolve the issue
+4. Verify your fix works by running your script again
+5. Test edge cases to ensure your fix is robust
+6. Submit your changes and finish your work by issuing the following command: 
+`echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`.
+   Do not combine it with any other command. <important>After this command, you 
+cannot continue working on this task.</important>
+
+## Command Execution Rules
+
+You are operating in an environment where
+
+1. You issue at least one command
+2. The system executes the command(s) in a subshell
+3. You see the result(s)
+4. You write your next command(s)
+
+Each response should include:
+
+1. **Reasoning text** where you explain your analysis and plan
+2. At least one tool call with your command
+
+**CRITICAL REQUIREMENTS:**
+
+- Your response SHOULD include reasoning text explaining what you're doing
+- Your response MUST include AT LEAST ONE bash tool call
+- Directory or environment variable changes are not persistent. Every action is 
+executed in a new subshell.
+- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd 
+/path/to/working/dir && ...` or write/load environment variables from files
+- Submit your changes and finish your work by issuing the following command: 
+`echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`.
+  Do not combine it with any other command. <important>After this command, you 
+cannot continue working on this task.</important>
+
+Example of a CORRECT response:
+<example_response>
+I need to understand the structure of the repository first. Let me check what 
+files are in the current directory to get a better understanding of the 
+codebase.
+
+[Makes bash tool call with {"command": "ls -la"} as arguments]
+</example_response>
+
+<system_information>
+Linux 6.10.14-linuxkit #1 SMP PREEMPT_DYNAMIC Sat May 17 08:29:19 UTC 2025 
+x86_64
+</system_information>
+
+## Useful command examples
+
+### Create a new file:
+
+```bash
+cat <<'EOF' > newfile.py
+import numpy as np
+hello = "world"
+print(hello)
+EOF
+```
+
+### Edit files with sed:```bash
+# Replace all occurrences
+sed -i 's/old_string/new_string/g' filename.py
+
+# Replace only first occurrence
+sed -i 's/old_string/new_string/' filename.py
+
+# Replace first occurrence on line 1
+sed -i '1s/old_string/new_string/' filename.py
+
+# Replace all occurrences in lines 1-10
+sed -i '1,10s/old_string/new_string/g' filename.py
+```
+
+### View file content:
+
+```bash
+# View specific lines with numbers
+nl -ba filename.py | sed -n '10,20p'
+```
+
+### Any other command you want to run
+
+```bash
+anything
+```
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 1, $0.00):
+I'll help you solve this issue with `TextResponse.text` not respecting the 
+response encoding. Let me start by analyzing the codebase.
+
+```
+find . -type f -name "*.py" | head -20
+```
+
+Tool:
+<returncode>
+0
+<output>
+./scrapy/__init__.py
+./scrapy/__main__.py
+./scrapy/addons.py
+./scrapy/cmdline.py
+./scrapy/commands/__init__.py
+./scrapy/commands/bench.py
+./scrapy/commands/check.py
+./scrapy/commands/crawl.py
+./scrapy/commands/edit.py
+./scrapy/commands/fetch.py
+./scrapy/commands/genspider.py
+./scrapy/commands/list.py
+./scrapy/commands/parse.py
+./scrapy/commands/runspider.py
+./scrapy/commands/settings.py
+./scrapy/commands/shell.py
+./scrapy/commands/startproject.py
+./scrapy/commands/version.py
+./scrapy/commands/view.py
+./scrapy/contracts/__init__.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 2, $0.00):
+Good! This is a Scrapy project. Let me look for the TextResponse class:
+
+```
+find . -type f -name "*.py" | xargs grep -l "class TextResponse" 2>/dev/null
+```
+
+Tool:
+<returncode>
+0
+<output>
+./scrapy/http/response/text.py
+./tests/test_http_response.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 3, $0.01):
+Perfect! Let me examine the TextResponse class:
+
+```
+cat ./scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output_head>
+"""
+This module implements the TextResponse class which adds encoding handling and
+discovering (through HTTP headers) to base Response class.
+
+See documentation in docs/topics/request-response.rst
+"""
+from __future__ import annotations
+
+import json
+from contextlib import suppress
+from typing import TYPE_CHECKING, Any, Generator, Optional, Tuple
+from urllib.parse import urljoin
+
+import parsel
+from w3lib.encoding import (
+    html_body_declared_encoding,
+    html_to_unicode,
+    http_content_type_encoding,
+    read_bom,
+    resolve_encoding,
+)
+from w3lib.html import strip_html5_whitespace
+
+from scrapy.http import Request
+from scrapy.http.response import Response
+from scrapy.utils.python import memoizemethod_noargs, to_unicode
+from scrapy.utils.response import get_base_url
+
+if TYPE_CHECKING:
+    from scrapy.selector import Selector
+
+_NONE = object()
+
+
+class TextResponse(Response):
+    _DEFAULT_ENCODING = "ascii"
+    _cached_decoded_json = _NONE
+
+    attributes: Tuple[str, ...] = Response.attributes + ("encoding",)
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        self._encoding = kwargs.pop("encoding", None)
+        self._cached_benc: Optional[str] = None
+        self._cached_ubody: Optional[str] = None
+        self._cached_selector: Optional[Selector] = None
+        super().__init__(*args, **kwargs)
+
+    def _set_url(self, url):
+        if isinstance(url, str):
+            self._url = to_unicode(url, self.encoding)
+        else:
+            super()._set_url(url)
+
+    def _set_body(self, body):
+        self._body = b""  # used by encoding detection
+        if isinstance(body, str):
+            if self._encoding is None:
+                raise TypeError(
+                    "Cannot convert unicode body - "
+                    f"{type(self).__name__} has no encoding"
+                )
+            self._body = body.encode(self._encoding)
+        else:
+            super()._set_body(body)
+
+    @property
+    def encoding(self):
+        return self._declared_encoding() or self._body_inferred_encoding()
+
+    def _declared_encoding(self):
+        return (
+            self._encoding
+            or self._bom_encoding()
+            or self._headers_encoding()
+            or self._body_declared_encoding()
+        )
+
+    def json(self):
+        """
+        .. versionadded:: 2.2
+
+        Deserialize a JSON document to a Python object.
+        """
+        if self._cached_decoded_json is _NONE:
+            self._cached_decoded_json = json.loads(self.body)
+        return self._cached_decoded_json
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = "charset=utf-8"  # BUG: ignores response encoding
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody
+
+    def urljoin(self, url):
+        """Join this Response's url with a possible relative url to form an
+        absolute interpretation of the latter."""
+        return urljoin(get_base_url(self), url)
+
+    @memoizemethod_noargs
+    def _headers_encoding(self):
+        content_type = self.headers.get(b"Content-Type", b"")
+        return http_content_type_encoding(to_unicode(content_type, 
+encoding="latin-1"))
+
+    def _body_inferred_encoding(self):
+        if self._cached_benc is None:
+            content_type = to_unicode(
+                self.headers.get(b"Content-Type", b""), encoding="latin-1"
+            )
+            benc, ubody = html_to_unicode(
+                content_type,
+                self.body,
+                auto_detect_fun=self._auto_detect_fun,
+                default_encoding=self._DEFAULT_ENCODING,
+            )
+            self._cached_benc = benc
+            self._cached_ubody = ubody
+        return self._cached_benc
+
+    def _auto_detect_fun(self, text):
+        for enc in (self._DEFAULT_ENCODING, "utf-8", "cp1252"):
+            try:
+                text.decode(enc)
+            except UnicodeError:
+                continue
+            return resolve_encoding(enc)
+
+    @memoizemethod_noargs
+    def _body_declared_encoding(self):
+        return html_body_declared_encoding(self.body)
+
+    @memoizemethod_noargs
+    def _bom_encoding(self):
+        return read_bom(self.body)[0]
+
+    @property
+    def selector(self):
+        from scrapy.selector import Selector
+
+        if self._cached_selector is None:
+            self._cached_selector = Selector(self)
+        return self._cached_selector
+
+    def jmespath(self, query, **kwargs):
+        if not hasattr(self.selector, "jmespath"):  # type: ignore[attr-defined]
+            raise AttributeError(
+                "Please install parsel >= 1.8.1 to get jmespath support"
+            )
+
+        return self.selector.jmespath(query, **kwargs)  # type: 
+ignore[attr-defined]
+
+    def xpath(self, query, **kwargs):
+        return self.selector.xpath(quer
+<output_tail>
+      priority=0,
+        dont_filter=False,
+        errback=None,
+        cb_kwargs=None,
+        flags=None,
+    ) -> Request:
+        """
+        Return a :class:`~.Request` instance to follow a link ``url``.
+        It accepts the same arguments as ``Request.__init__`` method,
+        but ``url`` can be not only an absolute URL, but also
+
+        * a relative URL
+        * a :class:`~scrapy.link.Link` object, e.g. the result of
+          :ref:`topics-link-extractors`
+        * a :class:`~scrapy.selector.Selector` object for a ``<link>`` or 
+``<a>`` element, e.g.
+          ``response.css('a.my_link')[0]``
+        * an attribute :class:`~scrapy.selector.Selector` (not SelectorList), 
+e.g.
+          ``response.css('a::attr(href)')[0]`` or
+          ``response.xpath('//img/@src')[0]``
+
+        See :ref:`response-follow-example` for usage examples.
+        """
+        if isinstance(url, parsel.Selector):
+            url = _url_from_selector(url)
+        elif isinstance(url, parsel.SelectorList):
+            raise ValueError("SelectorList is not supported")
+        encoding = self.encoding if encoding is None else encoding
+        return super().follow(
+            url=url,
+            callback=callback,
+            method=method,
+            headers=headers,
+            body=body,
+            cookies=cookies,
+            meta=meta,
+            encoding=encoding,
+            priority=priority,
+            dont_filter=dont_filter,
+            errback=errback,
+            cb_kwargs=cb_kwargs,
+            flags=flags,
+        )
+
+    def follow_all(
+        self,
+        urls=None,
+        callback=None,
+        method="GET",
+        headers=None,
+        body=None,
+        cookies=None,
+        meta=None,
+        encoding=None,
+        priority=0,
+        dont_filter=False,
+        errback=None,
+        cb_kwargs=None,
+        flags=None,
+        css=None,
+        xpath=None,
+    ) -> Generator[Request, None, None]:
+        """
+        A generator that produces :class:`~.Request` instances to follow all
+        links in ``urls``. It accepts the same arguments as the 
+:class:`~.Request`'s
+        ``__init__`` method, except that each ``urls`` element does not need to 
+be
+        an absolute URL, it can be any of the following:
+
+        * a relative URL
+        * a :class:`~scrapy.link.Link` object, e.g. the result of
+          :ref:`topics-link-extractors`
+        * a :class:`~scrapy.selector.Selector` object for a ``<link>`` or 
+``<a>`` element, e.g.
+          ``response.css('a.my_link')[0]``
+        * an attribute :class:`~scrapy.selector.Selector` (not SelectorList), 
+e.g.
+          ``response.css('a::attr(href)')[0]`` or
+          ``response.xpath('//img/@src')[0]``
+
+        In addition, ``css`` and ``xpath`` arguments are accepted to perform the
+link extraction
+        within the ``follow_all`` method (only one of ``urls``, ``css`` and 
+``xpath`` is accepted).
+
+        Note that when passing a ``SelectorList`` as argument for the ``urls`` 
+parameter or
+        using the ``css`` or ``xpath`` parameters, this method will not produce 
+requests for
+        selectors from which links cannot be obtained (for instance, anchor tags
+without an
+        ``href`` attribute)
+        """
+        arguments = [x for x in (urls, css, xpath) if x is not None]
+        if len(arguments) != 1:
+            raise ValueError(
+                "Please supply exactly one of the following arguments: urls, 
+css, xpath"
+            )
+        if not urls:
+            if css:
+                urls = self.css(css)
+            if xpath:
+                urls = self.xpath(xpath)
+        if isinstance(urls, parsel.SelectorList):
+            selectors = urls
+            urls = []
+            for sel in selectors:
+                with suppress(_InvalidSelector):
+                    urls.append(_url_from_selector(sel))
+        return super().follow_all(
+            urls=urls,
+            callback=callback,
+            method=method,
+            headers=headers,
+            body=body,
+            cookies=cookies,
+            meta=meta,
+            encoding=encoding,
+            priority=priority,
+            dont_filter=dont_filter,
+            errback=errback,
+            cb_kwargs=cb_kwargs,
+            flags=flags,
+        )
+
+
+class _InvalidSelector(ValueError):
+    """
+    Raised when a URL cannot be obtained from a Selector
+    """
+
+
+def _url_from_selector(sel):
+    # type: (parsel.Selector) -> str
+    if isinstance(sel.root, str):
+        # e.g. ::attr(href) result
+        return strip_html5_whitespace(sel.root)
+    if not hasattr(sel.root, "tag"):
+        raise _InvalidSelector(f"Unsupported selector: {sel}")
+    if sel.root.tag not in ("a", "link"):
+        raise _InvalidSelector(
+            "Only <a> and <link> elements are supported; " f"got 
+<{sel.root.tag}>"
+        )
+    href = sel.root.get("href")
+    if href is None:
+        raise _InvalidSelector(f"<{sel.root.tag}> element has no href attribute:
+{sel}")
+    return strip_html5_whitespace(href)
+
+<elided_chars>
+276
+<warning>
+Output too long.
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 4, $0.01):
+Now I can see the issue! Look at the `text` property around line 87:
+
+```python
+@property
+def text(self) -> str:
+    """Body as unicode"""
+    # access self.encoding before _cached_ubody to make sure
+    # _body_inferred_encoding is called
+    benc = self.encoding
+    if self._cached_ubody is None:
+        charset = "charset=utf-8"  # BUG: ignores response encoding
+        self._cached_ubody = html_to_unicode(charset, self.body)[1]
+    return self._cached_ubody
+```
+
+The bug is clear: `charset = "charset=utf-8"` is hardcoded and ignores 
+`self.encoding`. Let me check the test file to understand how this should work:
+
+```
+grep -A 50 "def test.*text" ./tests/test_http_response.py | head -100
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 5, $0.02):
+Let me search for TextResponse tests:
+
+```
+grep -n "TextResponse" ./tests/test_http_response.py | head -20
+```
+
+Tool:
+<returncode>
+0
+<output>
+16:    TextResponse,
+354:class TextResponseTest(BaseResponseTest):
+355:    response_class = TextResponse
+489:        # TextResponse (and subclasses) must be passed a encoding when 
+instantiating with unicode bodies
+580:        # FIXME: This test should pass once we stop using BeautifulSoup's 
+UnicodeDammit in TextResponse
+850:class HtmlResponseTest(TextResponseTest):
+891:class XmlResponseTest(TextResponseTest):
+966:class CustomResponse(TextResponse):
+967:    attributes = TextResponse.attributes + ("foo", "bar")
+976:class CustomResponseTest(TextResponseTest):
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 6, $0.02):
+Let me view the TextResponseTest class:
+
+```
+sed -n '354,580p' ./tests/test_http_response.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+class TextResponseTest(BaseResponseTest):
+    response_class = TextResponse
+
+    def test_replace(self):
+        super().test_replace()
+        r1 = self.response_class(
+            "http://www.example.com", body="hello", encoding="cp852"
+        )
+        r2 = r1.replace(url="http://www.example.com/other")
+        r3 = r1.replace(url="http://www.example.com/other", encoding="latin1")
+
+        assert isinstance(r2, self.response_class)
+        self.assertEqual(r2.url, "http://www.example.com/other")
+        self._assert_response_encoding(r2, "cp852")
+        self.assertEqual(r3.url, "http://www.example.com/other")
+        self.assertEqual(r3._declared_encoding(), "latin1")
+
+    def test_unicode_url(self):
+        # instantiate with unicode url without encoding (should set default 
+encoding)
+        resp = self.response_class("http://www.example.com/")
+        self._assert_response_encoding(resp, 
+self.response_class._DEFAULT_ENCODING)
+
+        # make sure urls are converted to str
+        resp = self.response_class(url="http://www.example.com/", 
+encoding="utf-8")
+        assert isinstance(resp.url, str)
+
+        resp = self.response_class(
+            url="http://www.example.com/price/\xa3", encoding="utf-8"
+        )
+        self.assertEqual(resp.url, 
+to_unicode(b"http://www.example.com/price/\xc2\xa3"))
+        resp = self.response_class(
+            url="http://www.example.com/price/\xa3", encoding="latin-1"
+        )
+        self.assertEqual(resp.url, "http://www.example.com/price/\xa3")
+        resp = self.response_class(
+            "http://www.example.com/price/\xa3",
+            headers={"Content-type": ["text/html; charset=utf-8"]},
+        )
+        self.assertEqual(resp.url, 
+to_unicode(b"http://www.example.com/price/\xc2\xa3"))
+        resp = self.response_class(
+            "http://www.example.com/price/\xa3",
+            headers={"Content-type": ["text/html; charset=iso-8859-1"]},
+        )
+        self.assertEqual(resp.url, "http://www.example.com/price/\xa3")
+
+    def test_unicode_body(self):
+        unicode_string = (
+            "\u043a\u0438\u0440\u0438\u043b\u043b\u0438\u0447\u0435\u0441\u043a\
+u0438\u0439 "
+            "\u0442\u0435\u043a\u0441\u0442"
+        )
+        self.assertRaises(
+            TypeError,
+            self.response_class,
+            "http://www.example.com",
+            body="unicode body",
+        )
+
+        original_string = unicode_string.encode("cp1251")
+        r1 = self.response_class(
+            "http://www.example.com", body=original_string, encoding="cp1251"
+        )
+
+        # check response.text
+        self.assertTrue(isinstance(r1.text, str))
+        self.assertEqual(r1.text, unicode_string)
+
+    def test_encoding(self):
+        r1 = self.response_class(
+            "http://www.example.com",
+            body=b"\xc2\xa3",
+            headers={"Content-type": ["text/html; charset=utf-8"]},
+        )
+        r2 = self.response_class(
+            "http://www.example.com", encoding="utf-8", body="\xa3"
+        )
+        r3 = self.response_class(
+            "http://www.example.com",
+            body=b"\xa3",
+            headers={"Content-type": ["text/html; charset=iso-8859-1"]},
+        )
+        r4 = self.response_class("http://www.example.com", body=b"\xa2\xa3")
+        r5 = self.response_class(
+            "http://www.example.com",
+            body=b"\xc2\xa3",
+            headers={"Content-type": ["text/html; charset=None"]},
+        )
+        r6 = self.response_class(
+            "http://www.example.com",
+            body=b"\xa8D",
+            headers={"Content-type": ["text/html; charset=gb2312"]},
+        )
+        r7 = self.response_class(
+            "http://www.example.com",
+            body=b"\xa8D",
+            headers={"Content-type": ["text/html; charset=gbk"]},
+        )
+        r8 = self.response_class(
+            "http://www.example.com",
+            body=codecs.BOM_UTF8 + b"\xc2\xa3",
+            headers={"Content-type": ["text/html; charset=cp1251"]},
+        )
+        r9 = self.response_class(
+            "http://www.example.com",
+            body=b"\x80",
+            headers={
+                "Content-type": [b"application/x-download; 
+filename=\x80dummy.txt"]
+            },
+        )
+
+        self.assertEqual(r1._headers_encoding(), "utf-8")
+        self.assertEqual(r2._headers_encoding(), None)
+        self.assertEqual(r2._declared_encoding(), "utf-8")
+        self._assert_response_encoding(r2, "utf-8")
+        self.assertEqual(r3._headers_encoding(), "cp1252")
+        self.assertEqual(r3._declared_encoding(), "cp1252")
+        self.assertEqual(r4._headers_encoding(), None)
+        self.assertEqual(r5._headers_encoding(), None)
+        self.assertEqual(r8._headers_encoding(), "cp1251")
+        self.assertEqual(r9._headers_encoding(), None)
+        self.assertEqual(r8._declared_encoding(), "utf-8")
+        self.assertEqual(r9._declared_encoding(), None)
+        self._assert_response_encoding(r5, "utf-8")
+        self._assert_response_encoding(r8, "utf-8")
+        self._assert_response_encoding(r9, "cp1252")
+        assert (
+            r4._body_inferred_encoding() is not None
+            and r4._body_inferred_encoding() != "ascii"
+        )
+        self._assert_response_values(r1, "utf-8", "\xa3")
+        self._assert_response_values(r2, "utf-8", "\xa3")
+        self._assert_response_values(r3, "iso-8859-1", "\xa3")
+        self._assert_response_values(r6, "gb18030", "\u2015")
+        self._assert_response_values(r7, "gb18030", "\u2015")
+        self._assert_response_values(r9, "cp1252", "€")
+
+        # TextResponse (and subclasses) must be passed a encoding when 
+instantiating with unicode bodies
+        self.assertRaises(
+            TypeError,
+            self.response_class,
+            "http://www.example.com",
+            body="\xa3",
+        )
+
+    def test_declared_encoding_invalid(self):
+        """Check that unknown declared encodings are ignored"""
+        r = self.response_class(
+            "http://www.example.com",
+            headers={"Content-type": ["text/html; charset=UNKNOWN"]},
+            body=b"\xc2\xa3",
+        )
+        self.assertEqual(r._declared_encoding(), None)
+        self._assert_response_values(r, "utf-8", "\xa3")
+
+    def test_utf16(self):
+        """Test utf-16 because UnicodeDammit is known to have problems with"""
+        r = self.response_class(
+            "http://www.example.com",
+            body=b"\xff\xfeh\x00i\x00",
+            encoding="utf-16",
+        )
+        self._assert_response_values(r, "utf-16", "hi")
+
+    def test_invalid_utf8_encoded_body_with_valid_utf8_BOM(self):
+        r6 = self.response_class(
+            "http://www.example.com",
+            headers={"Content-type": ["text/html; charset=utf-8"]},
+            body=b"\xef\xbb\xbfWORD\xe3\xab",
+        )
+        self.assertEqual(r6.encoding, "utf-8")
+        self.assertIn(
+            r6.text,
+            {
+                "WORD\ufffd\ufffd",  # w3lib < 1.19.0
+                "WORD\ufffd",  # w3lib >= 1.19.0
+            },
+        )
+
+    def test_bom_is_removed_from_body(self):
+        # Inferring encoding from body also cache decoded body as sideeffect,
+        # this test tries to ensure that calling response.encoding and
+        # response.text in indistinct order doesn't affect final
+        # response.text in indistinct order doesn't affect final
+        # values for encoding and decoded body.
+        url = "http://example.com"
+        body = b"\xef\xbb\xbfWORD"
+        headers = {"Content-type": ["text/html; charset=utf-8"]}
+
+        # Test response without content-type and BOM encoding
+        response = self.response_class(url, body=body)
+        self.assertEqual(response.encoding, "utf-8")
+        self.assertEqual(response.text, "WORD")
+        response = self.response_class(url, body=body)
+        self.assertEqual(response.text, "WORD")
+        self.assertEqual(response.encoding, "utf-8")
+
+        # Body caching sideeffect isn't triggered when encoding is declared in
+        # content-type header but BOM still need to be removed from decoded
+        # body
+        response = self.response_class(url, headers=headers, body=body)
+        self.assertEqual(response.encoding, "utf-8")
+        self.assertEqual(response.text, "WORD")
+        response = self.response_class(url, headers=headers, body=body)
+        self.assertEqual(response.text, "WORD")
+        self.assertEqual(response.encoding, "utf-8")
+
+    def test_replace_wrong_encoding(self):
+        """Test invalid chars are replaced properly"""
+        r = self.response_class(
+            "http://www.example.com",
+            encoding="utf-8",
+            body=b"PREFIX\xe3\xabSUFFIX",
+        )
+        # XXX: Policy for replacing invalid chars may suffer minor variations
+        # but it should always contain the unicode replacement char ('\ufffd')
+        assert "\ufffd" in r.text, repr(r.text)
+        assert "PREFIX" in r.text, repr(r.text)
+        assert "SUFFIX" in r.text, repr(r.text)
+
+        # Do not destroy html tags due to encoding bugs
+        r = self.response_class(
+            "http://example.com",
+            encoding="utf-8",
+            body=b"\xf0<span>value</span>",
+        )
+        assert "<span>value</span>" in r.text, repr(r.text)
+
+        # FIXME: This test should pass once we stop using BeautifulSoup's 
+UnicodeDammit in TextResponse
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 7, $0.02):
+Good! Now let me check the `_assert_response_values` method to better understand
+what should happen:
+
+```
+grep -B 5 -A 10 "_assert_response_values" ./tests/test_http_response.py | head 
+-30
+```
+
+Tool:
+<returncode>
+0
+<output>
+        r3 = self.response_class("http://www.example.com", flags=["cached"])
+        r4 = r3.replace(body=b"", flags=[])
+        self.assertEqual(r4.body, b"")
+        self.assertEqual(r4.flags, [])
+
+    def _assert_response_values(self, response, encoding, body):
+        if isinstance(body, str):
+            body_unicode = body
+            body_bytes = body.encode(encoding)
+        else:
+            body_unicode = body.decode(encoding)
+            body_bytes = body
+
+        assert isinstance(response.body, bytes)
+        assert isinstance(response.text, str)
+        self._assert_response_encoding(response, encoding)
+--
+        self._assert_response_encoding(r9, "cp1252")
+        assert (
+            r4._body_inferred_encoding() is not None
+            and r4._body_inferred_encoding() != "ascii"
+        )
+        self._assert_response_values(r1, "utf-8", "\xa3")
+        self._assert_response_values(r2, "utf-8", "\xa3")
+        self._assert_response_values(r3, "iso-8859-1", "\xa3")
+        self._assert_response_values(r6, "gb18030", "\u2015")
+        self._assert_response_values(r7, "gb18030", "\u2015")
+        self._assert_response_values(r9, "cp1252", "€")
+
+        # TextResponse (and subclasses) must be passed a encoding when 
+instantiating with unicode bodies
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 8, $0.02):
+Now let me understand what `html_to_unicode` function does:
+
+```
+python3 -c "from w3lib.encoding import html_to_unicode; help(html_to_unicode)"
+```
+
+Tool:
+<returncode>
+0
+<output>
+Help on function html_to_unicode in module w3lib.encoding:
+
+html_to_unicode(content_type_header: 'str | None', html_body_str: 'bytes', 
+default_encoding: 'str' = 'utf8', auto_detect_fun: 'Callable[[bytes], str | 
+None] | None' = None) -> 'tuple[str, str]'
+    Convert raw html bytes to unicode
+
+    This attempts to make a reasonable guess at the content encoding of the
+    html body, following a similar process to a web browser.
+
+    It will try in order:
+
+    * BOM (byte-order mark)
+    * http content type header
+    * meta or xml tag declarations
+    * auto-detection, if the `auto_detect_fun` keyword argument is not ``None``
+    * default encoding in keyword arg (which defaults to utf8)
+
+    If an encoding other than the auto-detected or default encoding is used,
+    overrides will be applied, converting some character encodings to more
+    suitable alternatives.
+
+    If a BOM is found matching the encoding, it will be stripped.
+
+    The `auto_detect_fun` argument can be used to pass a function that will
+    sniff the encoding of the text. This function must take the raw text as an
+    argument and return the name of an encoding that python can process, or
+    None.  To use chardet, for example, you can define the function as::
+
+        auto_detect_fun=lambda x: chardet.detect(x).get('encoding')
+
+    or to use UnicodeDammit (shipped with the BeautifulSoup library)::
+
+        auto_detect_fun=lambda x: UnicodeDammit(x).originalEncoding
+
+    If the locale of the website or user language preference is known, then a
+    better default encoding can be supplied.
+
+    If `content_type_header` is not present, ``None`` can be passed signifying
+    that the header was not present.
+
+    This method will not fail, if characters cannot be converted to unicode,
+    ``\ufffd`` (the unicode replacement character) will be inserted instead.
+
+    Returns a tuple of ``(<encoding used>, <unicode_string>)``
+
+    Examples:
+
+    >>> import w3lib.encoding
+    >>> w3lib.encoding.html_to_unicode(None,
+    ... b"""<!DOCTYPE html>
+    ... <head>
+    ... <meta charset="UTF-8" />
+    ... <meta name="viewport" content="width=device-width" />
+    ... <title>Creative Commons France</title>
+    ... <link rel='canonical' href='http://creativecommons.fr/' />
+    ... <body>
+    ... <p>Creative Commons est une organisation \xc3\xa0 but non lucratif
+    ... qui a pour dessein de faciliter la diffusion et le partage des oeuvres
+    ... tout en accompagnant les nouvelles pratiques de cr\xc3\xa9ation \xc3\xa0
+l\xe2\x80\x99\xc3\xa8re numerique.</p>
+    ... </body>
+    ... </html>""")
+    ('utf-8', '<!DOCTYPE html>\n<head>\n<meta charset="UTF-8" />\n<meta 
+name="viewport" content="width=device-width" />\n<title>Creative Commons 
+France</title>\n<link rel=\'canonical\' href=\'http://creativecommons.fr/\' 
+/>\n<body>\n<p>Creative Commons est une organisation \xe0 but non lucratif\nqui 
+a pour dessein de faciliter la diffusion et le partage des oeuvres\ntout en 
+accompagnant les nouvelles pratiques de cr\xe9ation \xe0 l\u2019\xe8re 
+numerique.</p>\n</body>\n</html>')
+    >>>
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 9, $0.03):
+Now I understand. The issue is that in the `text` property, it's hardcoding 
+`charset=utf-8` instead of using the actual encoding. Let me create a test 
+script first to reproduce the issue:
+
+```
+cat > /tmp/test_latin1_encoding.py << 'EOF'
+#!/usr/bin/env python
+"""Test script to reproduce the Latin-1 encoding issue"""
+
+from scrapy.http import TextResponse
+
+# Test 1: Latin-1 encoded response with header
+print("Test 1: Latin-1 response with charset header")
+body_latin1 = "café".encode("latin-1")  # b'caf\xe9'
+response_latin1 = TextResponse(
+    "http://www.example.com",
+    body=body_latin1,
+    headers={"Content-Type": ["text/html; charset=iso-8859-1"]}
+)
+print(f"Body (bytes): {response_latin1.body}")
+print(f"Encoding: {response_latin1.encoding}")
+print(f"Text: {response_latin1.text}")
+print(f"Expected: café")
+print(f"Match: {response_latin1.text == 'café'}")
+print()
+
+# Test 2: UTF-8 encoded response (should still work)
+print("Test 2: UTF-8 response with charset header")
+body_utf8 = "café".encode("utf-8")
+response_utf8 = TextResponse(
+    "http://www.example.com",
+    body=body_utf8,
+    headers={"Content-Type": ["text/html; charset=utf-8"]}
+)
+print(f"Body (bytes): {response_utf8.body}")
+print(f"Encoding: {response_utf8.encoding}")
+print(f"Text: {response_utf8.text}")
+print(f"Expected: café")
+print(f"Match: {response_utf8.text == 'café'}")
+print()
+
+# Test 3: CP1252 (Windows-1252) encoded response
+print("Test 3: CP1252 response with charset header")
+body_cp1252 = "café".encode("cp1252")
+response_cp1252 = TextResponse(
+    "http://www.example.com",
+    body=body_cp1252,
+    headers={"Content-Type": ["text/html; charset=cp1252"]}
+)
+print(f"Body (bytes): {response_cp1252.body}")
+print(f"Encoding: {response_cp1252.encoding}")
+print(f"Text: {response_cp1252.text}")
+print(f"Expected: café")
+print(f"Match: {response_cp1252.text == 'café'}")
+EOF
+python3 /tmp/test_latin1_encoding.py
+
+```
+
+Tool:
+<returncode>
+1
+<output>
+Traceback (most recent call last):
+  File "/tmp/test_latin1_encoding.py", line 4, in <module>
+    from scrapy.http import TextResponse
+ModuleNotFoundError: No module named 'scrapy'
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 10, $0.03):
+I need to install scrapy. Let me check where the code is:
+
+```
+cd /root && python3 -c "import sys; sys.path.insert(0, '.'); from scrapy.http 
+import TextResponse; print('Success')" 2>&1 || cd /root && ls -la
+```
+
+Tool:
+<returncode>
+0
+<output>
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'scrapy'
+total 20
+drwx------ 1 root root 4096 Apr  7 02:17 .
+drwxr-xr-x 1 root root 4096 Apr 12 15:57 ..
+-rw-r--r-- 1 root root  607 Mar  2 21:50 .bashrc
+-rw-r--r-- 1 root root  132 Mar  2 21:50 .profile
+-rw-r--r-- 1 root root  169 Apr  7 02:17 .wget-hsts
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 11, $0.04):
+Let me check the current directory structure:
+
+```
+pwd && ls -la | head -20
+```
+
+Tool:
+<returncode>
+0
+<output>
+/work
+total 16
+drwxr-xr-x   8 root root  256 Apr 12 15:57 .
+drwxr-xr-x   1 root root 4096 Apr 12 15:57 ..
+drwxr-xr-x   4 root root  128 Apr 12 15:58 .agent_logs
+-rw-r--r--   1 root root 3117 Apr 12 15:23 README.rst
+drwxr-xr-x  44 root root 1408 Apr 12 15:23 scrapy
+-rw-r--r--   1 root root 1732 Apr 12 15:23 setup.cfg
+-rw-r--r--   1 root root 2575 Apr 12 15:23 setup.py
+drwxr-xr-x 129 root root 4128 Apr 12 15:23 tests
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 12, $0.04):
+Good! Now let me test it with the current working directory:
+
+```
+cd /work && python3 /tmp/test_latin1_encoding.py
+```
+
+Tool:
+<returncode>
+1
+<output>
+Traceback (most recent call last):
+  File "/tmp/test_latin1_encoding.py", line 4, in <module>
+    from scrapy.http import TextResponse
+ModuleNotFoundError: No module named 'scrapy'
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 13, $0.04):
+Let me set the PYTHONPATH:
+
+```
+cd /work && PYTHONPATH=/work python3 /tmp/test_latin1_encoding.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+Test 1: Latin-1 response with charset header
+Body (bytes): b'caf\xe9'
+Encoding: cp1252
+Text: caf�
+Expected: café
+Match: False
+
+Test 2: UTF-8 response with charset header
+Body (bytes): b'caf\xc3\xa9'
+Encoding: utf-8
+Text: café
+Expected: café
+Match: True
+
+Test 3: CP1252 response with charset header
+Body (bytes): b'caf\xe9'
+Encoding: cp1252
+Text: caf�
+Expected: café
+Match: False
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 14, $0.04):
+Perfect! This demonstrates the issue clearly. Test 1 (Latin-1) is failing, and 
+Test 3 (CP1252) is also failing. The problem is that the encoding detection says
+"cp1252" but then the text property ignores that and hardcodes UTF-8, resulting 
+in the replacement character `\ufffd`.
+
+Now let me look at the problematic code again and understand what needs to be 
+fixed:
+
+```
+sed -n '87,95p' /work/scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = "charset=utf-8"  # BUG: ignores response encoding
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 15, $0.05):
+Now let me see how the `_body_inferred_encoding` method works (around line 108):
+
+```
+sed -n '103,125p' /work/scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+    @memoizemethod_noargs
+    def _headers_encoding(self):
+        content_type = self.headers.get(b"Content-Type", b"")
+        return http_content_type_encoding(to_unicode(content_type, 
+encoding="latin-1"))
+
+    def _body_inferred_encoding(self):
+        if self._cached_benc is None:
+            content_type = to_unicode(
+                self.headers.get(b"Content-Type", b""), encoding="latin-1"
+            )
+            benc, ubody = html_to_unicode(
+                content_type,
+                self.body,
+                auto_detect_fun=self._auto_detect_fun,
+                default_encoding=self._DEFAULT_ENCODING,
+            )
+            self._cached_benc = benc
+            self._cached_ubody = ubody
+        return self._cached_benc
+
+    def _auto_detect_fun(self, text):
+        for enc in (self._DEFAULT_ENCODING, "utf-8", "cp1252"):
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 16, $0.05):
+Aha! I see the issue now. The `_body_inferred_encoding` method already calls 
+`html_to_unicode` and caches both the encoding (`self._cached_benc`) and the 
+unicode body (`self._cached_ubody`). However, the `text` property is then 
+calling `html_to_unicode` again with hardcoded "charset=utf-8", which:
+
+1. Overwrites the cached unicode body
+2. Ignores the actual encoding
+
+The fix should be to use the cached values from `_body_inferred_encoding` or 
+properly use the detected encoding. Let me look at the full text property again:
+
+```
+sed -n '87,97p' /work/scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = "charset=utf-8"  # BUG: ignores response encoding
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 17, $0.05):
+Now I understand the issue completely. The problem is:
+
+1. When we access `self.encoding`, it calls `_body_inferred_encoding()` which 
+properly detects the encoding and caches both `_cached_benc` and `_cached_ubody`
+2. But then the code checks if `_cached_ubody is None`, which would be False if 
+`_body_inferred_encoding()` was called (line 120 caches it)
+3. However, if the encoding is from `_declared_encoding()` but not from 
+`_body_inferred_encoding()`, then `_cached_ubody` would still be None
+
+So the fix is to properly format the charset string to use the actual encoding. 
+Let me trace through the logic more carefully:
+
+```
+sed -n '60,102p' /work/scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+                    f"{type(self).__name__} has no encoding"
+                )
+            self._body = body.encode(self._encoding)
+        else:
+            super()._set_body(body)
+
+    @property
+    def encoding(self):
+        return self._declared_encoding() or self._body_inferred_encoding()
+
+    def _declared_encoding(self):
+        return (
+            self._encoding
+            or self._bom_encoding()
+            or self._headers_encoding()
+            or self._body_declared_encoding()
+        )
+
+    def json(self):
+        """
+        .. versionadded:: 2.2
+
+        Deserialize a JSON document to a Python object.
+        """
+        if self._cached_decoded_json is _NONE:
+            self._cached_decoded_json = json.loads(self.body)
+        return self._cached_decoded_json
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = "charset=utf-8"  # BUG: ignores response encoding
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody
+
+    def urljoin(self, url):
+        """Join this Response's url with a possible relative url to form an
+        absolute interpretation of the latter."""
+        return urljoin(get_base_url(self), url)
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 18, $0.06):
+Now I see the full logic. The `encoding` property (line 68) first calls 
+`_declared_encoding()` and if that returns something, it uses it. Otherwise, it 
+calls `_body_inferred_encoding()` which will cache both the encoding and the 
+unicode body.
+
+The issue is in the `text` property. It should use the detected encoding 
+(`benc`) instead of hardcoding UTF-8. The charset string should be formatted 
+properly. Let me check what format html_to_unicode expects:
+
+```
+cd /work && PYTHONPATH=/work python3 << 'EOF'
+from w3lib.encoding import html_to_unicode
+
+# Test what happens with different charset formats
+test_body = b"caf\xe9"
+
+# Test 1: None as content type
+enc1, text1 = html_to_unicode(None, test_body, default_encoding="latin-1")
+print(f"None: enc={enc1}, text={text1}")
+
+# Test 2: charset in content type format
+enc2, text2 = html_to_unicode("text/html; charset=latin-1", test_body)
+print(f"With Content-Type: enc={enc2}, text={text2}")
+
+# Test 3: just charset format
+enc3, text3 = html_to_unicode("charset=latin-1", test_body)
+print(f"Just charset: enc={enc3}, text={text3}")
+EOF
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+None: enc=latin-1, text=café
+With Content-Type: enc=cp1252, text=café
+Just charset: enc=cp1252, text=café
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 19, $0.06):
+Interesting! Now let me understand what the correct format should be for the 
+charset string. Let me check what content_type header looks like in 
+_body_inferred_encoding:
+
+```
+cd /work && PYTHONPATH=/work python3 << 'EOF'
+from scrapy.http import TextResponse
+
+# Create a response with Latin-1 encoding
+body_latin1 = "café".encode("latin-1")
+response = TextResponse(
+    "http://www.example.com",
+    body=body_latin1,
+    headers={"Content-Type": ["text/html; charset=iso-8859-1"]}
+)
+
+# Check what the headers look like
+print(f"Raw header: {response.headers.get(b'Content-Type')}")
+
+# Check what the encoding property returns
+print(f"Encoding: {response.encoding}")
+
+# Check internal state
+print(f"_declared_encoding: {response._declared_encoding()}")
+print(f"_headers_encoding: {response._headers_encoding()}")
+EOF
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+Raw header: b'text/html; charset=iso-8859-1'
+Encoding: cp1252
+_declared_encoding: cp1252
+_headers_encoding: cp1252
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 20, $0.06):
+Now let me trace the exact issue. The problem is that when 
+`_declared_encoding()` returns something (cp1252), the 
+`_body_inferred_encoding()` method is NOT called, so `_cached_ubody` remains 
+None. Then in the `text` property, it tries to decode with hardcoded UTF-8.
+
+The fix is simple: Instead of hardcoding "charset=utf-8", we should use the 
+detected encoding. Let me create the proper fix:
+
+```
+cd /work && cat ./scrapy/http/response/text.py | sed -n '87,97p'
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = "charset=utf-8"  # BUG: ignores response encoding
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 21, $0.07):
+Now let me implement the fix. The solution is to use the detected encoding in 
+the charset string:
+
+```
+cd /work && cat > /tmp/fix.py << 'EOF'
+# Read the file
+with open('./scrapy/http/response/text.py', 'r') as f:
+    content = f.read()
+
+# Replace the buggy text property
+old_code = '''    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = "charset=utf-8"  # BUG: ignores response encoding
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody'''
+
+new_code = '''    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = f"charset={benc}" if benc else None
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody'''
+
+content = content.replace(old_code, new_code)
+
+# Write the file
+with open('./scrapy/http/response/text.py', 'w') as f:
+    f.write(content)
+
+print("Fixed!")
+EOF
+python3 /tmp/fix.py
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+Fixed!
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 22, $0.07):
+Now let me verify the fix:
+
+```
+cd /work && sed -n '87,97p' ./scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = f"charset={benc}" if benc else None
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 23, $0.07):
+Great! Now let's test the fix:
+
+```
+cd /work && PYTHONPATH=/work python3 /tmp/test_latin1_encoding.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+Test 1: Latin-1 response with charset header
+Body (bytes): b'caf\xe9'
+Encoding: cp1252
+Text: café
+Expected: café
+Match: True
+
+Test 2: UTF-8 response with charset header
+Body (bytes): b'caf\xc3\xa9'
+Encoding: utf-8
+Text: café
+Expected: café
+Match: True
+
+Test 3: CP1252 response with charset header
+Body (bytes): b'caf\xe9'
+Encoding: cp1252
+Text: café
+Expected: café
+Match: True
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 24, $0.07):
+Excellent! All tests pass now! Let me run the existing test suite to ensure we 
+haven't broken anything:
+
+```
+cd /work && python3 -m pytest tests/test_http_response.py::TextResponseTest -v
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python3
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'response_text_wrong_encoding'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 52 items
+
+tests/test_http_response.py::TextResponseTest::test_bom_is_removed_from_body 
+PASSED [  1%]
+tests/test_http_response.py::TextResponseTest::test_cache_json_response PASSED [
+3%]
+tests/test_http_response.py::TextResponseTest::test_copy PASSED          [  5%]
+tests/test_http_response.py::TextResponseTest::test_copy_cb_kwargs PASSED [  7%]
+tests/test_http_response.py::TextResponseTest::test_copy_inherited_classes 
+PASSED [  9%]
+tests/test_http_response.py::TextResponseTest::test_copy_meta PASSED     [ 11%]
+tests/test_http_response.py::TextResponseTest::test_declared_encoding_invalid 
+PASSED [ 13%]
+tests/test_http_response.py::TextResponseTest::test_encoding PASSED      [ 15%]
+tests/test_http_response.py::TextResponseTest::test_follow_None_url PASSED [ 
+17%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_absolute PASSED [
+19%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_css PASSED [ 21%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_css_skip_invalid 
+PASSED [ 23%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_empty PASSED [ 
+25%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_flags PASSED [ 
+26%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_invalid PASSED [ 
+28%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_links PASSED [ 
+30%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_relative PASSED [
+32%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_too_many_argument
+s PASSED [ 34%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_whitespace PASSED
+[ 36%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_whitespace_links 
+PASSED [ 38%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_xpath PASSED [ 
+40%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_xpath_skip_invali
+d PASSED [ 42%]
+tests/test_http_response.py::TextResponseTest::test_follow_encoding PASSED [ 
+44%]
+tests/test_http_response.py::TextResponseTest::test_follow_flags PASSED  [ 46%]
+tests/test_http_response.py::TextResponseTest::test_follow_link PASSED   [ 48%]
+tests/test_http_response.py::TextResponseTest::test_follow_selector PASSED [ 
+50%]
+tests/test_http_response.py::TextResponseTest::test_follow_selector_attribute 
+PASSED [ 51%]
+tests/test_http_response.py::TextResponseTest::test_follow_selector_invalid 
+PASSED [ 53%]
+tests/test_http_response.py::TextResponseTest::test_follow_selector_list PASSED 
+[ 55%]
+tests/test_http_response.py::TextResponseTest::test_follow_selector_no_href 
+PASSED [ 57%]
+tests/test_http_response.py::TextResponseTest::test_follow_url_absolute PASSED [
+59%]
+tests/test_http_response.py::TextResponseTest::test_follow_url_relative PASSED [
+61%]
+tests/test_http_response.py::TextResponseTest::test_follow_whitespace_link 
+PASSED [ 63%]
+tests/test_http_response.py::TextResponseTest::test_follow_whitespace_selector 
+PASSED [ 65%]
+tests/test_http_response.py::TextResponseTest::test_follow_whitespace_url PASSED
+[ 67%]
+tests/test_http_response.py::TextResponseTest::test_immutable_attributes PASSED 
+[ 69%]
+tests/test_http_response.py::TextResponseTest::test_init PASSED          [ 71%]
+tests/test_http_response.py::TextResponseTest::test_invalid_utf8_encoded_body_wi
+th_valid_utf8_BOM PASSED [ 73%]
+tests/test_http_response.py::TextResponseTest::test_json_response PASSED [ 75%]
+tests/test_http_response.py::TextResponseTest::test_replace PASSED       [ 76%]
+tests/test_http_response.py::TextResponseTest::test_replace_wrong_encoding 
+PASSED [ 78%]
+tests/test_http_response.py::TextResponseTest::test_selector PASSED      [ 80%]
+tests/test_http_response.py::TextResponseTest::test_selector_shortcuts PASSED [ 
+82%]
+tests/test_http_response.py::TextResponseTest::test_selector_shortcuts_kwargs 
+PASSED [ 84%]
+tests/test_http_response.py::TextResponseTest::test_shortcut_attributes PASSED [
+86%]
+tests/test_http_response.py::TextResponseTest::test_unavailable_cb_kwargs PASSED
+[ 88%]
+tests/test_http_response.py::TextResponseTest::test_unavailable_meta PASSED [ 
+90%]
+tests/test_http_response.py::TextResponseTest::test_unicode_body PASSED  [ 92%]
+tests/test_http_response.py::TextResponseTest::test_unicode_url PASSED   [ 94%]
+tests/test_http_response.py::TextResponseTest::test_urljoin PASSED       [ 96%]
+tests/test_http_response.py::TextResponseTest::test_urljoin_with_base_url PASSED
+[ 98%]
+tests/test_http_response.py::TextResponseTest::test_utf16 PASSED         [100%]
+
+============================== 52 passed in 4.54s ==============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 25, $0.08):
+Perfect! All TextResponseTest tests pass. Let me also run the HtmlResponseTest 
+and XmlResponseTest to make sure those inherit classes still work:
+
+```
+cd /work && python3 -m pytest tests/test_http_response.py::HtmlResponseTest -v
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python3
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'response_text_wrong_encoding'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 54 items
+
+tests/test_http_response.py::HtmlResponseTest::test_bom_is_removed_from_body 
+PASSED [  1%]
+tests/test_http_response.py::HtmlResponseTest::test_cache_json_response PASSED [
+3%]
+tests/test_http_response.py::HtmlResponseTest::test_copy PASSED          [  5%]
+tests/test_http_response.py::HtmlResponseTest::test_copy_cb_kwargs PASSED [  7%]
+tests/test_http_response.py::HtmlResponseTest::test_copy_inherited_classes 
+PASSED [  9%]
+tests/test_http_response.py::HtmlResponseTest::test_copy_meta PASSED     [ 11%]
+tests/test_http_response.py::HtmlResponseTest::test_declared_encoding_invalid 
+PASSED [ 12%]
+tests/test_http_response.py::HtmlResponseTest::test_encoding PASSED      [ 14%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_None_url PASSED [ 
+16%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_absolute PASSED [
+18%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_css PASSED [ 20%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_css_skip_invalid 
+PASSED [ 22%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_empty PASSED [ 
+24%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_flags PASSED [ 
+25%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_invalid PASSED [ 
+27%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_links PASSED [ 
+29%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_relative PASSED [
+31%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_too_many_argument
+s PASSED [ 33%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_whitespace PASSED
+[ 35%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_whitespace_links 
+PASSED [ 37%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_xpath PASSED [ 
+38%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_all_xpath_skip_invali
+d PASSED [ 40%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_encoding PASSED [ 
+42%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_flags PASSED  [ 44%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_link PASSED   [ 46%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_selector PASSED [ 
+48%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_selector_attribute 
+PASSED [ 50%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_selector_invalid 
+PASSED [ 51%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_selector_list PASSED 
+[ 53%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_selector_no_href 
+PASSED [ 55%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_url_absolute PASSED [
+57%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_url_relative PASSED [
+59%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_whitespace_link 
+PASSED [ 61%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_whitespace_selector 
+PASSED [ 62%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_whitespace_url PASSED
+[ 64%]
+tests/test_http_response.py::HtmlResponseTest::test_html5_meta_charset PASSED [ 
+66%]
+tests/test_http_response.py::HtmlResponseTest::test_html_encoding PASSED [ 68%]
+tests/test_http_response.py::HtmlResponseTest::test_immutable_attributes PASSED 
+[ 70%]
+tests/test_http_response.py::HtmlResponseTest::test_init PASSED          [ 72%]
+tests/test_http_response.py::HtmlResponseTest::test_invalid_utf8_encoded_body_wi
+th_valid_utf8_BOM PASSED [ 74%]
+tests/test_http_response.py::HtmlResponseTest::test_json_response PASSED [ 75%]
+tests/test_http_response.py::HtmlResponseTest::test_replace PASSED       [ 77%]
+tests/test_http_response.py::HtmlResponseTest::test_replace_wrong_encoding 
+PASSED [ 79%]
+tests/test_http_response.py::HtmlResponseTest::test_selector PASSED      [ 81%]
+tests/test_http_response.py::HtmlResponseTest::test_selector_shortcuts PASSED [ 
+83%]
+tests/test_http_response.py::HtmlResponseTest::test_selector_shortcuts_kwargs 
+PASSED [ 85%]
+tests/test_http_response.py::HtmlResponseTest::test_shortcut_attributes PASSED [
+87%]
+tests/test_http_response.py::HtmlResponseTest::test_unavailable_cb_kwargs PASSED
+[ 88%]
+tests/test_http_response.py::HtmlResponseTest::test_unavailable_meta PASSED [ 
+90%]
+tests/test_http_response.py::HtmlResponseTest::test_unicode_body PASSED  [ 92%]
+tests/test_http_response.py::HtmlResponseTest::test_unicode_url PASSED   [ 94%]
+tests/test_http_response.py::HtmlResponseTest::test_urljoin PASSED       [ 96%]
+tests/test_http_response.py::HtmlResponseTest::test_urljoin_with_base_url PASSED
+[ 98%]
+tests/test_http_response.py::HtmlResponseTest::test_utf16 PASSED         [100%]
+
+============================== 54 passed in 3.28s ==============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 26, $0.08):
+Great! Let me also test XmlResponseTest:
+
+```
+cd /work && python3 -m pytest tests/test_http_response.py::XmlResponseTest -v
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python3
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'response_text_wrong_encoding'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 54 items
+
+tests/test_http_response.py::XmlResponseTest::test_bom_is_removed_from_body 
+PASSED [  1%]
+tests/test_http_response.py::XmlResponseTest::test_cache_json_response PASSED [ 
+3%]
+tests/test_http_response.py::XmlResponseTest::test_copy PASSED           [  5%]
+tests/test_http_response.py::XmlResponseTest::test_copy_cb_kwargs PASSED [  7%]
+tests/test_http_response.py::XmlResponseTest::test_copy_inherited_classes PASSED
+[  9%]
+tests/test_http_response.py::XmlResponseTest::test_copy_meta PASSED      [ 11%]
+tests/test_http_response.py::XmlResponseTest::test_declared_encoding_invalid 
+PASSED [ 12%]
+tests/test_http_response.py::XmlResponseTest::test_encoding PASSED       [ 14%]
+tests/test_http_response.py::XmlResponseTest::test_follow_None_url PASSED [ 16%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_absolute PASSED [ 
+18%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_css PASSED [ 20%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_css_skip_invalid 
+PASSED [ 22%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_empty PASSED [ 
+24%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_flags PASSED [ 
+25%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_invalid PASSED [ 
+27%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_links PASSED [ 
+29%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_relative PASSED [ 
+31%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_too_many_arguments
+PASSED [ 33%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_whitespace PASSED 
+[ 35%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_whitespace_links 
+PASSED [ 37%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_xpath PASSED [ 
+38%]
+tests/test_http_response.py::XmlResponseTest::test_follow_all_xpath_skip_invalid
+PASSED [ 40%]
+tests/test_http_response.py::XmlResponseTest::test_follow_encoding PASSED [ 42%]
+tests/test_http_response.py::XmlResponseTest::test_follow_flags PASSED   [ 44%]
+tests/test_http_response.py::XmlResponseTest::test_follow_link PASSED    [ 46%]
+tests/test_http_response.py::XmlResponseTest::test_follow_selector PASSED [ 48%]
+tests/test_http_response.py::XmlResponseTest::test_follow_selector_attribute 
+PASSED [ 50%]
+tests/test_http_response.py::XmlResponseTest::test_follow_selector_invalid 
+PASSED [ 51%]
+tests/test_http_response.py::XmlResponseTest::test_follow_selector_list PASSED [
+53%]
+tests/test_http_response.py::XmlResponseTest::test_follow_selector_no_href 
+PASSED [ 55%]
+tests/test_http_response.py::XmlResponseTest::test_follow_url_absolute PASSED [ 
+57%]
+tests/test_http_response.py::XmlResponseTest::test_follow_url_relative PASSED [ 
+59%]
+tests/test_http_response.py::XmlResponseTest::test_follow_whitespace_link PASSED
+[ 61%]
+tests/test_http_response.py::XmlResponseTest::test_follow_whitespace_selector 
+PASSED [ 62%]
+tests/test_http_response.py::XmlResponseTest::test_follow_whitespace_url PASSED 
+[ 64%]
+tests/test_http_response.py::XmlResponseTest::test_immutable_attributes PASSED [
+66%]
+tests/test_http_response.py::XmlResponseTest::test_init PASSED           [ 68%]
+tests/test_http_response.py::XmlResponseTest::test_invalid_utf8_encoded_body_wit
+h_valid_utf8_BOM PASSED [ 70%]
+tests/test_http_response.py::XmlResponseTest::test_json_response PASSED  [ 72%]
+tests/test_http_response.py::XmlResponseTest::test_replace PASSED        [ 74%]
+tests/test_http_response.py::XmlResponseTest::test_replace_encoding PASSED [ 
+75%]
+tests/test_http_response.py::XmlResponseTest::test_replace_wrong_encoding PASSED
+[ 77%]
+tests/test_http_response.py::XmlResponseTest::test_selector PASSED       [ 79%]
+tests/test_http_response.py::XmlResponseTest::test_selector_shortcuts PASSED [ 
+81%]
+tests/test_http_response.py::XmlResponseTest::test_selector_shortcuts_kwargs 
+PASSED [ 83%]
+tests/test_http_response.py::XmlResponseTest::test_shortcut_attributes PASSED [ 
+85%]
+tests/test_http_response.py::XmlResponseTest::test_unavailable_cb_kwargs PASSED 
+[ 87%]
+tests/test_http_response.py::XmlResponseTest::test_unavailable_meta PASSED [ 
+88%]
+tests/test_http_response.py::XmlResponseTest::test_unicode_body PASSED   [ 90%]
+tests/test_http_response.py::XmlResponseTest::test_unicode_url PASSED    [ 92%]
+tests/test_http_response.py::XmlResponseTest::test_urljoin PASSED        [ 94%]
+tests/test_http_response.py::XmlResponseTest::test_urljoin_with_base_url PASSED 
+[ 96%]
+tests/test_http_response.py::XmlResponseTest::test_utf16 PASSED          [ 98%]
+tests/test_http_response.py::XmlResponseTest::test_xml_encoding PASSED   [100%]
+
+============================== 54 passed in 3.60s ==============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+
+mini-swe-agent (step 27, $0.09):
+Excellent! All tests pass. Now let me create a more comprehensive test to ensure
+we've solved the issue completely:
+
+```
+cd /work && cat > /tmp/comprehensive_test.py << 'EOF'
+#!/usr/bin/env python
+"""Comprehensive test for the TextResponse.text encoding fix"""
+
+from scrapy.http import TextResponse, HtmlResponse, XmlResponse
+
+def test_encoding(encoding_name, charset_header, test_string="café"):
+    """Test that response.text respects the declared encoding"""
+    body_bytes = test_string.encode(encoding_name)
+    
+    response = TextResponse(
+        "http://www.example.com",
+        body=body_bytes,
+        headers={"Content-Type": [f"text/html; charset={charset_header}"]}
+    )
+    
+    assert response.text == test_string, (
+        f"Failed for {encoding_name}/{charset_header}: "
+        f"expected {repr(test_string)}, got {repr(response.text)}"
+    )
+    print(f"✓ {encoding_name} ({charset_header}): {response.text}")
+
+# Test various common encodings
+encodings_to_test = [
+    ("utf-8", "utf-8", "café"),
+    ("latin-1", "iso-8859-1", "café"),
+    ("cp1252", "windows-1252", "café"),
+    ("gb2312", "gb2312", "中国"),
+    ("shift_jis", "shift_jis", "こんにちは"),
+]
+
+print("Testing TextResponse:")
+for enc_name, charset, test_str in encodings_to_test:
+    test_encoding(enc_name, charset, test_str)
+
+print("\nTesting HtmlResponse:")
+for enc_name, charset, test_str in encodings_to_test:
+    body_bytes = test_str.encode(enc_name)
+    response = HtmlResponse(
+        "http://www.example.com",
+        body=body_bytes,
+        headers={"Content-Type": [f"text/html; charset={charset}"]}
+    )
+    assert response.text == test_str, (
+        f"HtmlResponse failed for {enc_name}/{charset}"
+    )
+    print(f"✓ {enc_name} ({charset}): {response.text}")
+
+print("\nTesting XmlResponse:")
+for enc_name, charset, test_str in encodings_to_test:
+    body_bytes = test_str.encode(enc_name)
+    response = XmlResponse(
+        "http://www.example.com",
+        body=body_bytes,
+        headers={"Content-Type": [f"text/xml; charset={charset}"]}
+    )
+    assert response.text == test_str, (
+        f"XmlResponse failed for {enc_name}/{charset}"
+    )
+    print(f"✓ {enc_name} ({charset}): {response.text}")
+
+print("\n✅ All tests passed!")
+EOF
+PYTHONPATH=/work python3 /tmp/comprehensive_test.py
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+Testing TextResponse:
+✓ utf-8 (utf-8): café
+✓ latin-1 (iso-8859-1): café
+✓ cp1252 (windows-1252): café
+✓ gb2312 (gb2312): 中国
+✓ shift_jis (shift_jis): こんにちは
+
+Testing HtmlResponse:
+✓ utf-8 (utf-8): café
+✓ latin-1 (iso-8859-1): café
+✓ cp1252 (windows-1252): café
+✓ gb2312 (gb2312): 中国
+✓ shift_jis (shift_jis): こんにちは
+
+Testing XmlResponse:
+✓ utf-8 (utf-8): café
+✓ latin-1 (iso-8859-1): café
+✓ cp1252 (windows-1252): café
+✓ gb2312 (gb2312): 中国
+✓ shift_jis (shift_jis): こんにちは
+
+✅ All tests passed!
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 28, $0.10):
+Perfect! Now let's test edge cases:
+
+```
+cd /work && cat > /tmp/edge_case_test.py << 'EOF'
+#!/usr/bin/env python
+"""Edge case tests for TextResponse.text encoding fix"""
+
+from scrapy.http import TextResponse
+import codecs
+
+print("Testing edge cases:")
+
+# Test 1: Response with BOM (Byte Order Mark)
+print("\n1. Response with UTF-8 BOM:")
+body_with_bom = codecs.BOM_UTF8 + "café".encode("utf-8")
+response = TextResponse(
+    "http://www.example.com",
+    body=body_with_bom,
+    headers={"Content-Type": ["text/html; charset=utf-8"]}
+)
+print(f"   Text: {response.text}")
+print(f"   Expected: café (without BOM)")
+print(f"   Match: {response.text == 'café'}")
+
+# Test 2: No charset header (should use default encoding detection)
+print("\n2. Response without charset header (UTF-8):")
+response = TextResponse(
+    "http://www.example.com",
+    body="café".encode("utf-8")
+)
+print(f"   Encoding: {response.encoding}")
+print(f"   Text: {response.text}")
+print(f"   Match: {response.text == 'café'}")
+
+# Test 3: Explicitly set encoding parameter
+print("\n3. Response with explicit encoding parameter:")
+response = TextResponse(
+    "http://www.example.com",
+    body="café".encode("latin-1"),
+    encoding="latin-1"
+)
+print(f"   Encoding: {response.encoding}")
+print(f"   Text: {response.text}")
+print(f"   Match: {response.text == 'café'}")
+
+# Test 4: Meta charset in body (should be detected)
+print("\n4. Response with meta charset in body:")
+html_body = '<html><head><meta 
+charset="iso-8859-1"></head><body>café</body></html>'.encode("latin-1")
+response = TextResponse(
+    "http://www.example.com",
+    body=html_body
+)
+print(f"   Encoding: {response.encoding}")
+# Just verify it doesn't crash and text is accessible
+print(f"   Text starts with: {response.text[:50]}")
+print(f"   Can decode: ✓")
+
+# Test 5: Caching behavior
+print("\n5. Caching behavior:")
+response = TextResponse(
+    "http://www.example.com",
+    body="café".encode("latin-1"),
+    headers={"Content-Type": ["text/html; charset=iso-8859-1"]}
+)
+text1 = response.text
+text2 = response.text
+print(f"   First access: {text1}")
+print(f"   Second access: {text2}")
+print(f"   Same object (cached): {text1 is text2}")
+
+print("\n✅ All edge case tests passed!")
+EOF
+PYTHONPATH=/work python3 /tmp/edge_case_test.py
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+Testing edge cases:
+
+1. Response with UTF-8 BOM:
+   Text: café
+   Expected: café (without BOM)
+   Match: True
+
+2. Response without charset header (UTF-8):
+   Encoding: utf-8
+   Text: café
+   Match: True
+
+3. Response with explicit encoding parameter:
+   Encoding: latin-1
+   Text: café
+   Match: True
+
+4. Response with meta charset in body:
+   Encoding: cp1252
+   Text starts with: <html><head><meta charset="iso-8859-1"></head><bod
+   Can decode: ✓
+
+5. Caching behavior:
+   First access: café
+   Second access: café
+   Same object (cached): True
+
+✅ All edge case tests passed!
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 29, $0.11):
+Excellent! All tests pass. Now let me verify the fix one more time by viewing 
+the changed code:
+
+```
+cd /work && sed -n '87,100p' ./scrapy/http/response/text.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = f"charset={benc}" if benc else None
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody
+
+    def urljoin(self, url):
+        """Join this Response's url with a possible relative url to form an
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 30, $0.11):
+Perfect! Let me run one final comprehensive test to ensure everything works:
+
+```
+cd /work && python3 -m pytest tests/test_http_response.py -v -k "text or 
+encoding" 2>&1 | head -100
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python3
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'response_text_wrong_encoding'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 238 items / 171 deselected / 67 selected
+
+tests/test_http_response.py::TextResponseTest::test_bom_is_removed_from_body 
+PASSED [  1%]
+tests/test_http_response.py::TextResponseTest::test_cache_json_response PASSED [
+2%]
+tests/test_http_response.py::TextResponseTest::test_copy PASSED          [  4%]
+tests/test_http_response.py::TextResponseTest::test_copy_cb_kwargs PASSED [  5%]
+tests/test_http_response.py::TextResponseTest::test_copy_inherited_classes 
+PASSED [  7%]
+tests/test_http_response.py::TextResponseTest::test_copy_meta PASSED     [  8%]
+tests/test_http_response.py::TextResponseTest::test_declared_encoding_invalid 
+PASSED [ 10%]
+tests/test_http_response.py::TextResponseTest::test_encoding PASSED      [ 11%]
+tests/test_http_response.py::TextResponseTest::test_follow_None_url PASSED [ 
+13%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_absolute PASSED [
+14%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_css PASSED [ 16%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_css_skip_invalid 
+PASSED [ 17%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_empty PASSED [ 
+19%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_flags PASSED [ 
+20%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_invalid PASSED [ 
+22%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_links PASSED [ 
+23%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_relative PASSED [
+25%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_too_many_argument
+s PASSED [ 26%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_whitespace PASSED
+[ 28%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_whitespace_links 
+PASSED [ 29%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_xpath PASSED [ 
+31%]
+tests/test_http_response.py::TextResponseTest::test_follow_all_xpath_skip_invali
+d PASSED [ 32%]
+tests/test_http_response.py::TextResponseTest::test_follow_encoding PASSED [ 
+34%]
+tests/test_http_response.py::TextResponseTest::test_follow_flags PASSED  [ 35%]
+tests/test_http_response.py::TextResponseTest::test_follow_link PASSED   [ 37%]
+tests/test_http_response.py::TextResponseTest::test_follow_selector PASSED [ 
+38%]
+tests/test_http_response.py::TextResponseTest::test_follow_selector_attribute 
+PASSED [ 40%]
+tests/test_http_response.py::TextResponseTest::test_follow_selector_invalid 
+PASSED [ 41%]
+tests/test_http_response.py::TextResponseTest::test_follow_selector_list PASSED 
+[ 43%]
+tests/test_http_response.py::TextResponseTest::test_follow_selector_no_href 
+PASSED [ 44%]
+tests/test_http_response.py::TextResponseTest::test_follow_url_absolute PASSED [
+46%]
+tests/test_http_response.py::TextResponseTest::test_follow_url_relative PASSED [
+47%]
+tests/test_http_response.py::TextResponseTest::test_follow_whitespace_link 
+PASSED [ 49%]
+tests/test_http_response.py::TextResponseTest::test_follow_whitespace_selector 
+PASSED [ 50%]
+tests/test_http_response.py::TextResponseTest::test_follow_whitespace_url PASSED
+[ 52%]
+tests/test_http_response.py::TextResponseTest::test_immutable_attributes PASSED 
+[ 53%]
+tests/test_http_response.py::TextResponseTest::test_init PASSED          [ 55%]
+tests/test_http_response.py::TextResponseTest::test_invalid_utf8_encoded_body_wi
+th_valid_utf8_BOM PASSED [ 56%]
+tests/test_http_response.py::TextResponseTest::test_json_response PASSED [ 58%]
+tests/test_http_response.py::TextResponseTest::test_replace PASSED       [ 59%]
+tests/test_http_response.py::TextResponseTest::test_replace_wrong_encoding 
+PASSED [ 61%]
+tests/test_http_response.py::TextResponseTest::test_selector PASSED      [ 62%]
+tests/test_http_response.py::TextResponseTest::test_selector_shortcuts PASSED [ 
+64%]
+tests/test_http_response.py::TextResponseTest::test_selector_shortcuts_kwargs 
+PASSED [ 65%]
+tests/test_http_response.py::TextResponseTest::test_shortcut_attributes PASSED [
+67%]
+tests/test_http_response.py::TextResponseTest::test_unavailable_cb_kwargs PASSED
+[ 68%]
+tests/test_http_response.py::TextResponseTest::test_unavailable_meta PASSED [ 
+70%]
+tests/test_http_response.py::TextResponseTest::test_unicode_body PASSED  [ 71%]
+tests/test_http_response.py::TextResponseTest::test_unicode_url PASSED   [ 73%]
+tests/test_http_response.py::TextResponseTest::test_urljoin PASSED       [ 74%]
+tests/test_http_response.py::TextResponseTest::test_urljoin_with_base_url PASSED
+[ 76%]
+tests/test_http_response.py::TextResponseTest::test_utf16 PASSED         [ 77%]
+tests/test_http_response.py::HtmlResponseTest::test_declared_encoding_invalid 
+PASSED [ 79%]
+tests/test_http_response.py::HtmlResponseTest::test_encoding PASSED      [ 80%]
+tests/test_http_response.py::HtmlResponseTest::test_follow_encoding PASSED [ 
+82%]
+tests/test_http_response.py::HtmlResponseTest::test_html_encoding PASSED [ 83%]
+tests/test_http_response.py::HtmlResponseTest::test_replace_wrong_encoding 
+PASSED [ 85%]
+tests/test_http_response.py::XmlResponseTest::test_declared_encoding_invalid 
+PASSED [ 86%]
+tests/test_http_response.py::XmlResponseTest::test_encoding PASSED       [ 88%]
+tests/test_http_response.py::XmlResponseTest::test_follow_encoding PASSED [ 89%]
+tests/test_http_response.py::XmlResponseTest::test_replace_encoding PASSED [ 
+91%]
+tests/test_http_response.py::XmlResponseTest::test_replace_wrong_encoding PASSED
+[ 92%]
+tests/test_http_response.py::XmlResponseTest::test_xml_encoding PASSED   [ 94%]
+tests/test_http_response.py::CustomResponseTest::test_declared_encoding_invalid 
+PASSED [ 95%]
+tests/test_http_response.py::CustomResponseTest::test_encoding PASSED    [ 97%]
+tests/test_http_response.py::CustomResponseTest::test_follow_encoding PASSED [ 
+98%]
+tests/test_http_response.py::CustomResponseTest::test_replace_wrong_encoding 
+PASSED [100%]
+
+====================== 67 passed, 171 deselected in 2.26s ======================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 31, $0.11):
+Perfect! All tests pass. Let me also run the entire test suite for http_response
+to ensure nothing is broken:
+
+```
+cd /work && python3 -m pytest tests/test_http_response.py --tb=short 2>&1 | tail
+-50
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collected 238 items
+
+tests/test_http_response.py ............................................ [ 18%]
+........................................................................ [ 48%]
+........................................................................ [ 78%]
+..................................................                       [100%]
+
+============================= 238 passed in 3.42s ==============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 32, $0.12):
+Excellent! All 238 tests pass! Let me create one final test to document the 
+specific issue mentioned in the problem statement:
+
+```
+cd /work && cat > /tmp/issue_test.py << 'EOF'
+#!/usr/bin/env python
+"""
+Test to verify that the issue described in the problem statement is fixed.
+
+Issue: TextResponse.text should decode response bodies using the response's 
+declared encoding. After a recent change it always decodes as UTF-8, which 
+corrupts responses declared with a different charset such as Latin-1.
+
+This test verifies that TextResponse.text honors the response encoding when 
+decoding the body.
+"""
+
+from scrapy.http import TextResponse
+
+def test_latin1_response():
+    """Test that Latin-1 response is decoded correctly"""
+    # Latin-1 encoded content
+    latin1_text = "café"
+    latin1_bytes = latin1_text.encode("latin-1")  # Produces: b'caf\xe9'
+    
+    # Create a response with Latin-1 charset
+    response = TextResponse(
+        url="http://example.com",
+        body=latin1_bytes,
+        headers={"Content-Type": ["text/html; charset=iso-8859-1"]}
+    )
+    
+    # Before the fix, this would produce corruption: 'caf\ufffd'
+    # After the fix, this correctly produces: 'café'
+    print(f"Input bytes: {latin1_bytes}")
+    print(f"Declared encoding: {response.encoding}")
+    print(f"Decoded text: {response.text}")
+    print(f"Expected text: {latin1_text}")
+    
+    assert response.text == latin1_text, (
+        f"Latin-1 response was not decoded correctly. "
+        f"Expected {repr(latin1_text)}, got {repr(response.text)}"
+    )
+    print("✅ Latin-1 test passed!")
+
+def test_utf8_response():
+    """Verify UTF-8 responses still work correctly"""
+    utf8_text = "café"
+    utf8_bytes = utf8_text.encode("utf-8")  # Produces: b'caf\xc3\xa9'
+    
+    response = TextResponse(
+        url="http://example.com",
+        body=utf8_bytes,
+        headers={"Content-Type": ["text/html; charset=utf-8"]}
+    )
+    
+    print(f"\nInput bytes: {utf8_bytes}")
+    print(f"Declared encoding: {response.encoding}")
+    print(f"Decoded text: {response.text}")
+    print(f"Expected text: {utf8_text}")
+    
+    assert response.text == utf8_text
+    print("✅ UTF-8 test passed!")
+
+def test_cp1252_response():
+    """Test Windows-1252 (CP1252) response"""
+    cp1252_text = "café"
+    cp1252_bytes = cp1252_text.encode("cp1252")  # Produces: b'caf\xe9'
+    
+    response = TextResponse(
+        url="http://example.com",
+        body=cp1252_bytes,
+        headers={"Content-Type": ["text/html; charset=windows-1252"]}
+    )
+    
+    print(f"\nInput bytes: {cp1252_bytes}")
+    print(f"Declared encoding: {response.encoding}")
+    print(f"Decoded text: {response.text}")
+    print(f"Expected text: {cp1252_text}")
+    
+    assert response.text == cp1252_text
+    print("✅ CP1252 test passed!")
+
+if __name__ == "__main__":
+    print("=" * 70)
+    print("Testing fix for: TextResponse.text encoding issue")
+    print("=" * 70)
+    
+    test_latin1_response()
+    test_utf8_response()
+    test_cp1252_response()
+    
+    print("\n" + "=" * 70)
+    print("✅ All tests passed! Issue is fixed!")
+    print("=" * 70)
+EOF
+PYTHONPATH=/work python3 /tmp/issue_test.py
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+======================================================================
+Testing fix for: TextResponse.text encoding issue
+======================================================================
+Input bytes: b'caf\xe9'
+Declared encoding: cp1252
+Decoded text: café
+Expected text: café
+✅ Latin-1 test passed!
+
+Input bytes: b'caf\xc3\xa9'
+Declared encoding: utf-8
+Decoded text: café
+Expected text: café
+✅ UTF-8 test passed!
+
+Input bytes: b'caf\xe9'
+Declared encoding: cp1252
+Decoded text: café
+Expected text: café
+✅ CP1252 test passed!
+
+======================================================================
+✅ All tests passed! Issue is fixed!
+======================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 33, $0.13):
+Perfect! Let me create one more test to verify the behavior with different 
+scenarios:
+
+```
+cd /work && cat > /tmp/detailed_test.py << 'EOF'
+#!/usr/bin/env python
+"""Detailed test showing the difference before and after the fix"""
+
+from scrapy.http import TextResponse
+
+print("Before fix behavior (simulated):")
+print("=========================================")
+print("The old code hardcoded: charset='charset=utf-8'")
+print("This caused Latin-1 and other encodings to be misinterpreted.\n")
+
+print("After fix behavior (actual):")
+print("=========================================")
+print("The new code uses: charset=f'charset={benc}' where benc is the detected 
+encoding\n")
+
+# Example 1: Latin-1
+print("Example 1: Latin-1 encoded response")
+print("-" * 50)
+latin1_text = "café français"
+latin1_bytes = latin1_text.encode("latin-1")
+
+response = TextResponse(
+    url="http://example.com",
+    body=latin1_bytes,
+    headers={"Content-Type": ["text/html; charset=iso-8859-1"]}
+)
+
+print(f"Original text:     {latin1_text}")
+print(f"Bytes (Latin-1):   {latin1_bytes}")
+print(f"Response encoding: {response.encoding}")
+print(f"Decoded text:      {response.text}")
+print(f"Correct: {response.text == latin1_text} ✅\n")
+
+# Example 2: UTF-8
+print("Example 2: UTF-8 encoded response")
+print("-" * 50)
+utf8_text = "こんにちは世界"
+utf8_bytes = utf8_text.encode("utf-8")
+
+response = TextResponse(
+    url="http://example.com",
+    body=utf8_bytes,
+    headers={"Content-Type": ["text/html; charset=utf-8"]}
+)
+
+print(f"Original text:     {utf8_text}")
+print(f"Bytes (UTF-8):     {utf8_bytes}")
+print(f"Response encoding: {response.encoding}")
+print(f"Decoded text:      {response.text}")
+print(f"Correct: {response.text == utf8_text} ✅\n")
+
+# Example 3: Shift-JIS
+print("Example 3: Shift-JIS encoded response")
+print("-" * 50)
+sjis_text = "こんにちは"
+sjis_bytes = sjis_text.encode("shift_jis")
+
+response = TextResponse(
+    url="http://example.com",
+    body=sjis_bytes,
+    headers={"Content-Type": ["text/html; charset=shift_jis"]}
+)
+
+print(f"Original text:     {sjis_text}")
+print(f"Bytes (Shift-JIS): {sjis_bytes}")
+print(f"Response encoding: {response.encoding}")
+print(f"Decoded text:      {response.text}")
+print(f"Correct: {response.text == sjis_text} ✅\n")
+
+print("=" * 50)
+print("✅ The fix correctly honors response encodings!")
+print("=" * 50)
+EOF
+PYTHONPATH=/work python3 /tmp/detailed_test.py
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+Before fix behavior (simulated):
+=========================================
+The old code hardcoded: charset='charset=utf-8'
+This caused Latin-1 and other encodings to be misinterpreted.
+
+After fix behavior (actual):
+=========================================
+The new code uses: charset=f'charset={benc}' where benc is the detected encoding
+
+Example 1: Latin-1 encoded response
+--------------------------------------------------
+Original text:     café français
+Bytes (Latin-1):   b'caf\xe9 fran\xe7ais'
+Response encoding: cp1252
+Decoded text:      café français
+Correct: True ✅
+
+Example 2: UTF-8 encoded response
+--------------------------------------------------
+Original text:     こんにちは世界
+Bytes (UTF-8):     
+b'\xe3\x81\x93\xe3\x82\x93\xe3\x81\xab\xe3\x81\xa1\xe3\x81\xaf\xe4\xb8\x96\xe7\x
+95\x8c'
+Response encoding: utf-8
+Decoded text:      こんにちは世界
+Correct: True ✅
+
+Example 3: Shift-JIS encoded response
+--------------------------------------------------
+Original text:     こんにちは
+Bytes (Shift-JIS): b'\x82\xb1\x82\xf1\x82\xc9\x82\xbf\x82\xcd'
+Response encoding: cp932
+Decoded text:      こんにちは
+Correct: True ✅
+
+==================================================
+✅ The fix correctly honors response encodings!
+==================================================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 34, $0.14):
+Perfect! Everything works as expected. Let me verify the fix one more time and 
+create a summary:
+
+```
+cd /work && cat ./scrapy/http/response/text.py | sed -n '87,97p'
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+    @property
+    def text(self) -> str:
+        """Body as unicode"""
+        # access self.encoding before _cached_ubody to make sure
+        # _body_inferred_encoding is called
+        benc = self.encoding
+        if self._cached_ubody is None:
+            charset = f"charset={benc}" if benc else None
+            self._cached_ubody = html_to_unicode(charset, self.body)[1]
+        return self._cached_ubody
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 35, $0.15):
+Perfect! Let me create a summary document:
+
+```
+cat > /tmp/FIX_SUMMARY.md << 'EOF'
+# Fix Summary: TextResponse.text Encoding Issue
+
+## Problem
+The `TextResponse.text` property was hardcoding the charset to UTF-8, ignoring 
+the response's declared encoding. This caused responses with other charsets 
+(like Latin-1, Windows-1252, etc.) to be incorrectly decoded, resulting in 
+corrupted text with replacement characters (U+FFFD).
+
+### Example of the Bug
+```python
+# Latin-1 encoded response
+response = TextResponse(
+    "http://example.com",
+    body=b"caf\xe9",  # Latin-1 bytes for "café"
+    headers={"Content-Type": ["text/html; charset=iso-8859-1"]}
+)
+
+# Before fix: response.text = "caf\ufffd"  (corrupted with replacement char)
+# After fix:  response.text = "café"      (correct)
+```
+
+## Root Cause
+In `scrapy/http/response/text.py`, the `text` property had this code:
+```python
+@property
+def text(self) -> str:
+    """Body as unicode"""
+    benc = self.encoding
+    if self._cached_ubody is None:
+        charset = "charset=utf-8"  # BUG: hardcoded UTF-8, ignored response 
+encoding
+        self._cached_ubody = html_to_unicode(charset, self.body)[1]
+    return self._cached_ubody
+```
+
+The `charset` variable was hardcoded to `"charset=utf-8"` instead of using the 
+detected encoding in `benc`.
+
+## Solution
+Changed line 94 from:
+```python
+charset = "charset=utf-8"  # BUG: ignores response encoding
+```
+
+To:
+```python
+charset = f"charset={benc}" if benc else None
+```
+
+This ensures that the detected encoding (stored in `benc`) is used when decoding
+the response body.
+
+## Changes Made
+**File: `scrapy/http/response/text.py`**
+- **Lines 87-97**: Modified the `text` property to use the detected encoding 
+instead of hardcoding UTF-8
+
+## Testing
+All existing tests pass:
+- 238 tests in `tests/test_http_response.py` ✅
+- Specific encoding tests (Latin-1, UTF-8, CP1252, GB2312, Shift-JIS) ✅
+- Edge cases (BOM, no charset header, explicit encoding parameter) ✅
+- Subclasses (HtmlResponse, XmlResponse) ✅
+
+## Verification
+The fix correctly handles:
+1. UTF-8 encoded responses
+2. Latin-1 (ISO-8859-1) encoded responses
+3. Windows-1252 (CP1252) encoded responses
+4. Asian encodings (GB2312, Shift-JIS, CP932)
+5. BOM (Byte Order Mark) detection
+6. Responses without explicit charset headers
+7. Responses with explicit encoding parameters
+8. Cached text access
+EOF
+cat /tmp/FIX_SUMMARY.md
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+# Fix Summary: TextResponse.text Encoding Issue
+
+## Problem
+The `TextResponse.text` property was hardcoding the charset to UTF-8, ignoring 
+the response's declared encoding. This caused responses with other charsets 
+(like Latin-1, Windows-1252, etc.) to be incorrectly decoded, resulting in 
+corrupted text with replacement characters (U+FFFD).
+
+### Example of the Bug
+```python
+# Latin-1 encoded response
+response = TextResponse(
+    "http://example.com",
+    body=b"caf\xe9",  # Latin-1 bytes for "café"
+    headers={"Content-Type": ["text/html; charset=iso-8859-1"]}
+)
+
+# Before fix: response.text = "caf\ufffd"  (corrupted with replacement char)
+# After fix:  response.text = "café"      (correct)
+```
+
+## Root Cause
+In `scrapy/http/response/text.py`, the `text` property had this code:
+```python
+@property
+def text(self) -> str:
+    """Body as unicode"""
+    benc = self.encoding
+    if self._cached_ubody is None:
+        charset = "charset=utf-8"  # BUG: hardcoded UTF-8, ignored response 
+encoding
+        self._cached_ubody = html_to_unicode(charset, self.body)[1]
+    return self._cached_ubody
+```
+
+The `charset` variable was hardcoded to `"charset=utf-8"` instead of using the 
+detected encoding in `benc`.
+
+## Solution
+Changed line 94 from:
+```python
+charset = "charset=utf-8"  # BUG: ignores response encoding
+```
+
+To:
+```python
+charset = f"charset={benc}" if benc else None
+```
+
+This ensures that the detected encoding (stored in `benc`) is used when decoding
+the response body.
+
+## Changes Made
+**File: `scrapy/http/response/text.py`**
+- **Lines 87-97**: Modified the `text` property to use the detected encoding 
+instead of hardcoding UTF-8
+
+## Testing
+All existing tests pass:
+- 238 tests in `tests/test_http_response.py` ✅
+- Specific encoding tests (Latin-1, UTF-8, CP1252, GB2312, Shift-JIS) ✅
+- Edge cases (BOM, no charset header, explicit encoding parameter) ✅
+- Subclasses (HtmlResponse, XmlResponse) ✅
+
+## Verification
+The fix correctly handles:
+1. UTF-8 encoded responses
+2. Latin-1 (ISO-8859-1) encoded responses
+3. Windows-1252 (CP1252) encoded responses
+4. Asian encodings (GB2312, Shift-JIS, CP932)
+5. BOM (Byte Order Mark) detection
+6. Responses without explicit charset headers
+7. Responses with explicit encoding parameters
+8. Cached text access
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 36, $0.15):
+Perfect! Now let me run one final comprehensive test to ensure everything is 
+working:
+
+```
+cd /work && python3 -m pytest tests/test_http_response.py -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+........................................................................ [ 30%]
+........................................................................ [ 60%]
+........................................................................ [ 90%]
+......................                                                   [100%]
+238 passed in 4.75s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 37, $0.16):
+Excellent! All 238 tests pass. Let me verify the change one last time by looking
+at the diff:
+
+```
+cd /work && git diff scrapy/http/response/text.py 2>/dev/null || diff -u 
+/dev/null /dev/null
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 38, $0.16):
+Let me check the specific line that was changed:
+
+```
+cd /work && sed -n '87,100p' scrapy/http/response/text.py | cat -n
+```
+
+Tool:
+<returncode>
+0
+<output>
+     1  
+     2      @property
+     3      def text(self) -> str:
+     4          """Body as unicode"""
+     5          # access self.encoding before _cached_ubody to make sure
+     6          # _body_inferred_encoding is called
+     7          benc = self.encoding
+     8          if self._cached_ubody is None:
+     9              charset = f"charset={benc}" if benc else None
+    10              self._cached_ubody = html_to_unicode(charset, self.body)[1]
+    11          return self._cached_ubody
+    12  
+    13      def urljoin(self, url):
+    14          """Join this Response's url with a possible relative url to form
+an
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 39, $0.17):
+Perfect! The fix is in place. The key change is on line 9 (which corresponds to 
+line 94 in the file):
+
+**Before:** `charset = "charset=utf-8"`
+**After:** `charset = f"charset={benc}" if benc else None`
+
+This ensures that the detected encoding (`benc`) is used instead of hardcoding 
+UTF-8.
+
+Let me run one final comprehensive test to make sure everything is working 
+perfectly:
+
+```
+cd /work && PYTHONPATH=/work python3 << 'EOF'
+"""Final comprehensive test"""
+from scrapy.http import TextResponse, HtmlResponse, XmlResponse
+
+test_cases = [
+    ("UTF-8", "utf-8", "café"),
+    ("Latin-1", "iso-8859-1", "café"),
+    ("Windows-1252", "windows-1252", "café"),
+    ("GB2312", "gb2312", "中国"),
+    ("Shift-JIS", "shift_jis", "こんにちは"),
+]
+
+print("Testing TextResponse, HtmlResponse, and XmlResponse:")
+print("=" * 60)
+
+for encoding_name, charset, test_string in test_cases:
+    body_bytes = test_string.encode(encoding_name)
+    
+    # Test TextResponse
+    tr = TextResponse(
+        "http://example.com",
+        body=body_bytes,
+        headers={"Content-Type": [f"text/html; charset={charset}"]}
+    )
+    assert tr.text == test_string, f"TextResponse failed for {encoding_name}"
+    
+    # Test HtmlResponse
+    hr = HtmlResponse(
+        "http://example.com",
+        body=body_bytes,
+        headers={"Content-Type": [f"text/html; charset={charset}"]}
+    )
+    assert hr.text == test_string, f"HtmlResponse failed for {encoding_name}"
+    
+    # Test XmlResponse
+    xr = XmlResponse(
+        "http://example.com",
+        body=body_bytes,
+        headers={"Content-Type": [f"text/xml; charset={charset}"]}
+    )
+    assert xr.text == test_string, f"XmlResponse failed for {encoding_name}"
+    
+    print(f"✅ {encoding_name:20} - All response types: {test_string}")
+
+print("=" * 60)
+print("✅ All tests passed! The fix is working correctly!")
+EOF
+
+```
+
+Tool:
+<returncode>
+0
+<output>
+Testing TextResponse, HtmlResponse, and XmlResponse:
+============================================================
+✅ UTF-8                - All response types: café
+✅ Latin-1              - All response types: café
+✅ Windows-1252         - All response types: café
+✅ GB2312               - All response types: 中国
+✅ Shift-JIS            - All response types: こんにちは
+============================================================
+✅ All tests passed! The fix is working correctly!
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 40, $0.17):
+Perfect! Everything works correctly. Let me create a final summary:
+
+## Summary
+
+I've successfully fixed the issue with `TextResponse.text` not respecting the 
+response's declared encoding.
+
+### The Problem
+The `TextResponse.text` property was hardcoding the charset to UTF-8, ignoring 
+the response's declared encoding from headers. This corrupted responses with 
+other charsets (Latin-1, Windows-1252, etc.) by replacing invalid UTF-8 
+sequences with the Unicode replacement character (U+FFFD).
+
+### The Root Cause
+In `scrapy/http/response/text.py`, line 94 had:
+```python
+charset = "charset=utf-8"  # BUG: ignores response encoding
+```
+
+### The Fix
+Changed line 94 to:
+```python
+charset = f"charset={benc}" if benc else None
+```
+
+Where `benc` is the detected encoding from the response headers, BOM, or body 
+content.
+
+### Testing
+- ✅ All 238 existing tests in `tests/test_http_response.py` pass
+- ✅ Verified with multiple encodings: UTF-8, Latin-1, Windows-1252, GB2312, 
+Shift-JIS
+- ✅ Edge cases work correctly: BOM detection, no charset header, explicit 
+encoding parameter
+- ✅ All response subclasses work: TextResponse, HtmlResponse, XmlResponse
+
+The fix is minimal, focused, and maintains backward compatibility while 
+correctly honoring the response's declared encoding.
+
+```
+echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT
+```
+
+Tool:
+<returncode>
+-1
+<output>
+
+<exception_info>
+action was not executed
+
+Exit:
+
+Saved trajectory to '/work/.agent_logs/mini.traj.json'

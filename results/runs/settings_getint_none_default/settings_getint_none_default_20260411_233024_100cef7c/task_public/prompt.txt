@@ -1,0 +1,8 @@
+`Settings.getint(name, default=None)` should return `None` when the
+setting is missing and `default=None`.  Currently it raises a
+`TypeError` in that case.
+
+Fix `getint` so that a `None` default is returned as-is when the key
+is not present.
+
+Verify with: pytest tests/test_settings.py -k getint -q

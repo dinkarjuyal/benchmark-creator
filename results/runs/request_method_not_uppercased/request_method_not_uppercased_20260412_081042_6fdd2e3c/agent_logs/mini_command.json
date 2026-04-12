@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`Request` always normalises the HTTP method to uppercase\n(e.g. `\"get\"` \u2192 `\"GET\"`).  After a recent change the\n`.upper()` call was removed, so mixed-case methods are stored\nas provided and HTTP comparisons in middleware break.\n\nRestore the uppercasing so `request.method` is always uppercase.\n\nVerify with: pytest tests/test_http_request.py -k method -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

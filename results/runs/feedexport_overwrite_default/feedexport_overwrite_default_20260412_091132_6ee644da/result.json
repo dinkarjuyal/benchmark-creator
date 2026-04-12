@@ -1,0 +1,57 @@
+{
+  "task_id": "feedexport_overwrite_default",
+  "trial_index": 0,
+  "agent_name": "mini_claude_haiku_4_5",
+  "description": "Feed exporter overwrite should default to False to avoid data loss",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default_104gzdvg",
+  "public_task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/task_public",
+  "agent_config_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/agents/mini_claude_haiku_4_5.yaml",
+  "agent_config_redacted_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/agent_config.redacted.yaml",
+  "agent_env_vars": [
+    "ANTHROPIC_API_KEY"
+  ],
+  "prompt_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/prompt.txt",
+  "agent_logs_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/agent_logs",
+  "runtime_context_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/runtime_context.json",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_feedexport_overwrite_default_setup_7172f82f64",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 3.055,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_feedexport_overwrite_default_agent_12261eb75b",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 300.961,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/agent_stderr.txt"
+    },
+    {
+      "step": "validator",
+      "command": "python /task/validator.py",
+      "container_name": "harness_feedexport_overwrite_default_validator_dbb5494b5a",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 4.264,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/validator_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/validator_stderr.txt"
+    }
+  ],
+  "validation": {
+    "score": 0.0,
+    "passed": false,
+    "message": "agent step timed out.",
+    "metrics": {
+      "failing_step": "agent"
+    }
+  }
+}

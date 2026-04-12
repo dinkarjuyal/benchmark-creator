@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "Scrapy's retry middleware should retry a request up to\n`RETRY_TIMES` times (inclusive).  After a recent change the\ncomparison was changed from `<=` to `<`, so one fewer retry\nis performed than configured.\n\nFix the condition so requests are retried up to and including\n`RETRY_TIMES` attempts.\n\nVerify with: pytest tests/test_downloadermiddleware_retry.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

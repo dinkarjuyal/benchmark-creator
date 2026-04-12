@@ -1,0 +1,33 @@
+{
+  "task_id": "retry_count_reset_bug",
+  "description": "Retry count should accumulate in meta; regression always starts from 1",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/retry_count_reset_bug",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_count_reset_bug_bo0dmvgs",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_count_reset_bug/retry_count_reset_bug_20260412_083648_630cd008",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "Scrapy's retry middleware tracks retry attempts in\n`request.meta['retry_times']`.  After a recent change this counter\nis always reset to `1` instead of incrementing from the current\nvalue, causing requests to be retried indefinitely beyond the\n`RETRY_TIMES` limit.\n\nFix the retry logic so the counter correctly accumulates across\nretries.\n\nVerify with: pytest tests/test_downloadermiddleware_retry.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_retry_count_reset_bug_setup_e778040995",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 4.043,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_count_reset_bug/retry_count_reset_bug_20260412_083648_630cd008/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_count_reset_bug/retry_count_reset_bug_20260412_083648_630cd008/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_retry_count_reset_bug_agent_6fa2d736d5",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 176.404,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_count_reset_bug/retry_count_reset_bug_20260412_083648_630cd008/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_count_reset_bug/retry_count_reset_bug_20260412_083648_630cd008/agent_stderr.txt"
+    }
+  ]
+}

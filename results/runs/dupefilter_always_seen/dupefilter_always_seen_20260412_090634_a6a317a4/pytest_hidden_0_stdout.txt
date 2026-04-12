@@ -1,0 +1,14 @@
+...                                                                      [100%]
+=============================== warnings summary ===============================
+_val_hidden_0_x0ji4hqf.py::test_different_urls_both_new
+_val_hidden_0_x0ji4hqf.py::test_first_url_duplicate_after_second
+_val_hidden_0_x0ji4hqf.py::test_post_vs_get_different_fingerprints
+  /work/scrapy/dupefilters.py:59: ScrapyDeprecationWarning: '2.6' is a deprecated value for the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting.
+  
+  It is also the default value. In other words, it is normal to get this warning if you have not defined a value for the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting. This is so for backward compatibility reasons, but it will change in a future version of Scrapy.
+  
+  See the documentation of the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting for information on how to handle this deprecation.
+    fingerprinter or RequestFingerprinter()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 3 warnings in 2.54s

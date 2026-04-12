@@ -1,0 +1,10 @@
+`Scheduler.has_pending_requests()` should return `True` when
+there are queued requests waiting to be processed.  After a
+recent change it always returns `False`, so the engine
+immediately considers the crawl finished even with a non-empty
+queue.
+
+Fix `has_pending_requests` so it correctly reports whether the
+scheduler has queued requests.
+
+Verify with: pytest tests/test_scheduler.py -q

@@ -1,0 +1,33 @@
+{
+  "task_id": "compression_enabled_check",
+  "description": "COMPRESSION_ENABLED=False must raise NotConfigured; regression removes check",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/compression_enabled_check",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/compression_enabled_check_59s6a_jl",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/compression_enabled_check/compression_enabled_check_20260412_084424_6f3b20b5",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "Setting `COMPRESSION_ENABLED = False` should disable Scrapy's HTTP\ncompression middleware (`HttpCompressionMiddleware`).  After a recent\nchange this check was removed, so the middleware is always active.\n\nRestore the `NotConfigured` raise so `COMPRESSION_ENABLED = False`\ncorrectly disables the middleware.\n\nVerify with: pytest tests/test_downloadermiddleware_httpcompression.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_compression_enabled_check_setup_3514641206",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.273,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/compression_enabled_check/compression_enabled_check_20260412_084424_6f3b20b5/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/compression_enabled_check/compression_enabled_check_20260412_084424_6f3b20b5/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_compression_enabled_check_agent_c4336162b0",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 291.798,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/compression_enabled_check/compression_enabled_check_20260412_084424_6f3b20b5/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/compression_enabled_check/compression_enabled_check_20260412_084424_6f3b20b5/agent_stderr.txt"
+    }
+  ]
+}

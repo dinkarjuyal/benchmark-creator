@@ -1,0 +1,8 @@
+You notice that `Selector.css()` has been accidentally
+overwritten and now returns the raw XPath translation string
+instead of a `SelectorList`.  All CSS-based scraping is broken.
+
+Restore `Selector.css()` so it returns a proper `SelectorList`
+by calling `self.xpath()` with the translated XPath expression.
+
+Verify with: pytest tests/test_selector.py -q

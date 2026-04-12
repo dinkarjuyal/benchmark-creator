@@ -1,0 +1,33 @@
+{
+  "task_id": "settings_getint_none_default",
+  "description": "getint with default=None should return None not raise TypeError",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/settings_getint_none_default",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default_2c8w19zq",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225514_8ae84e93",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`Settings.getint(name, default=None)` should return `None` when the\nsetting is missing and `default=None`.  Currently it raises a\n`TypeError` in that case.\n\nFix `getint` so that a `None` default is returned as-is when the key\nis not present.\n\nVerify with: pytest tests/test_settings.py -k getint -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_settings_getint_none_default_setup_450a8b23df",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 5.235,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225514_8ae84e93/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225514_8ae84e93/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model deterministic --model-class deterministic --config /task/public/mini_deterministic.yaml",
+      "container_name": "harness_settings_getint_none_default_agent_2e9570d525",
+      "exit_code": 1,
+      "timed_out": false,
+      "duration_sec": 7.843,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225514_8ae84e93/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/settings_getint_none_default/settings_getint_none_default_20260411_225514_8ae84e93/agent_stderr.txt"
+    }
+  ]
+}

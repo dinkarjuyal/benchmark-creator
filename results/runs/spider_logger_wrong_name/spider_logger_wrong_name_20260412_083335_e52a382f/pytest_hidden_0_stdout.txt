@@ -1,0 +1,10 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________________________ test_logger_not_class_name __________________________
+_val_hidden_0_bpqhnrz6.py:8: in test_logger_not_class_name
+    spider = WeirdName.from_settings(scrapy.settings.Settings())
+             ^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: type object 'WeirdName' has no attribute 'from_settings'. Did you mean: 'custom_settings'?
+=========================== short test summary info ============================
+FAILED _val_hidden_0_bpqhnrz6.py::test_logger_not_class_name - AttributeError...
+1 failed in 3.05s

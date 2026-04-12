@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`RFPDupeFilter.request_seen()` should add each new request's\nfingerprint to its internal set so subsequent identical requests are\nfiltered.  After a recent change the fingerprint is never stored,\ncausing every request to appear new every time.\n\nFix `request_seen` so fingerprints are correctly added to the set.\n\nVerify with: pytest tests/test_dupefilters.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

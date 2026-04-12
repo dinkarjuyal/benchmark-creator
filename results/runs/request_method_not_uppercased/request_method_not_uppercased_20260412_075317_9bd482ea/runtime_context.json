@@ -1,0 +1,33 @@
+{
+  "task_id": "request_method_not_uppercased",
+  "description": "Request.method must be uppercased; regression stores it as-is",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/request_method_not_uppercased",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_method_not_uppercased_ukn10s8u",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_method_not_uppercased/request_method_not_uppercased_20260412_075317_9bd482ea",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`Request` always normalises the HTTP method to uppercase\n(e.g. `\"get\"` \u2192 `\"GET\"`).  After a recent change the\n`.upper()` call was removed, so mixed-case methods are stored\nas provided and HTTP comparisons in middleware break.\n\nRestore the uppercasing so `request.method` is always uppercase.\n\nVerify with: pytest tests/test_http_request.py -k method -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_request_method_not_uppercased_setup_22c5409d5d",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 1193.175,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_method_not_uppercased/request_method_not_uppercased_20260412_075317_9bd482ea/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_method_not_uppercased/request_method_not_uppercased_20260412_075317_9bd482ea/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_request_method_not_uppercased_agent_42f2be8fb6",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 207.474,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_method_not_uppercased/request_method_not_uppercased_20260412_075317_9bd482ea/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_method_not_uppercased/request_method_not_uppercased_20260412_075317_9bd482ea/agent_stderr.txt"
+    }
+  ]
+}

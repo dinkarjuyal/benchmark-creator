@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`Request` should own an independent copy of `cb_kwargs` so that\nexternal mutations to the dict passed at construction don't affect\nthe request.\n\nAfter a recent change, `cb_kwargs` is stored by reference, creating\nshared mutable state between the caller and the request.\n\nFix `Request.__init__` to copy the `cb_kwargs` argument.\n\nVerify with: pytest tests/test_http_request.py -k cb_kwargs -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

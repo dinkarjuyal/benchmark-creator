@@ -1,0 +1,33 @@
+{
+  "task_id": "request_copy_meta_aliasing",
+  "description": "Request._meta must be deep-copied in copy(); regression aliases it",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/request_copy_meta_aliasing",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_copy_meta_aliasing_v2cwxewc",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_copy_meta_aliasing/request_copy_meta_aliasing_20260412_083842_cabe007e",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`Request` stores its `meta` dict internally.  When a caller passes a\n`meta` dict at construction time, the request should own an\nindependent copy so that external mutations to the original dict\ndon't affect the request.\n\nAfter a recent change `Request` stores a direct reference to the\ncaller's dict instead of copying it, causing shared mutable state.\n\nFix the `Request.__init__` so that the `meta` argument is copied on\nconstruction.\n\nVerify with: pytest tests/test_http_request.py -k meta -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_request_copy_meta_aliasing_setup_26492f5cb5",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.672,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_copy_meta_aliasing/request_copy_meta_aliasing_20260412_083842_cabe007e/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_copy_meta_aliasing/request_copy_meta_aliasing_20260412_083842_cabe007e/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_request_copy_meta_aliasing_agent_fda7959ef3",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 258.018,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_copy_meta_aliasing/request_copy_meta_aliasing_20260412_083842_cabe007e/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_copy_meta_aliasing/request_copy_meta_aliasing_20260412_083842_cabe007e/agent_stderr.txt"
+    }
+  ]
+}

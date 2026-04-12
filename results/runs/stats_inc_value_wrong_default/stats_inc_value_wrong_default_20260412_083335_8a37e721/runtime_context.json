@@ -1,0 +1,33 @@
+{
+  "task_id": "stats_inc_value_wrong_default",
+  "description": "inc_value must start from 0 for new keys; regression crashes on None + int",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/stats_inc_value_wrong_default",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/stats_inc_value_wrong_default_660_9eg3",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/stats_inc_value_wrong_default/stats_inc_value_wrong_default_20260412_083335_8a37e721",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`MemoryStatsCollector.inc_value()` should initialise a missing\ncounter to `start` (default `0`) before incrementing.  After a\nrecent change it uses `dict.get(key, None)` which raises a\n`TypeError` the first time any new stat key is incremented.\n\nFix `inc_value` so missing keys are initialised to `start`\nbefore the increment.\n\nVerify with: pytest tests/test_stats.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_stats_inc_value_wrong_default_setup_e9050d089b",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 5.56,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/stats_inc_value_wrong_default/stats_inc_value_wrong_default_20260412_083335_8a37e721/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/stats_inc_value_wrong_default/stats_inc_value_wrong_default_20260412_083335_8a37e721/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_stats_inc_value_wrong_default_agent_418cd19da3",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 121.637,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/stats_inc_value_wrong_default/stats_inc_value_wrong_default_20260412_083335_8a37e721/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/stats_inc_value_wrong_default/stats_inc_value_wrong_default_20260412_083335_8a37e721/agent_stderr.txt"
+    }
+  ]
+}

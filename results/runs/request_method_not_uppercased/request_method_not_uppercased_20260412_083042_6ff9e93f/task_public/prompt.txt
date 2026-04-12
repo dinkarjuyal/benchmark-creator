@@ -1,0 +1,8 @@
+`Request` always normalises the HTTP method to uppercase
+(e.g. `"get"` → `"GET"`).  After a recent change the
+`.upper()` call was removed, so mixed-case methods are stored
+as provided and HTTP comparisons in middleware break.
+
+Restore the uppercasing so `request.method` is always uppercase.
+
+Verify with: pytest tests/test_http_request.py -k method -q

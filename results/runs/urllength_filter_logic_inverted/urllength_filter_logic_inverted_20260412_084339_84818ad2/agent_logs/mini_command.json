@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`UrlLengthMiddleware` should filter out requests whose URLs exceed\n`URLLENGTH_LIMIT` characters.  After a recent change the comparison\noperator was flipped, so short URLs are dropped and long URLs pass\nthrough.\n\nFix the URL length check so URLs longer than `URLLENGTH_LIMIT` are\nfiltered out (not shorter ones).\n\nVerify with: pytest tests/test_spidermiddleware_urllength.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

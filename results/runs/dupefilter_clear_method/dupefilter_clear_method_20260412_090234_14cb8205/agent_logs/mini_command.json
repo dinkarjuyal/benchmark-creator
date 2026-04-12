@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`RFPDupeFilter` accumulates fingerprints in memory but provides no way\nto reset the filter without creating a new instance.\n\nAdd a `clear()` method to `RFPDupeFilter` that empties the seen-fingerprint\nset so that previously-seen URLs are treated as new again.\n\nDo not break any existing deduplication behavior.\n\nVerify with: pytest tests/test_dupefilters.py -k clear -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

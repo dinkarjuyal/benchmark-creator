@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "Each spider's `logger` property should return a logger named\nafter `spider.name` so log records can be filtered by spider\nname at runtime.  After a recent change it uses\n`self.__class__.__name__` instead, breaking log filtering for\nspiders whose class name differs from their `name` attribute.\n\nFix the `logger` property to use `self.name`.\n\nVerify with: pytest tests/test_spider.py -k logger -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

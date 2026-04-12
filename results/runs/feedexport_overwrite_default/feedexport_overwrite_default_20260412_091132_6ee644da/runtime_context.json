@@ -1,0 +1,33 @@
+{
+  "task_id": "feedexport_overwrite_default",
+  "description": "Feed exporter overwrite should default to False to avoid data loss",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/feedexport_overwrite_default",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default_104gzdvg",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "The Scrapy feed exporter's `overwrite` option should default to\n`False` (append mode) to avoid accidentally overwriting existing\nexport files.  After a recent change the default was flipped to\n`True`, causing feeds to overwrite existing files by default.\n\nFix the feed exporter so `overwrite` defaults to `False` when not\nexplicitly set.\n\nVerify with: pytest tests/test_feedexport.py -k overwrite -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_feedexport_overwrite_default_setup_7172f82f64",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 3.055,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_feedexport_overwrite_default_agent_12261eb75b",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 300.961,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/feedexport_overwrite_default/feedexport_overwrite_default_20260412_091132_6ee644da/agent_stderr.txt"
+    }
+  ]
+}

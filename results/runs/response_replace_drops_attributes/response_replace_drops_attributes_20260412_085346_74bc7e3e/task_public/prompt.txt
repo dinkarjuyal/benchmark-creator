@@ -1,0 +1,9 @@
+`Response.replace()` should copy all attributes from the original
+response except those explicitly overridden in the call.  After
+a recent change none of the original attributes are preserved —
+calling `resp.replace(status=404)` produces a response with
+default values for url, headers, body, etc.
+
+Fix `Response.replace()` so unspecified attributes are preserved.
+
+Verify with: pytest tests/test_http_response.py -k replace -q

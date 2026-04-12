@@ -1,0 +1,33 @@
+{
+  "task_id": "request_replace_headers_preserved",
+  "description": "Request.replace() without headers kwarg should preserve original headers",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/request_replace_headers_preserved",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_replace_headers_preserved_00exzeq6",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_replace_headers_preserved/request_replace_headers_preserved_20260412_084844_2625a40e",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`Request.replace()` should carry over all original attributes except\nthose explicitly overridden.  After a recent change, `replace()`\nignores the original request's attributes entirely and uses the\nclass defaults instead.\n\nFix `Request.replace()` so that unspecified attributes are copied\nfrom the original request.\n\nVerify with: pytest tests/test_http_request.py -k replace -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_request_replace_headers_preserved_setup_a8d323ccd3",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.329,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_replace_headers_preserved/request_replace_headers_preserved_20260412_084844_2625a40e/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_replace_headers_preserved/request_replace_headers_preserved_20260412_084844_2625a40e/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_request_replace_headers_preserved_agent_40e8641e0e",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 232.726,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_replace_headers_preserved/request_replace_headers_preserved_20260412_084844_2625a40e/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_replace_headers_preserved/request_replace_headers_preserved_20260412_084844_2625a40e/agent_stderr.txt"
+    }
+  ]
+}

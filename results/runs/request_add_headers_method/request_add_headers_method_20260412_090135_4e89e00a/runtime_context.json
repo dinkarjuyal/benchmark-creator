@@ -1,0 +1,33 @@
+{
+  "task_id": "request_add_headers_method",
+  "description": "`scrapy.http.Request` has `headers` as a dict-like attribute but no",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/request_add_headers_method",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method_l8fjtmch",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`scrapy.http.Request` has `headers` as a dict-like attribute but no\nconvenience method for merging new headers into an existing request.\n\nAdd a method `Request.with_headers(extra_headers)` that returns a new\n`Request` (via `replace()`) with the given headers merged on top of the\nexisting ones.  The original request must be unchanged.\n\nExample:\n    req = Request('https://example.com', headers={'User-Agent': 'bot'})\n    new = req.with_headers({'Authorization': 'Bearer token'})\n    # new has both headers; req is unchanged\n\nVerify with: pytest tests/test_http_request.py -k with_headers -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_request_add_headers_method_setup_79dae6ff29",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.418,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_request_add_headers_method_agent_7f2966f163",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 303.281,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_add_headers_method/request_add_headers_method_20260412_090135_4e89e00a/agent_stderr.txt"
+    }
+  ]
+}

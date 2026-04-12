@@ -1,0 +1,1211 @@
+Building agent config from specs: ['mini.yaml', 'environment.cwd=/work']
+
+System:
+You are a helpful assistant that can interact with a computer.
+
+User:
+Please solve this issue: `HttpCacheMiddleware` should raise `NotConfigured` (and
+thus be
+disabled) when `HTTPCACHE_ENABLED = False`.  After a recent
+change the condition was inverted: the middleware now raises
+when caching *is* enabled and silently activates when it is
+disabled.
+
+Fix the check so `HTTPCACHE_ENABLED = False` correctly disables
+the middleware.
+
+Verify with: pytest tests/test_downloadermiddleware_httpcache.py -q
+
+
+You can execute bash commands and edit files to implement the necessary changes.
+
+## Recommended Workflow
+
+This workflow should be done step-by-step so that you can iterate on your 
+changes and any possible problems.
+
+1. Analyze the codebase by finding and reading relevant files
+2. Create a script to reproduce the issue
+3. Edit the source code to resolve the issue
+4. Verify your fix works by running your script again
+5. Test edge cases to ensure your fix is robust
+6. Submit your changes and finish your work by issuing the following command: 
+`echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`.
+   Do not combine it with any other command. <important>After this command, you 
+cannot continue working on this task.</important>
+
+## Command Execution Rules
+
+You are operating in an environment where
+
+1. You issue at least one command
+2. The system executes the command(s) in a subshell
+3. You see the result(s)
+4. You write your next command(s)
+
+Each response should include:
+
+1. **Reasoning text** where you explain your analysis and plan
+2. At least one tool call with your command
+
+**CRITICAL REQUIREMENTS:**
+
+- Your response SHOULD include reasoning text explaining what you're doing
+- Your response MUST include AT LEAST ONE bash tool call
+- Directory or environment variable changes are not persistent. Every action is 
+executed in a new subshell.
+- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd 
+/path/to/working/dir && ...` or write/load environment variables from files
+- Submit your changes and finish your work by issuing the following command: 
+`echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`.
+  Do not combine it with any other command. <important>After this command, you 
+cannot continue working on this task.</important>
+
+Example of a CORRECT response:
+<example_response>
+I need to understand the structure of the repository first. Let me check what 
+files are in the current directory to get a better understanding of the 
+codebase.
+
+[Makes bash tool call with {"command": "ls -la"} as arguments]
+</example_response>
+
+<system_information>
+Linux 6.10.14-linuxkit #1 SMP PREEMPT_DYNAMIC Sat May 17 08:29:19 UTC 2025 
+x86_64
+</system_information>
+
+## Useful command examples
+
+### Create a new file:
+
+```bash
+cat <<'EOF' > newfile.py
+import numpy as np
+hello = "world"
+print(hello)
+EOF
+```
+
+### Edit files with sed:```bash
+# Replace all occurrences
+sed -i 's/old_string/new_string/g' filename.py
+
+# Replace only first occurrence
+sed -i 's/old_string/new_string/' filename.py
+
+# Replace first occurrence on line 1
+sed -i '1s/old_string/new_string/' filename.py
+
+# Replace all occurrences in lines 1-10
+sed -i '1,10s/old_string/new_string/g' filename.py
+```
+
+### View file content:
+
+```bash
+# View specific lines with numbers
+nl -ba filename.py | sed -n '10,20p'
+```
+
+### Any other command you want to run
+
+```bash
+anything
+```
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 1, $0.00):
+I'll help you solve this issue. Let me start by analyzing the codebase to 
+understand the problem with the `HttpCacheMiddleware`.
+
+```
+find . -type f -name "*httpcache*" | head -20
+```
+
+Tool:
+<returncode>
+0
+<output>
+./scrapy/downloadermiddlewares/httpcache.py
+./scrapy/extensions/httpcache.py
+./tests/test_downloadermiddleware_httpcache.py
+./tests/test_visible_httpcache_enabled_check_inverted_0.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 2, $0.00):
+Good! I found the relevant files. Let me first look at the test file to 
+understand what's being tested:
+
+```
+cat ./tests/test_downloadermiddleware_httpcache.py
+```
+
+Tool:
+<returncode>
+0
+<output_head>
+import email.utils
+import shutil
+import tempfile
+import time
+import unittest
+from contextlib import contextmanager
+
+from scrapy.downloadermiddlewares.httpcache import HttpCacheMiddleware
+from scrapy.exceptions import IgnoreRequest
+from scrapy.http import HtmlResponse, Request, Response
+from scrapy.settings import Settings
+from scrapy.spiders import Spider
+from scrapy.utils.test import get_crawler
+
+
+class _BaseTest(unittest.TestCase):
+    storage_class = "scrapy.extensions.httpcache.DbmCacheStorage"
+    policy_class = "scrapy.extensions.httpcache.RFC2616Policy"
+
+    def setUp(self):
+        self.yesterday = email.utils.formatdate(time.time() - 86400)
+        self.today = email.utils.formatdate()
+        self.tomorrow = email.utils.formatdate(time.time() + 86400)
+        self.crawler = get_crawler(Spider)
+        self.spider = self.crawler._create_spider("example.com")
+        self.tmpdir = tempfile.mkdtemp()
+        self.request = Request("http://www.example.com", headers={"User-Agent": 
+"test"})
+        self.response = Response(
+            "http://www.example.com",
+            headers={"Content-Type": "text/html"},
+            body=b"test body",
+            status=202,
+        )
+        self.crawler.stats.open_spider(self.spider)
+
+    def tearDown(self):
+        self.crawler.stats.close_spider(self.spider, "")
+        shutil.rmtree(self.tmpdir)
+
+    def _get_settings(self, **new_settings):
+        settings = {
+            "HTTPCACHE_ENABLED": True,
+            "HTTPCACHE_DIR": self.tmpdir,
+            "HTTPCACHE_EXPIRATION_SECS": 1,
+            "HTTPCACHE_IGNORE_HTTP_CODES": [],
+            "HTTPCACHE_POLICY": self.policy_class,
+            "HTTPCACHE_STORAGE": self.storage_class,
+        }
+        settings.update(new_settings)
+        return Settings(settings)
+
+    @contextmanager
+    def _storage(self, **new_settings):
+        with self._middleware(**new_settings) as mw:
+            yield mw.storage
+
+    @contextmanager
+    def _policy(self, **new_settings):
+        with self._middleware(**new_settings) as mw:
+            yield mw.policy
+
+    @contextmanager
+    def _middleware(self, **new_settings):
+        settings = self._get_settings(**new_settings)
+        mw = HttpCacheMiddleware(settings, self.crawler.stats)
+        mw.spider_opened(self.spider)
+        try:
+            yield mw
+        finally:
+            mw.spider_closed(self.spider)
+
+    def assertEqualResponse(self, response1, response2):
+        self.assertEqual(response1.url, response2.url)
+        self.assertEqual(response1.status, response2.status)
+        self.assertEqual(response1.headers, response2.headers)
+        self.assertEqual(response1.body, response2.body)
+
+    def assertEqualRequest(self, request1, request2):
+        self.assertEqual(request1.url, request2.url)
+        self.assertEqual(request1.headers, request2.headers)
+        self.assertEqual(request1.body, request2.body)
+
+    def assertEqualRequestButWithCacheValidators(self, request1, request2):
+        self.assertEqual(request1.url, request2.url)
+        assert b"If-None-Match" not in request1.headers
+        assert b"If-Modified-Since" not in request1.headers
+        assert any(
+            h in request2.headers for h in (b"If-None-Match", 
+b"If-Modified-Since")
+        )
+        self.assertEqual(request1.body, request2.body)
+
+    def test_dont_cache(self):
+        with self._middleware() as mw:
+            self.request.meta["dont_cache"] = True
+            mw.process_response(self.request, self.response, self.spider)
+            self.assertEqual(
+                mw.storage.retrieve_response(self.spider, self.request), None
+            )
+
+        with self._middleware() as mw:
+            self.request.meta["dont_cache"] = False
+            mw.process_response(self.request, self.response, self.spider)
+            if mw.policy.should_cache_response(self.response, self.request):
+                self.assertIsInstance(
+                    mw.storage.retrieve_response(self.spider, self.request),
+                    self.response.__class__,
+                )
+
+
+class DefaultStorageTest(_BaseTest):
+    def test_storage(self):
+        with self._storage() as storage:
+            request2 = self.request.copy()
+            assert storage.retrieve_response(self.spider, request2) is None
+
+            storage.store_response(self.spider, self.request, self.response)
+            response2 = storage.retrieve_response(self.spider, request2)
+            assert isinstance(response2, HtmlResponse)  # content-type header
+            self.assertEqualResponse(self.response, response2)
+
+            time.sleep(2)  # wait for cache to expire
+            assert storage.retrieve_response(self.spider, request2) is None
+
+    def test_storage_never_expire(self):
+        with self._storage(HTTPCACHE_EXPIRATION_SECS=0) as storage:
+            assert storage.retrieve_response(self.spider, self.request) is None
+            storage.store_response(self.spider, self.request, self.response)
+            time.sleep
+<output_tail>
+date",
+                    "Last-Modified": self.yesterday,
+                },
+            ),
+            (
+                200,
+                {
+                    "Cache-Control": "must-revalidate",
+                    "Expires": self.yesterday,
+                    "Last-Modified": self.yesterday,
+                },
+            ),
+            (200, {"Cache-Control": "max-age=86400,must-revalidate", "Age": 
+"86405"}),
+        ]
+        with self._middleware() as mw:
+            for idx, (status, headers) in enumerate(sampledata):
+                req0 = Request(f"http://example-{idx}.com")
+                res0a = Response(req0.url, status=status, headers=headers)
+                # cache expired response
+                res1 = self._process_requestresponse(mw, req0, res0a)
+                self.assertEqualResponse(res1, res0a)
+                assert "cached" not in res1.flags
+                # Same request but as cached response is stale a new response 
+must
+                # be returned
+                res0b = res0a.replace(body=b"bar")
+                res2 = self._process_requestresponse(mw, req0, res0b)
+                self.assertEqualResponse(res2, res0b)
+                assert "cached" not in res2.flags
+                cc = headers.get("Cache-Control", "")
+                # Previous response expired too, subsequent request to same
+                # resource must revalidate and succeed on 304 if validators
+                # are present
+                if "ETag" in headers or "Last-Modified" in headers:
+                    res0c = res0b.replace(status=304)
+                    res3 = self._process_requestresponse(mw, req0, res0c)
+                    self.assertEqualResponse(res3, res0b)
+                    assert "cached" in res3.flags
+                    # get cached response on server errors unless 
+must-revalidate
+                    # in cached response
+                    res0d = res0b.replace(status=500)
+                    res4 = self._process_requestresponse(mw, req0, res0d)
+                    if "must-revalidate" in cc:
+                        assert "cached" not in res4.flags
+                        self.assertEqualResponse(res4, res0d)
+                    else:
+                        assert "cached" in res4.flags
+                        self.assertEqualResponse(res4, res0b)
+                # Requests with max-stale can fetch expired cached responses
+                # unless cached response has must-revalidate
+                req1 = req0.replace(headers={"Cache-Control": "max-stale"})
+                res5 = self._process_requestresponse(mw, req1, res0b)
+                self.assertEqualResponse(res5, res0b)
+                if "no-cache" in cc or "must-revalidate" in cc:
+                    assert "cached" not in res5.flags
+                else:
+                    assert "cached" in res5.flags
+
+    def test_process_exception(self):
+        with self._middleware() as mw:
+            res0 = Response(self.request.url, headers={"Expires": 
+self.yesterday})
+            req0 = Request(self.request.url)
+            self._process_requestresponse(mw, req0, res0)
+            for e in mw.DOWNLOAD_EXCEPTIONS:
+                # Simulate encountering an error on download attempts
+                assert mw.process_request(req0, self.spider) is None
+                res1 = mw.process_exception(req0, e("foo"), self.spider)
+                # Use cached response as recovery
+                assert "cached" in res1.flags
+                self.assertEqualResponse(res0, res1)
+            # Do not use cached response for unhandled exceptions
+            mw.process_request(req0, self.spider)
+            assert mw.process_exception(req0, Exception("foo"), self.spider) is 
+None
+
+    def test_ignore_response_cache_controls(self):
+        sampledata = [
+            (200, {"Date": self.yesterday, "Expires": self.tomorrow}),
+            (200, {"Date": self.yesterday, "Cache-Control": 
+"no-store,max-age=86405"}),
+            (200, {"Age": "299", "Cache-Control": "max-age=300,no-cache"}),
+            (300, {"Cache-Control": "no-cache"}),
+            (200, {"Expires": self.tomorrow, "Cache-Control": "no-store"}),
+        ]
+        with self._middleware(
+            HTTPCACHE_IGNORE_RESPONSE_CACHE_CONTROLS=["no-cache", "no-store"]
+        ) as mw:
+            for idx, (status, headers) in enumerate(sampledata):
+                req0 = Request(f"http://example-{idx}.com")
+                res0 = Response(req0.url, status=status, headers=headers)
+                # cache fresh response
+                res1 = self._process_requestresponse(mw, req0, res0)
+                self.assertEqualResponse(res1, res0)
+                assert "cached" not in res1.flags
+                # return fresh cached response without network interaction
+                res2 = self._process_requestresponse(mw, req0, None)
+                self.assertEqualResponse(res1, res2)
+                assert "cached" in res2.flags
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+<elided_chars>
+15829
+<warning>
+Output too long.
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 3, $0.01):
+Now let me check the main HttpCacheMiddleware file to see where the issue is:
+
+```
+cat ./scrapy/downloadermiddlewares/httpcache.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+from email.utils import formatdate
+from typing import Optional, Type, TypeVar
+
+from twisted.internet import defer
+from twisted.internet.error import (
+    ConnectError,
+    ConnectionDone,
+    ConnectionLost,
+    ConnectionRefusedError,
+    DNSLookupError,
+    TCPTimedOutError,
+    TimeoutError,
+)
+from twisted.web.client import ResponseFailed
+
+from scrapy import signals
+from scrapy.crawler import Crawler
+from scrapy.exceptions import IgnoreRequest, NotConfigured
+from scrapy.http.request import Request
+from scrapy.http.response import Response
+from scrapy.settings import Settings
+from scrapy.spiders import Spider
+from scrapy.statscollectors import StatsCollector
+from scrapy.utils.misc import load_object
+
+HttpCacheMiddlewareTV = TypeVar("HttpCacheMiddlewareTV", 
+bound="HttpCacheMiddleware")
+
+
+class HttpCacheMiddleware:
+    DOWNLOAD_EXCEPTIONS = (
+        defer.TimeoutError,
+        TimeoutError,
+        DNSLookupError,
+        ConnectionRefusedError,
+        ConnectionDone,
+        ConnectError,
+        ConnectionLost,
+        TCPTimedOutError,
+        ResponseFailed,
+        OSError,
+    )
+
+    def __init__(self, settings: Settings, stats: StatsCollector) -> None:
+        if settings.getbool("HTTPCACHE_ENABLED"):  # BUG: raises when enabled
+            raise NotConfigured
+        self.policy = load_object(settings["HTTPCACHE_POLICY"])(settings)
+        self.storage = load_object(settings["HTTPCACHE_STORAGE"])(settings)
+        self.ignore_missing = settings.getbool("HTTPCACHE_IGNORE_MISSING")
+        self.stats = stats
+
+    @classmethod
+    def from_crawler(
+        cls: Type[HttpCacheMiddlewareTV], crawler: Crawler
+    ) -> HttpCacheMiddlewareTV:
+        assert crawler.stats
+        o = cls(crawler.settings, crawler.stats)
+        crawler.signals.connect(o.spider_opened, signal=signals.spider_opened)
+        crawler.signals.connect(o.spider_closed, signal=signals.spider_closed)
+        return o
+
+    def spider_opened(self, spider: Spider) -> None:
+        self.storage.open_spider(spider)
+
+    def spider_closed(self, spider: Spider) -> None:
+        self.storage.close_spider(spider)
+
+    def process_request(self, request: Request, spider: Spider) -> 
+Optional[Response]:
+        if request.meta.get("dont_cache", False):
+            return None
+
+        # Skip uncacheable requests
+        if not self.policy.should_cache_request(request):
+            request.meta["_dont_cache"] = True  # flag as uncacheable
+            return None
+
+        # Look for cached response and check if expired
+        cachedresponse = self.storage.retrieve_response(spider, request)
+        if cachedresponse is None:
+            self.stats.inc_value("httpcache/miss", spider=spider)
+            if self.ignore_missing:
+                self.stats.inc_value("httpcache/ignore", spider=spider)
+                raise IgnoreRequest(f"Ignored request not in cache: {request}")
+            return None  # first time request
+
+        # Return cached response only if not expired
+        cachedresponse.flags.append("cached")
+        if self.policy.is_cached_response_fresh(cachedresponse, request):
+            self.stats.inc_value("httpcache/hit", spider=spider)
+            return cachedresponse
+
+        # Keep a reference to cached response to avoid a second cache lookup on
+        # process_response hook
+        request.meta["cached_response"] = cachedresponse
+
+        return None
+
+    def process_response(
+        self, request: Request, response: Response, spider: Spider
+    ) -> Response:
+        if request.meta.get("dont_cache", False):
+            return response
+
+        # Skip cached responses and uncacheable requests
+        if "cached" in response.flags or "_dont_cache" in request.meta:
+            request.meta.pop("_dont_cache", None)
+            return response
+
+        # RFC2616 requires origin server to set Date header,
+        # https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.18
+        if "Date" not in response.headers:
+            response.headers["Date"] = formatdate(usegmt=True)
+
+        # Do not validate first-hand responses
+        cachedresponse = request.meta.pop("cached_response", None)
+        if cachedresponse is None:
+            self.stats.inc_value("httpcache/firsthand", spider=spider)
+            self._cache_response(spider, response, request, cachedresponse)
+            return response
+
+        if self.policy.is_cached_response_valid(cachedresponse, response, 
+request):
+            self.stats.inc_value("httpcache/revalidate", spider=spider)
+            return cachedresponse
+
+        self.stats.inc_value("httpcache/invalidate", spider=spider)
+        self._cache_response(spider, response, request, cachedresponse)
+        return response
+
+    def process_exception(
+        self, request: Request, exception: Exception, spider: Spider
+    ) -> Optional[Response]:
+        cachedresponse = request.meta.pop("cached_response", None)
+        if cachedresponse is not None and isinstance(
+            exception, self.DOWNLOAD_EXCEPTIONS
+        ):
+            self.stats.inc_value("httpcache/errorrecovery", spider=spider)
+            return cachedresponse
+        return None
+
+    def _cache_response(
+        self,
+        spider: Spider,
+        response: Response,
+        request: Request,
+        cachedresponse: Optional[Response],
+    ) -> None:
+        if self.policy.should_cache_response(response, request):
+            self.stats.inc_value("httpcache/store", spider=spider)
+            self.storage.store_response(spider, request, response)
+        else:
+            self.stats.inc_value("httpcache/uncacheable", spider=spider)
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 4, $0.01):
+Perfect! I can see the bug clearly now. On line 44, the condition is inverted:
+
+```python
+if settings.getbool("HTTPCACHE_ENABLED"):  # BUG: raises when enabled
+    raise NotConfigured
+```
+
+This is backward! It should raise `NotConfigured` when the setting is `False`, 
+not when it's `True`.
+
+Let me also check if there's a test file mentioned in the output:
+
+```
+cat ./tests/test_visible_httpcache_enabled_check_inverted_0.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+import pytest
+from scrapy.exceptions import NotConfigured
+from scrapy.downloadermiddlewares.httpcache import HttpCacheMiddleware
+from scrapy.utils.test import get_crawler
+
+def test_disabled_raises_not_configured():
+    crawler = get_crawler(settings_dict={'HTTPCACHE_ENABLED': False})
+    with pytest.raises(NotConfigured):
+        HttpCacheMiddleware.from_crawler(crawler)
+
+def test_enabled_does_not_raise():
+    crawler = get_crawler(settings_dict={
+        'HTTPCACHE_ENABLED': True,
+        'HTTPCACHE_DIR': '/tmp/test_cache'
+    })
+    mw = HttpCacheMiddleware.from_crawler(crawler)
+    assert mw is not None
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 5, $0.02):
+Great! This test file shows exactly what should happen. Let me run the tests 
+first to confirm the bug:
+
+```
+cd /tmp && python -m pytest 
+/tests/test_visible_httpcache_enabled_check_inverted_0.py -v 2>&1 | head -50
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'httpcache_enabled_check_inverted'}
+rootdir: /tmp
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 0 items
+
+============================ no tests ran in 0.01s =============================
+ERROR: file or directory not found: 
+/tests/test_visible_httpcache_enabled_check_inverted_0.py
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 6, $0.02):
+Let me find the correct path:
+
+```
+pwd && ls -la tests/test_visible_httpcache_enabled_check_inverted_0.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+/work
+-rw-r--r-- 1 root root 614 Apr 12 14:52 
+tests/test_visible_httpcache_enabled_check_inverted_0.py
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 7, $0.02):
+Good, I'm in the right directory. Let me run the test now:
+
+```
+cd /work && python -m pytest 
+tests/test_visible_httpcache_enabled_check_inverted_0.py -v
+```
+
+Tool:
+<returncode>
+1
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'httpcache_enabled_check_inverted'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 2 items
+
+tests/test_visible_httpcache_enabled_check_inverted_0.py::test_disabled_raises_n
+ot_configured FAILED [ 50%]
+tests/test_visible_httpcache_enabled_check_inverted_0.py::test_enabled_does_not_
+raise FAILED [100%]
+
+=================================== FAILURES ===================================
+_____________________ test_disabled_raises_not_configured ______________________
+
+    def test_disabled_raises_not_configured():
+        crawler = get_crawler(settings_dict={'HTTPCACHE_ENABLED': False})
+>       with pytest.raises(NotConfigured):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'scrapy.exceptions.NotConfigured'>
+
+tests/test_visible_httpcache_enabled_check_inverted_0.py:8: Failed
+_________________________ test_enabled_does_not_raise __________________________
+
+    def test_enabled_does_not_raise():
+        crawler = get_crawler(settings_dict={
+            'HTTPCACHE_ENABLED': True,
+            'HTTPCACHE_DIR': '/tmp/test_cache'
+        })
+>       mw = HttpCacheMiddleware.from_crawler(crawler)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_visible_httpcache_enabled_check_inverted_0.py:16: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scrapy/downloadermiddlewares/httpcache.py:56: in from_crawler
+    o = cls(crawler.settings, crawler.stats)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware object at 
+0x7fa02d3c6a80>
+settings = <scrapy.settings.Settings object at 0x7fa02c837f20>
+stats = <scrapy.statscollectors.MemoryStatsCollector object at 0x7fa02c837ef0>
+
+    def __init__(self, settings: Settings, stats: StatsCollector) -> None:
+        if settings.getbool("HTTPCACHE_ENABLED"):  # BUG: raises when enabled
+>           raise NotConfigured
+E           scrapy.exceptions.NotConfigured
+
+scrapy/downloadermiddlewares/httpcache.py:45: NotConfigured
+=========================== short test summary info ============================
+FAILED 
+tests/test_visible_httpcache_enabled_check_inverted_0.py::test_disabled_raises_n
+ot_configured
+FAILED 
+tests/test_visible_httpcache_enabled_check_inverted_0.py::test_enabled_does_not_
+raise
+============================== 2 failed in 6.21s ===============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 8, $0.02):
+Perfect! The tests confirm the bug:
+1. When `HTTPCACHE_ENABLED = False`, it should raise `NotConfigured`, but it 
+doesn't.
+2. When `HTTPCACHE_ENABLED = True`, it should NOT raise, but it does.
+
+The condition is inverted. Now let me fix the bug by inverting the condition:
+
+```
+cd /work && sed -i '45s/if settings.getbool("HTTPCACHE_ENABLED"):/if not 
+settings.getbool("HTTPCACHE_ENABLED"):/' 
+scrapy/downloadermiddlewares/httpcache.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 9, $0.02):
+Let me verify the fix was applied correctly:
+
+```
+cd /work && sed -n '42,50p' scrapy/downloadermiddlewares/httpcache.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+    def __init__(self, settings: Settings, stats: StatsCollector) -> None:
+        if settings.getbool("HTTPCACHE_ENABLED"):  # BUG: raises when enabled
+            raise NotConfigured
+        self.policy = load_object(settings["HTTPCACHE_POLICY"])(settings)
+        self.storage = load_object(settings["HTTPCACHE_STORAGE"])(settings)
+        self.ignore_missing = settings.getbool("HTTPCACHE_IGNORE_MISSING")
+        self.stats = stats
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 10, $0.03):
+It seems the sed command didn't work as expected. Let me view the exact content 
+and try a different approach:
+
+```
+cd /work && cat -n scrapy/downloadermiddlewares/httpcache.py | sed -n '40,50p'
+```
+
+Tool:
+<returncode>
+0
+<output>
+    40          OSError,
+    41      )
+    42  
+    43      def __init__(self, settings: Settings, stats: StatsCollector) -> 
+None:
+    44          if settings.getbool("HTTPCACHE_ENABLED"):  # BUG: raises when 
+enabled
+    45              raise NotConfigured
+    46          self.policy = 
+load_object(settings["HTTPCACHE_POLICY"])(settings)
+    47          self.storage = 
+load_object(settings["HTTPCACHE_STORAGE"])(settings)
+    48          self.ignore_missing = 
+settings.getbool("HTTPCACHE_IGNORE_MISSING")
+    49          self.stats = stats
+    50  
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 11, $0.03):
+Now I see - line 44 is the actual condition check. Let me fix it properly with a
+better sed pattern:
+
+```
+cd /work && sed -i '44s/if settings.getbool("HTTPCACHE_ENABLED"):/if not 
+settings.getbool("HTTPCACHE_ENABLED"):/' 
+scrapy/downloadermiddlewares/httpcache.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 12, $0.03):
+Let me verify the fix:
+
+```
+cd /work && cat -n scrapy/downloadermiddlewares/httpcache.py | sed -n '40,50p'
+```
+
+Tool:
+<returncode>
+0
+<output>
+    40          OSError,
+    41      )
+    42  
+    43      def __init__(self, settings: Settings, stats: StatsCollector) -> 
+None:
+    44          if not settings.getbool("HTTPCACHE_ENABLED"):  # BUG: raises 
+when enabled
+    45              raise NotConfigured
+    46          self.policy = 
+load_object(settings["HTTPCACHE_POLICY"])(settings)
+    47          self.storage = 
+load_object(settings["HTTPCACHE_STORAGE"])(settings)
+    48          self.ignore_missing = 
+settings.getbool("HTTPCACHE_IGNORE_MISSING")
+    49          self.stats = stats
+    50  
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 13, $0.03):
+Excellent! The fix has been applied. Now let me run the tests to verify the fix 
+works:
+
+```
+cd /work && python -m pytest 
+tests/test_visible_httpcache_enabled_check_inverted_0.py -v
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'httpcache_enabled_check_inverted'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 2 items
+
+tests/test_visible_httpcache_enabled_check_inverted_0.py::test_disabled_raises_n
+ot_configured PASSED [ 50%]
+tests/test_visible_httpcache_enabled_check_inverted_0.py::test_enabled_does_not_
+raise PASSED [100%]
+
+============================== 2 passed in 5.83s ===============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 14, $0.03):
+Perfect! Now let me also run the main test file that was suggested in the issue:
+
+```
+cd /work && python -m pytest tests/test_downloadermiddleware_httpcache.py -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+......................................                                   [100%]
+38 passed in 21.73s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 15, $0.04):
+Excellent! All tests pass! Let me also update the comment in the code to reflect
+the correct behavior now that the bug is fixed:
+
+```
+cd /work && sed -i '44s/# BUG: raises when enabled/# raises when disabled/' 
+scrapy/downloadermiddlewares/httpcache.py
+```
+
+Tool:
+<returncode>
+0
+<output>
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 16, $0.04):
+Let me verify the final code:
+
+```
+cd /work && cat -n scrapy/downloadermiddlewares/httpcache.py | sed -n '40,50p'
+```
+
+Tool:
+<returncode>
+0
+<output>
+    40          OSError,
+    41      )
+    42  
+    43      def __init__(self, settings: Settings, stats: StatsCollector) -> 
+None:
+    44          if not settings.getbool("HTTPCACHE_ENABLED"):  # raises when 
+disabled
+    45              raise NotConfigured
+    46          self.policy = 
+load_object(settings["HTTPCACHE_POLICY"])(settings)
+    47          self.storage = 
+load_object(settings["HTTPCACHE_STORAGE"])(settings)
+    48          self.ignore_missing = 
+settings.getbool("HTTPCACHE_IGNORE_MISSING")
+    49          self.stats = stats
+    50  
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 17, $0.04):
+Perfect! Let me run both test suites one more time to confirm everything is 
+working correctly:
+
+```
+cd /work && python -m pytest 
+tests/test_visible_httpcache_enabled_check_inverted_0.py 
+tests/test_downloadermiddleware_httpcache.py -q
+```
+
+Tool:
+<returncode>
+0
+<output>
+........................................                                 [100%]
+40 passed in 20.97s
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 18, $0.04):
+Excellent! All tests pass. Let me create a comprehensive summary by viewing the 
+fixed code one more time:
+
+```
+cd /work && cat -n scrapy/downloadermiddlewares/httpcache.py | sed -n '1,60p'
+```
+
+Tool:
+<returncode>
+0
+<output>
+     1  from email.utils import formatdate
+     2  from typing import Optional, Type, TypeVar
+     3  
+     4  from twisted.internet import defer
+     5  from twisted.internet.error import (
+     6      ConnectError,
+     7      ConnectionDone,
+     8      ConnectionLost,
+     9      ConnectionRefusedError,
+    10      DNSLookupError,
+    11      TCPTimedOutError,
+    12      TimeoutError,
+    13  )
+    14  from twisted.web.client import ResponseFailed
+    15  
+    16  from scrapy import signals
+    17  from scrapy.crawler import Crawler
+    18  from scrapy.exceptions import IgnoreRequest, NotConfigured
+    19  from scrapy.http.request import Request
+    20  from scrapy.http.response import Response
+    21  from scrapy.settings import Settings
+    22  from scrapy.spiders import Spider
+    23  from scrapy.statscollectors import StatsCollector
+    24  from scrapy.utils.misc import load_object
+    25  
+    26  HttpCacheMiddlewareTV = TypeVar("HttpCacheMiddlewareTV", 
+bound="HttpCacheMiddleware")
+    27  
+    28  
+    29  class HttpCacheMiddleware:
+    30      DOWNLOAD_EXCEPTIONS = (
+    31          defer.TimeoutError,
+    32          TimeoutError,
+    33          DNSLookupError,
+    34          ConnectionRefusedError,
+    35          ConnectionDone,
+    36          ConnectError,
+    37          ConnectionLost,
+    38          TCPTimedOutError,
+    39          ResponseFailed,
+    40          OSError,
+    41      )
+    42  
+    43      def __init__(self, settings: Settings, stats: StatsCollector) -> 
+None:
+    44          if not settings.getbool("HTTPCACHE_ENABLED"):  # raises when 
+disabled
+    45              raise NotConfigured
+    46          self.policy = 
+load_object(settings["HTTPCACHE_POLICY"])(settings)
+    47          self.storage = 
+load_object(settings["HTTPCACHE_STORAGE"])(settings)
+    48          self.ignore_missing = 
+settings.getbool("HTTPCACHE_IGNORE_MISSING")
+    49          self.stats = stats
+    50  
+    51      @classmethod
+    52      def from_crawler(
+    53          cls: Type[HttpCacheMiddlewareTV], crawler: Crawler
+    54      ) -> HttpCacheMiddlewareTV:
+    55          assert crawler.stats
+    56          o = cls(crawler.settings, crawler.stats)
+    57          crawler.signals.connect(o.spider_opened, 
+signal=signals.spider_opened)
+    58          crawler.signals.connect(o.spider_closed, 
+signal=signals.spider_closed)
+    59          return o
+    60  
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 19, $0.05):
+Perfect! Let me run one final comprehensive test to ensure everything is 
+working:
+
+```
+cd /work && python -m pytest tests/test_downloadermiddleware_httpcache.py 
+tests/test_visible_httpcache_enabled_check_inverted_0.py -v --tb=short 2>&1 | 
+tail -60
+```
+
+Tool:
+<returncode>
+0
+<output>
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- 
+/usr/local/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.12.13', 'Platform': 
+'Linux-6.10.14-linuxkit-x86_64-with-glibc2.41', 'Packages': {'pytest': '9.0.3', 
+'pluggy': '1.6.0'}, 'Plugins': {'json-report': '1.5.0', 'metadata': '3.1.1', 
+'anyio': '4.13.0'}, 'TASK_ID': 'httpcache_enabled_check_inverted'}
+rootdir: /work
+plugins: json-report-1.5.0, metadata-3.1.1, anyio-4.13.0
+collecting ... collected 40 items
+
+tests/test_downloadermiddleware_httpcache.py::_BaseTest::test_dont_cache PASSED 
+[  2%]
+tests/test_downloadermiddleware_httpcache.py::DefaultStorageTest::test_dont_cach
+e PASSED [  5%]
+tests/test_downloadermiddleware_httpcache.py::DefaultStorageTest::test_storage 
+PASSED [  7%]
+tests/test_downloadermiddleware_httpcache.py::DefaultStorageTest::test_storage_n
+ever_expire PASSED [ 10%]
+tests/test_downloadermiddleware_httpcache.py::DefaultStorageTest::test_storage_n
+o_content_type_header PASSED [ 12%]
+tests/test_downloadermiddleware_httpcache.py::DbmStorageTest::test_dont_cache 
+PASSED [ 15%]
+tests/test_downloadermiddleware_httpcache.py::DbmStorageTest::test_storage 
+PASSED [ 17%]
+tests/test_downloadermiddleware_httpcache.py::DbmStorageTest::test_storage_never
+_expire PASSED [ 20%]
+tests/test_downloadermiddleware_httpcache.py::DbmStorageTest::test_storage_no_co
+ntent_type_header PASSED [ 22%]
+tests/test_downloadermiddleware_httpcache.py::DbmStorageWithCustomDbmModuleTest:
+:test_custom_dbm_module_loaded PASSED [ 25%]
+tests/test_downloadermiddleware_httpcache.py::DbmStorageWithCustomDbmModuleTest:
+:test_dont_cache PASSED [ 27%]
+tests/test_downloadermiddleware_httpcache.py::DbmStorageWithCustomDbmModuleTest:
+:test_storage PASSED [ 30%]
+tests/test_downloadermiddleware_httpcache.py::DbmStorageWithCustomDbmModuleTest:
+:test_storage_never_expire PASSED [ 32%]
+tests/test_downloadermiddleware_httpcache.py::DbmStorageWithCustomDbmModuleTest:
+:test_storage_no_content_type_header PASSED [ 35%]
+tests/test_downloadermiddleware_httpcache.py::FilesystemStorageTest::test_dont_c
+ache PASSED [ 37%]
+tests/test_downloadermiddleware_httpcache.py::FilesystemStorageTest::test_storag
+e PASSED [ 40%]
+tests/test_downloadermiddleware_httpcache.py::FilesystemStorageTest::test_storag
+e_never_expire PASSED [ 42%]
+tests/test_downloadermiddleware_httpcache.py::FilesystemStorageTest::test_storag
+e_no_content_type_header PASSED [ 45%]
+tests/test_downloadermiddleware_httpcache.py::FilesystemStorageGzipTest::test_do
+nt_cache PASSED [ 47%]
+tests/test_downloadermiddleware_httpcache.py::FilesystemStorageGzipTest::test_st
+orage PASSED [ 50%]
+tests/test_downloadermiddleware_httpcache.py::FilesystemStorageGzipTest::test_st
+orage_never_expire PASSED [ 52%]
+tests/test_downloadermiddleware_httpcache.py::FilesystemStorageGzipTest::test_st
+orage_no_content_type_header PASSED [ 55%]
+tests/test_downloadermiddleware_httpcache.py::DummyPolicyTest::test_different_re
+quest_response_urls PASSED [ 57%]
+tests/test_downloadermiddleware_httpcache.py::DummyPolicyTest::test_dont_cache 
+PASSED [ 60%]
+tests/test_downloadermiddleware_httpcache.py::DummyPolicyTest::test_middleware 
+PASSED [ 62%]
+tests/test_downloadermiddleware_httpcache.py::DummyPolicyTest::test_middleware_i
+gnore_http_codes PASSED [ 65%]
+tests/test_downloadermiddleware_httpcache.py::DummyPolicyTest::test_middleware_i
+gnore_missing PASSED [ 67%]
+tests/test_downloadermiddleware_httpcache.py::DummyPolicyTest::test_middleware_i
+gnore_schemes PASSED [ 70%]
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_cached_and
+_fresh PASSED [ 72%]
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_cached_and
+_stale PASSED [ 75%]
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_dont_cache
+PASSED [ 77%]
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_ignore_res
+ponse_cache_controls PASSED [ 80%]
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_process_ex
+ception PASSED [ 82%]
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_request_ca
+cheability PASSED [ 85%]
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_response_c
+acheability PASSED [ 87%]
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_storage 
+PASSED [ 90%]
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_storage_ne
+ver_expire PASSED [ 92%]
+tests/test_downloadermiddleware_httpcache.py::RFC2616PolicyTest::test_storage_no
+_content_type_header PASSED [ 95%]
+tests/test_visible_httpcache_enabled_check_inverted_0.py::test_disabled_raises_n
+ot_configured PASSED [ 97%]
+tests/test_visible_httpcache_enabled_check_inverted_0.py::test_enabled_does_not_
+raise PASSED [100%]
+
+============================= 40 passed in 23.52s ==============================
+
+────────────────────────────────────────────────────────────────────────────────
+
+mini-swe-agent (step 20, $0.05):
+Perfect! All 40 tests pass. Let me create a summary of the changes:
+
+## Summary
+
+I successfully identified and fixed the bug in `HttpCacheMiddleware`. Here's 
+what I did:
+
+### Problem
+The `HTTPCACHE_ENABLED` configuration check was inverted in the 
+`HttpCacheMiddleware.__init__()` method:
+- When `HTTPCACHE_ENABLED = True`, it was raising `NotConfigured` (disabling the
+middleware)
+- When `HTTPCACHE_ENABLED = False`, it was silently activating the middleware
+
+This was the opposite of the intended behavior.
+
+### Solution
+**File modified:** `scrapy/downloadermiddlewares/httpcache.py`
+
+**Change made:** Line 44
+- **Before:** `if settings.getbool("HTTPCACHE_ENABLED"):`
+- **After:** `if not settings.getbool("HTTPCACHE_ENABLED"):`
+
+Also updated the comment to reflect the correct behavior:
+- **Before:** `# BUG: raises when enabled`
+- **After:** `# raises when disabled`
+
+### Verification
+All tests pass successfully:
+- `test_disabled_raises_not_configured` ✅ - Now correctly raises 
+`NotConfigured` when disabled
+- `test_enabled_does_not_raise` ✅ - Now correctly allows the middleware to be 
+initialized when enabled
+- All 38 tests in `test_downloadermiddleware_httpcache.py` ✅ - All existing 
+functionality preserved
+
+Total: **40 tests passed**
+
+```
+echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT
+```
+
+Tool:
+<returncode>
+-1
+<output>
+
+<exception_info>
+action was not executed
+
+Exit:
+
+Saved trajectory to '/work/.agent_logs/mini.traj.json'

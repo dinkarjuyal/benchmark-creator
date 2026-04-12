@@ -1,0 +1,33 @@
+{
+  "task_id": "robotstxt_allowed_inverted",
+  "description": "robots.txt should block disallowed URLs; regression blocks allowed ones",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/robotstxt_allowed_inverted",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/robotstxt_allowed_inverted_waey7l52",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/robotstxt_allowed_inverted/robotstxt_allowed_inverted_20260412_085243_06887288",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "The robots.txt middleware should raise `IgnoreRequest` only for\nURLs that are *not* allowed by the rules.  After a recent change\nthe condition was inverted: requests that are allowed are now\nblocked and vice versa.\n\nFix the robots.txt check so disallowed URLs are ignored and\nallowed URLs pass through.\n\nVerify with: pytest tests/test_downloadermiddleware_robotstxt.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_robotstxt_allowed_inverted_setup_1591ea80cb",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 1.665,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/robotstxt_allowed_inverted/robotstxt_allowed_inverted_20260412_085243_06887288/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/robotstxt_allowed_inverted/robotstxt_allowed_inverted_20260412_085243_06887288/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_robotstxt_allowed_inverted_agent_9b958044d5",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 99.072,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/robotstxt_allowed_inverted/robotstxt_allowed_inverted_20260412_085243_06887288/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/robotstxt_allowed_inverted/robotstxt_allowed_inverted_20260412_085243_06887288/agent_stderr.txt"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+.                                                                        [100%]
+=============================== warnings summary ===============================
+scrapy/spidermiddlewares/offsite.py:15
+  /work/scrapy/spidermiddlewares/offsite.py:15: ScrapyDeprecationWarning: The scrapy.spidermiddlewares.offsite module is deprecated, use scrapy.downloadermiddlewares.offsite instead.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 4.40s

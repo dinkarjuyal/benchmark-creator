@@ -1,0 +1,21 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`Settings.getint(name, default=None)` should return `None` when the\nsetting is missing and `default=None`.  Currently it raises a\n`TypeError` in that case.\n\nFix `getint` so that a `None` default is returned as-is when the key\nis not present.\n\nVerify with: pytest tests/test_settings.py -k getint -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "deterministic",
+    "--model-class",
+    "deterministic",
+    "-c",
+    "/task/public/mini_deterministic.yaml"
+  ]
+}

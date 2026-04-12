@@ -1,0 +1,66 @@
+{
+  "task_id": "request_method_not_uppercased",
+  "trial_index": 0,
+  "agent_name": "mini_claude_haiku_4_5",
+  "description": "Request.method must be uppercased; regression stores it as-is",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased_pfyepo0w",
+  "public_task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/task_public",
+  "agent_config_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/agents/mini_claude_haiku_4_5.yaml",
+  "agent_config_redacted_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/agent_config.redacted.yaml",
+  "agent_env_vars": [
+    "ANTHROPIC_API_KEY"
+  ],
+  "prompt_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/prompt.txt",
+  "agent_logs_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/agent_logs",
+  "runtime_context_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/runtime_context.json",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_request_method_not_uppercased_setup_0e99bb5cdc",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 1.854,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_request_method_not_uppercased_agent_b5eaa5a932",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 112.421,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/agent_stderr.txt"
+    },
+    {
+      "step": "validator",
+      "command": "python /task/validator.py",
+      "container_name": "harness_request_method_not_uppercased_validator_734056f040",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 15.507,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/validator_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs_test/request_method_not_uppercased/request_method_not_uppercased_20260412_082021_7e8b1ef9/validator_stderr.txt"
+    }
+  ],
+  "validation": {
+    "score": 0.9667,
+    "passed": true,
+    "message": "score=0.967 | hidden=1.00 visible=1.00 regression=0.67 policy=1.00",
+    "metrics": {
+      "hidden_test_fraction": 1.0,
+      "visible_test_fraction": 1.0,
+      "regression_safety": 0.6667,
+      "policy_quality": 1.0,
+      "hidden_passed": 2,
+      "hidden_total": 2,
+      "visible_passed": 2,
+      "visible_total": 2,
+      "is_noop": false,
+      "is_impossible": false
+    }
+  }
+}

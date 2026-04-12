@@ -1,0 +1,10 @@
+The redirect middleware uses `redirect_ttl` in request meta as a
+countdown to limit total redirects.  After a recent change the
+TTL is always reset to `REDIRECT_MAX_TIMES` on every hop instead
+of being carried over from the previous request's meta, so
+infinite redirect chains are no longer detected.
+
+Fix the TTL logic so it decrements across hops and redirects are
+correctly limited.
+
+Verify with: pytest tests/test_downloadermiddleware_redirect.py -q

@@ -1,0 +1,66 @@
+{
+  "task_id": "request_cb_kwargs_copy",
+  "trial_index": 0,
+  "agent_name": "mini_claude_haiku_4_5",
+  "description": "cb_kwargs must be copied on Request init to isolate from caller's dict",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy_hqcacyh8",
+  "public_task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/task_public",
+  "agent_config_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/agents/mini_claude_haiku_4_5.yaml",
+  "agent_config_redacted_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/agent_config.redacted.yaml",
+  "agent_env_vars": [
+    "ANTHROPIC_API_KEY"
+  ],
+  "prompt_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/prompt.txt",
+  "agent_logs_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/agent_logs",
+  "runtime_context_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/runtime_context.json",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_request_cb_kwargs_copy_setup_f2872eb6c4",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 7.282,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_request_cb_kwargs_copy_agent_81ffef8c04",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 250.88,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/agent_stderr.txt"
+    },
+    {
+      "step": "validator",
+      "command": "python /task/validator.py",
+      "container_name": "harness_request_cb_kwargs_copy_validator_7574e5b5eb",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 57.618,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/validator_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/validator_stderr.txt"
+    }
+  ],
+  "validation": {
+    "score": 0.9667,
+    "passed": true,
+    "message": "score=0.967 | hidden=1.00 visible=1.00 regression=0.67 policy=1.00",
+    "metrics": {
+      "hidden_test_fraction": 1.0,
+      "visible_test_fraction": 1.0,
+      "regression_safety": 0.6667,
+      "policy_quality": 1.0,
+      "hidden_passed": 2,
+      "hidden_total": 2,
+      "visible_passed": 1,
+      "visible_total": 1,
+      "is_noop": false,
+      "is_impossible": false
+    }
+  }
+}

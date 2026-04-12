@@ -1,0 +1,7 @@
+A developer reported that Scrapy settings writes at the same priority
+are being ignored.  Investigate `scrapy/settings/__init__.py` and fix
+the priority comparison logic if needed.
+
+Run: pytest tests/test_settings.py -k priority -q
+
+Note: if all tests already pass, no change is needed.

@@ -1,0 +1,8 @@
+A bug report claims that `Request` does not properly encode URLs with
+special characters, causing spiders to fail on URLs like
+`https://example.com/search?q=hello world`.
+
+Investigate `scrapy/http/request/__init__.py` and fix URL encoding
+if there is an issue.
+
+Run: pytest tests/test_http_request.py -k url -q

@@ -1,0 +1,10 @@
+Scrapy's retry middleware tracks retry attempts in
+`request.meta['retry_times']`.  After a recent change this counter
+is always reset to `1` instead of incrementing from the current
+value, causing requests to be retried indefinitely beyond the
+`RETRY_TIMES` limit.
+
+Fix the retry logic so the counter correctly accumulates across
+retries.
+
+Verify with: pytest tests/test_downloadermiddleware_retry.py -q

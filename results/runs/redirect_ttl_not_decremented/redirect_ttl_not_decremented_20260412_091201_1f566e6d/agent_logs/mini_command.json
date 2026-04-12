@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "The redirect middleware uses `redirect_ttl` in request meta as a\ncountdown to limit total redirects.  After a recent change the\nTTL is always reset to `REDIRECT_MAX_TIMES` on every hop instead\nof being carried over from the previous request's meta, so\ninfinite redirect chains are no longer detected.\n\nFix the TTL logic so it decrements across hops and redirects are\ncorrectly limited.\n\nVerify with: pytest tests/test_downloadermiddleware_redirect.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

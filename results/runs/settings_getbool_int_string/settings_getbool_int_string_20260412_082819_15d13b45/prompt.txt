@@ -1,0 +1,9 @@
+`Settings.getbool()` should correctly interpret the strings `'0'` as
+`False` and `'1'` as `True`.  After a recent change, the intermediate
+`int()` conversion was removed, causing `bool('0')` to return `True`
+(since `bool` of a non-empty string is always `True`).
+
+Fix `getbool` so that string representations of integers are handled
+correctly.
+
+Verify with: pytest tests/test_settings.py -k getbool -q

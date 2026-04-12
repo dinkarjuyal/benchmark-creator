@@ -1,0 +1,66 @@
+{
+  "task_id": "retry_times_off_by_one",
+  "trial_index": 0,
+  "agent_name": "mini_claude_haiku_4_5",
+  "description": "retry should allow up to max_retry_times attempts; regression uses < so last retry is skipped",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one_dotkwd_0",
+  "public_task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/task_public",
+  "agent_config_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/agents/mini_claude_haiku_4_5.yaml",
+  "agent_config_redacted_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/agent_config.redacted.yaml",
+  "agent_env_vars": [
+    "ANTHROPIC_API_KEY"
+  ],
+  "prompt_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/prompt.txt",
+  "agent_logs_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/agent_logs",
+  "runtime_context_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/runtime_context.json",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_retry_times_off_by_one_setup_8e0fd51e6c",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.309,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_retry_times_off_by_one_agent_8fcfa7a116",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 151.862,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/agent_stderr.txt"
+    },
+    {
+      "step": "validator",
+      "command": "python /task/validator.py",
+      "container_name": "harness_retry_times_off_by_one_validator_1cf4e11bda",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 36.277,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/validator_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/retry_times_off_by_one/retry_times_off_by_one_20260412_085106_d04eface/validator_stderr.txt"
+    }
+  ],
+  "validation": {
+    "score": 0.9667,
+    "passed": true,
+    "message": "score=0.967 | hidden=1.00 visible=1.00 regression=0.67 policy=1.00",
+    "metrics": {
+      "hidden_test_fraction": 1.0,
+      "visible_test_fraction": 1.0,
+      "regression_safety": 0.6667,
+      "policy_quality": 1.0,
+      "hidden_passed": 1,
+      "hidden_total": 1,
+      "visible_passed": 1,
+      "visible_total": 1,
+      "is_noop": false,
+      "is_impossible": false
+    }
+  }
+}

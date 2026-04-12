@@ -1,0 +1,9 @@
+`scrapy genspider my-spider example.com` should create a file named
+`my_spider.py` (hyphens replaced with underscores).  After a recent
+change, hyphens are no longer replaced, causing Python to fail when
+trying to import `my-spider.py` as a module.
+
+Fix the `genspider` command so hyphens in the spider name are
+replaced with underscores.
+
+Verify with: pytest tests/test_commands.py -k genspider -q

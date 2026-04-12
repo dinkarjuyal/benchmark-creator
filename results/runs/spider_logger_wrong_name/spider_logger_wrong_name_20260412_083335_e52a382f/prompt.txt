@@ -1,0 +1,9 @@
+Each spider's `logger` property should return a logger named
+after `spider.name` so log records can be filtered by spider
+name at runtime.  After a recent change it uses
+`self.__class__.__name__` instead, breaking log filtering for
+spiders whose class name differs from their `name` attribute.
+
+Fix the `logger` property to use `self.name`.
+
+Verify with: pytest tests/test_spider.py -k logger -q

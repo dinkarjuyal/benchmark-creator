@@ -1,0 +1,27 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________________ test_has_pending_after_enqueue ________________________
+_val_visible_0_qw4fjaeq.py:24: in test_has_pending_after_enqueue
+    scheduler.open(spider)
+scrapy/core/scheduler.py:219: in open
+    self.mqs = self._mq()
+               ^^^^^^^^^^
+scrapy/core/scheduler.py:319: in _mq
+    return create_instance(
+scrapy/utils/misc.py:194: in create_instance
+    instance = objcls(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not callable
+=============================== warnings summary ===============================
+_val_visible_0_qw4fjaeq.py::test_has_pending_after_enqueue
+  /work/scrapy/dupefilters.py:59: ScrapyDeprecationWarning: '2.6' is a deprecated value for the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting.
+  
+  It is also the default value. In other words, it is normal to get this warning if you have not defined a value for the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting. This is so for backward compatibility reasons, but it will change in a future version of Scrapy.
+  
+  See the documentation of the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting for information on how to handle this deprecation.
+    fingerprinter or RequestFingerprinter()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED _val_visible_0_qw4fjaeq.py::test_has_pending_after_enqueue - TypeError...
+1 failed, 1 warning in 6.34s

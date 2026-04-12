@@ -1,0 +1,12 @@
+`Request` stores its `meta` dict internally.  When a caller passes a
+`meta` dict at construction time, the request should own an
+independent copy so that external mutations to the original dict
+don't affect the request.
+
+After a recent change `Request` stores a direct reference to the
+caller's dict instead of copying it, causing shared mutable state.
+
+Fix the `Request.__init__` so that the `meta` argument is copied on
+construction.
+
+Verify with: pytest tests/test_http_request.py -k meta -q

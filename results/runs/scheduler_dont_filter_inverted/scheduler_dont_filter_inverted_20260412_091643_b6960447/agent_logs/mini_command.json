@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "When `request.dont_filter = True`, the scheduler should bypass\nthe dupefilter entirely and always enqueue the request.  After a\nrecent change the condition was inverted: `dont_filter=True`\nrequests are now filtered (dropped) while `dont_filter=False`\nrequests always pass through.\n\nFix `enqueue_request` so `dont_filter=True` correctly bypasses\nduplicate filtering.\n\nVerify with: pytest tests/test_scheduler.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

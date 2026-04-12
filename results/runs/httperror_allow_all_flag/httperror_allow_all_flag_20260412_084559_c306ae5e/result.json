@@ -1,0 +1,57 @@
+{
+  "task_id": "httperror_allow_all_flag",
+  "trial_index": 0,
+  "agent_name": "mini_claude_haiku_4_5",
+  "description": "HTTPERROR_ALLOW_ALL=True should pass all responses; regression ignores it",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag_9_a_srkv",
+  "public_task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/task_public",
+  "agent_config_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/agents/mini_claude_haiku_4_5.yaml",
+  "agent_config_redacted_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/agent_config.redacted.yaml",
+  "agent_env_vars": [
+    "ANTHROPIC_API_KEY"
+  ],
+  "prompt_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/prompt.txt",
+  "agent_logs_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/agent_logs",
+  "runtime_context_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/runtime_context.json",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_httperror_allow_all_flag_setup_b4e4cb0ffc",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 1.83,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_httperror_allow_all_flag_agent_24383a41d6",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 301.752,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/agent_stderr.txt"
+    },
+    {
+      "step": "validator",
+      "command": "python /task/validator.py",
+      "container_name": "harness_httperror_allow_all_flag_validator_57f83f7920",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.828,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/validator_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/validator_stderr.txt"
+    }
+  ],
+  "validation": {
+    "score": 0.0,
+    "passed": false,
+    "message": "agent step timed out.",
+    "metrics": {
+      "failing_step": "agent"
+    }
+  }
+}

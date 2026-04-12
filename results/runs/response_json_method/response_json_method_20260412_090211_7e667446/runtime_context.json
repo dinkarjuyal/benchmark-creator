@@ -1,0 +1,33 @@
+{
+  "task_id": "response_json_method",
+  "description": "`scrapy.http.TextResponse` should have a `.json()` method that parses",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/response_json_method",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_json_method_9mqd7h79",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_json_method/response_json_method_20260412_090211_7e667446",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`scrapy.http.TextResponse` should have a `.json()` method that parses\nthe response body as JSON (similar to `requests.Response.json()`).\n\nAdd `TextResponse.json()` so that:\n- It returns the parsed Python object (dict, list, etc.)\n- It raises `ValueError` (or `json.JSONDecodeError`) if the body is not valid JSON\n- It does not change any existing behavior\n\nVerify with: pytest tests/test_http_response.py -k json -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_response_json_method_setup_03b248b757",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 1.613,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_json_method/response_json_method_20260412_090211_7e667446/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_json_method/response_json_method_20260412_090211_7e667446/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_response_json_method_agent_6e944a0feb",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 150.431,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_json_method/response_json_method_20260412_090211_7e667446/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/response_json_method/response_json_method_20260412_090211_7e667446/agent_stderr.txt"
+    }
+  ]
+}

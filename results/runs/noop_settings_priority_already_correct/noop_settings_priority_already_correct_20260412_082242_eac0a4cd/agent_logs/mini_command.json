@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "A developer reported that Scrapy settings writes at the same priority\nare being ignored.  Investigate `scrapy/settings/__init__.py` and fix\nthe priority comparison logic if needed.\n\nRun: pytest tests/test_settings.py -k priority -q\n\nNote: if all tests already pass, no change is needed.\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

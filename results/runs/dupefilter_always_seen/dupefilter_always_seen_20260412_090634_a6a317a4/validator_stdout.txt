@@ -1,0 +1,1 @@
+{"score": 0.9667, "passed": true, "message": "score=0.967 | hidden=1.00 visible=1.00 regression=0.67 policy=1.00", "metrics": {"hidden_test_fraction": 1.0, "visible_test_fraction": 1.0, "regression_safety": 0.6667, "policy_quality": 1.0, "hidden_passed": 3, "hidden_total": 3, "visible_passed": 2, "visible_total": 2, "is_noop": false, "is_impossible": false}}

@@ -1,0 +1,33 @@
+{
+  "task_id": "useragent_setdefault_override",
+  "description": "User-Agent should use setdefault (not force-set) so spider can override",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/useragent_setdefault_override",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/useragent_setdefault_override_ufln9zhe",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/useragent_setdefault_override/useragent_setdefault_override_20260412_084414_c6d0035c",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "Scrapy's `UserAgentMiddleware` should set the `User-Agent` header\nonly if the request doesn't already have one (using `setdefault`).\nThis allows individual requests or spiders to override the global\n`USER_AGENT` setting.\n\nAfter a recent change the middleware always overwrites the header,\neven when the request already has a custom `User-Agent`.\n\nFix the middleware to use `setdefault` so per-request User-Agent\noverrides are respected.\n\nVerify with: pytest tests/test_downloadermiddleware_useragent.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_useragent_setdefault_override_setup_edfb9c0d27",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.461,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/useragent_setdefault_override/useragent_setdefault_override_20260412_084414_c6d0035c/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/useragent_setdefault_override/useragent_setdefault_override_20260412_084414_c6d0035c/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_useragent_setdefault_override_agent_a7ee734545",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 180.526,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/useragent_setdefault_override/useragent_setdefault_override_20260412_084414_c6d0035c/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/useragent_setdefault_override/useragent_setdefault_override_20260412_084414_c6d0035c/agent_stderr.txt"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_duplicate_without_dont_filter_is_dropped _________________
+_val_hidden_0_m3fvpjkl.py:14: in test_duplicate_without_dont_filter_is_dropped
+    s.open(MagicMock())
+scrapy/core/scheduler.py:225: in open
+    self.mqs = self._mq()
+               ^^^^^^^^^^
+scrapy/core/scheduler.py:325: in _mq
+    return create_instance(
+scrapy/utils/misc.py:194: in create_instance
+    instance = objcls(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not callable
+=============================== warnings summary ===============================
+_val_hidden_0_m3fvpjkl.py::test_duplicate_without_dont_filter_is_dropped
+  /work/scrapy/dupefilters.py:59: ScrapyDeprecationWarning: '2.6' is a deprecated value for the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting.
+  
+  It is also the default value. In other words, it is normal to get this warning if you have not defined a value for the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting. This is so for backward compatibility reasons, but it will change in a future version of Scrapy.
+  
+  See the documentation of the 'REQUEST_FINGERPRINTER_IMPLEMENTATION' setting for information on how to handle this deprecation.
+    fingerprinter or RequestFingerprinter()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED _val_hidden_0_m3fvpjkl.py::test_duplicate_without_dont_filter_is_dropped
+1 failed, 1 warning in 2.02s

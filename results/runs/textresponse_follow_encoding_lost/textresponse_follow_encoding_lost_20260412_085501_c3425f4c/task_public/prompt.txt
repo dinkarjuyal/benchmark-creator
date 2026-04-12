@@ -1,0 +1,10 @@
+`TextResponse.follow(url)` should resolve relative URLs against
+the current response's URL.  After a recent change the
+`urljoin` call was removed, so relative hrefs like `'/next'`
+are passed directly to `Request`, producing invalid absolute
+URLs.
+
+Fix `follow` so relative URLs are resolved against
+`self.url` before creating the `Request`.
+
+Verify with: pytest tests/test_http_response.py -k follow -q

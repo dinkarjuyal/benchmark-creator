@@ -1,0 +1,13 @@
+`scrapy.http.Request` has `headers` as a dict-like attribute but no
+convenience method for merging new headers into an existing request.
+
+Add a method `Request.with_headers(extra_headers)` that returns a new
+`Request` (via `replace()`) with the given headers merged on top of the
+existing ones.  The original request must be unchanged.
+
+Example:
+    req = Request('https://example.com', headers={'User-Agent': 'bot'})
+    new = req.with_headers({'Authorization': 'Bearer token'})
+    # new has both headers; req is unchanged
+
+Verify with: pytest tests/test_http_request.py -k with_headers -q

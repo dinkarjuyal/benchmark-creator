@@ -1,0 +1,9 @@
+When a spider has no `allowed_domains` (empty list or not set), the
+offsite middleware should allow all requests through.  After a recent
+change the compiled regex no longer matches any host, so all requests
+are incorrectly filtered as offsite.
+
+Fix `get_host_regex` so that an empty / missing `allowed_domains`
+returns a pattern that allows every host.
+
+Verify with: pytest tests/test_spidermiddleware_offsite.py -q

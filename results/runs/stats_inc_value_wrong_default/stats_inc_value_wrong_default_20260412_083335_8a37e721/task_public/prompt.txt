@@ -1,0 +1,9 @@
+`MemoryStatsCollector.inc_value()` should initialise a missing
+counter to `start` (default `0`) before incrementing.  After a
+recent change it uses `dict.get(key, None)` which raises a
+`TypeError` the first time any new stat key is incremented.
+
+Fix `inc_value` so missing keys are initialised to `start`
+before the increment.
+
+Verify with: pytest tests/test_stats.py -q

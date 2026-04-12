@@ -1,0 +1,11 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________________ test_ttl_carried_across_hops _________________________
+_val_visible_0_xuaz1q4z.py:16: in test_ttl_carried_across_hops
+    assert isinstance(result, Response), (
+E   AssertionError: Should stop redirecting when TTL is exhausted
+E   assert False
+E    +  where False = isinstance(<GET https://c.com>, Response)
+=========================== short test summary info ============================
+FAILED _val_visible_0_xuaz1q4z.py::test_ttl_carried_across_hops - AssertionEr...
+1 failed in 14.21s

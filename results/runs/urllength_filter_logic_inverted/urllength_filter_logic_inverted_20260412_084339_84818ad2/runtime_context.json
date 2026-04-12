@@ -1,0 +1,33 @@
+{
+  "task_id": "urllength_filter_logic_inverted",
+  "description": "URL length filter should block LONG URLs; regression blocks short ones",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/urllength_filter_logic_inverted",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/urllength_filter_logic_inverted_lagz_e27",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/urllength_filter_logic_inverted/urllength_filter_logic_inverted_20260412_084339_84818ad2",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`UrlLengthMiddleware` should filter out requests whose URLs exceed\n`URLLENGTH_LIMIT` characters.  After a recent change the comparison\noperator was flipped, so short URLs are dropped and long URLs pass\nthrough.\n\nFix the URL length check so URLs longer than `URLLENGTH_LIMIT` are\nfiltered out (not shorter ones).\n\nVerify with: pytest tests/test_spidermiddleware_urllength.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_urllength_filter_logic_inverted_setup_f4b0f72679",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.271,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/urllength_filter_logic_inverted/urllength_filter_logic_inverted_20260412_084339_84818ad2/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/urllength_filter_logic_inverted/urllength_filter_logic_inverted_20260412_084339_84818ad2/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_urllength_filter_logic_inverted_agent_821a103427",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 161.796,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/urllength_filter_logic_inverted/urllength_filter_logic_inverted_20260412_084339_84818ad2/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/urllength_filter_logic_inverted/urllength_filter_logic_inverted_20260412_084339_84818ad2/agent_stderr.txt"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`Scheduler.has_pending_requests()` should return `True` when\nthere are queued requests waiting to be processed.  After a\nrecent change it always returns `False`, so the engine\nimmediately considers the crawl finished even with a non-empty\nqueue.\n\nFix `has_pending_requests` so it correctly reports whether the\nscheduler has queued requests.\n\nVerify with: pytest tests/test_scheduler.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

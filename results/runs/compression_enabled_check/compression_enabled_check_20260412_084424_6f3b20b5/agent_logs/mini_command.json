@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "Setting `COMPRESSION_ENABLED = False` should disable Scrapy's HTTP\ncompression middleware (`HttpCompressionMiddleware`).  After a recent\nchange this check was removed, so the middleware is always active.\n\nRestore the `NotConfigured` raise so `COMPRESSION_ENABLED = False`\ncorrectly disables the middleware.\n\nVerify with: pytest tests/test_downloadermiddleware_httpcompression.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

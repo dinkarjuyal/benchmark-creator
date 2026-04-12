@@ -1,0 +1,33 @@
+{
+  "task_id": "request_cb_kwargs_copy",
+  "description": "cb_kwargs must be copied on Request init to isolate from caller's dict",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/request_cb_kwargs_copy",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy_hqcacyh8",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`Request` should own an independent copy of `cb_kwargs` so that\nexternal mutations to the dict passed at construction don't affect\nthe request.\n\nAfter a recent change, `cb_kwargs` is stored by reference, creating\nshared mutable state between the caller and the request.\n\nFix `Request.__init__` to copy the `cb_kwargs` argument.\n\nVerify with: pytest tests/test_http_request.py -k cb_kwargs -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_request_cb_kwargs_copy_setup_f2872eb6c4",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 7.282,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_request_cb_kwargs_copy_agent_81ffef8c04",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 250.88,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/request_cb_kwargs_copy/request_cb_kwargs_copy_20260412_084725_9596a0ad/agent_stderr.txt"
+    }
+  ]
+}

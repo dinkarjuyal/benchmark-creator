@@ -1,0 +1,66 @@
+{
+  "task_id": "scheduler_has_pending_always_false",
+  "trial_index": 0,
+  "agent_name": "mini_claude_haiku_4_5",
+  "description": "has_pending_requests must return True when queue is non-empty",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false_dsefgcae",
+  "public_task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/task_public",
+  "agent_config_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/agents/mini_claude_haiku_4_5.yaml",
+  "agent_config_redacted_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/agent_config.redacted.yaml",
+  "agent_env_vars": [
+    "ANTHROPIC_API_KEY"
+  ],
+  "prompt_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/prompt.txt",
+  "agent_logs_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/agent_logs",
+  "runtime_context_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/runtime_context.json",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_scheduler_has_pending_always_false_setup_0c026c8498",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 2.076,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_scheduler_has_pending_always_false_agent_537d80ccab",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 197.465,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/agent_stderr.txt"
+    },
+    {
+      "step": "validator",
+      "command": "python /task/validator.py",
+      "container_name": "harness_scheduler_has_pending_always_false_validator_46f283edd1",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 75.357,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/validator_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/scheduler_has_pending_always_false/scheduler_has_pending_always_false_20260412_085734_d7c1eb60/validator_stderr.txt"
+    }
+  ],
+  "validation": {
+    "score": 0.1667,
+    "passed": false,
+    "message": "score=0.167 | hidden=0.00 visible=0.00 regression=0.67 policy=1.00",
+    "metrics": {
+      "hidden_test_fraction": 0.0,
+      "visible_test_fraction": 0.0,
+      "regression_safety": 0.6667,
+      "policy_quality": 1.0,
+      "hidden_passed": 0,
+      "hidden_total": 2,
+      "visible_passed": 0,
+      "visible_total": 1,
+      "is_noop": false,
+      "is_impossible": false
+    }
+  }
+}

@@ -1,0 +1,10 @@
+Scrapy's spider middleware `_process_spider_exception` should pass
+an exception to the next middleware in the chain when the current
+middleware returns `None` (meaning it chose not to handle it).
+After a recent change, returning `None` causes the chain to stop
+early, so later middlewares never see the exception.
+
+Fix `_process_spider_exception` so the chain continues when a
+middleware returns `None`.
+
+Verify with: pytest tests/test_spidermw.py -q

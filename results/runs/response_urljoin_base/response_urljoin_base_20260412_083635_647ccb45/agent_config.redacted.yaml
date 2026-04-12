@@ -1,0 +1,6 @@
+name: mini_claude_haiku_4_5
+adapter: mini_swe_agent
+env_passthrough:
+  - ANTHROPIC_API_KEY
+adapter_config:
+  model: claude-haiku-4-5

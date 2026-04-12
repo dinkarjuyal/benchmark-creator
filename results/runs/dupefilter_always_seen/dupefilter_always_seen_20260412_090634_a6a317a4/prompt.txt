@@ -1,0 +1,8 @@
+Scrapy's `RFPDupeFilter.request_seen()` should return `False` the
+first time a URL is seen and `True` for subsequent duplicates.
+After a recent refactor it always returns `True`, causing every
+request to be filtered as a duplicate immediately.
+
+Fix `request_seen` so it correctly tracks which URLs have been seen.
+
+Verify with: pytest tests/test_dupefilters.py -q

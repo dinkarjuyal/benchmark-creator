@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`TextResponse.text` should decode response bodies using the\nresponse's declared encoding. After a recent change it always\ndecodes as UTF-8, which corrupts responses declared with a\ndifferent charset such as Latin-1.\n\nFix `TextResponse.text` so it honors the response encoding when\ndecoding the body.\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

@@ -1,0 +1,10 @@
+Add support for a new spider middleware method `process_start_requests`
+to be able to return an early short-circuit signal by returning the
+sentinel value `scrapy.utils.misc.SKIP_REMAINING_MIDDLEWARES` from
+`process_start_requests`, causing the remaining middlewares in the
+chain to be skipped for that request batch.
+
+Existing middleware behavior must be preserved when the sentinel is
+not returned.
+
+Verify with: pytest tests/test_spidermw.py -k short_circuit -q

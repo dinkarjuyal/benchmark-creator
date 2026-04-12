@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "Scrapy's `RFPDupeFilter.request_seen()` should return `False` the\nfirst time a URL is seen and `True` for subsequent duplicates.\nAfter a recent refactor it always returns `True`, causing every\nrequest to be filtered as a duplicate immediately.\n\nFix `request_seen` so it correctly tracks which URLs have been seen.\n\nVerify with: pytest tests/test_dupefilters.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

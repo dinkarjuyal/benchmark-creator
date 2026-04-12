@@ -1,0 +1,12 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________________ test_getint_none_default_returns_none _____________________
+_val_visible_0_evzf77h5.py:4: in test_getint_none_default_returns_none
+    result = s.getint('NONEXISTENT_KEY_XYZ', default=None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scrapy/settings/__init__.py:182: in getint
+    raise TypeError(f'No integer value for setting {name!r}')
+E   TypeError: No integer value for setting 'NONEXISTENT_KEY_XYZ'
+=========================== short test summary info ============================
+FAILED _val_visible_0_evzf77h5.py::test_getint_none_default_returns_none - Ty...
+1 failed in 4.10s

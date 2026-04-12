@@ -1,0 +1,33 @@
+{
+  "task_id": "httperror_allow_all_flag",
+  "description": "HTTPERROR_ALLOW_ALL=True should pass all responses; regression ignores it",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/httperror_allow_all_flag",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag_9_a_srkv",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "When `request.meta['handle_httpstatus_all'] = True`, all HTTP\nresponses (including 4xx/5xx) should be passed to the spider's\ncallback.  After a recent change this meta flag is always treated as\n`False`, so error responses are dropped regardless.\n\nFix `HttpErrorMiddleware.process_response` so the\n`handle_httpstatus_all` meta flag is respected.\n\nVerify with: pytest tests/test_spidermiddleware_httperror.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_httperror_allow_all_flag_setup_b4e4cb0ffc",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 1.83,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_httperror_allow_all_flag_agent_24383a41d6",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 301.752,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/httperror_allow_all_flag/httperror_allow_all_flag_20260412_084559_c306ae5e/agent_stderr.txt"
+    }
+  ]
+}

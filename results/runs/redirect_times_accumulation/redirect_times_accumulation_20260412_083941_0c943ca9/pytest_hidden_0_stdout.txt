@@ -1,0 +1,15 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________________ test_max_redirects_enforced __________________________
+_val_hidden_0_5b7pv1c7.py:14: in test_max_redirects_enforced
+    result = mw.process_response(req, resp, MagicMock())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scrapy/downloadermiddlewares/redirect.py:153: in process_response
+    return self._redirect(redirected, request, spider, response.status)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scrapy/downloadermiddlewares/redirect.py:106: in _redirect
+    raise IgnoreRequest("max redirections reached")
+E   scrapy.exceptions.IgnoreRequest: max redirections reached
+=========================== short test summary info ============================
+FAILED _val_hidden_0_5b7pv1c7.py::test_max_redirects_enforced - scrapy.except...
+1 failed in 4.56s

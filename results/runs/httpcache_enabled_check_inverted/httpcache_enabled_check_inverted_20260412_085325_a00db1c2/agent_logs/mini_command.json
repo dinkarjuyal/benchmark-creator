@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "`HttpCacheMiddleware` should raise `NotConfigured` (and thus be\ndisabled) when `HTTPCACHE_ENABLED = False`.  After a recent\nchange the condition was inverted: the middleware now raises\nwhen caching *is* enabled and silently activates when it is\ndisabled.\n\nFix the check so `HTTPCACHE_ENABLED = False` correctly disables\nthe middleware.\n\nVerify with: pytest tests/test_downloadermiddleware_httpcache.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

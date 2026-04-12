@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "When a spider has no `allowed_domains` (empty list or not set), the\noffsite middleware should allow all requests through.  After a recent\nchange the compiled regex no longer matches any host, so all requests\nare incorrectly filtered as offsite.\n\nFix `get_host_regex` so that an empty / missing `allowed_domains`\nreturns a pattern that allows every host.\n\nVerify with: pytest tests/test_spidermiddleware_offsite.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

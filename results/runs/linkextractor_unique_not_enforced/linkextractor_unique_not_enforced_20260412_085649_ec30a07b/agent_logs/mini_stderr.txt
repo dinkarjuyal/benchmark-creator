@@ -1,0 +1,2 @@
+Warning: Input is not a terminal (fd=0).
+Retrying <unknown> in 4 seconds as it raised InternalServerError: litellm.InternalServerError: AnthropicException - [SSL: SSLV3_ALERT_BAD_RECORD_MAC] ssl/tls alert bad record mac (_ssl.c:2580). Handle with `litellm.InternalServerError`..

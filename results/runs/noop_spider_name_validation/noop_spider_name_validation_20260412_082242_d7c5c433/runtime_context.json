@@ -1,0 +1,33 @@
+{
+  "task_id": "noop_spider_name_validation",
+  "description": "Someone reported that Scrapy allows spiders with invalid names",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/noop_spider_name_validation",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/noop_spider_name_validation_ay6lwi49",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/noop_spider_name_validation/noop_spider_name_validation_20260412_082242_d7c5c433",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "Someone reported that Scrapy allows spiders with invalid names\n(containing spaces or special characters).  Check if `Spider.__init__`\nvalidates the `name` attribute and add validation if missing.\n\nRun: pytest tests/test_spiders.py -k name -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_noop_spider_name_validation_setup_aaadfa24df",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 4.243,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/noop_spider_name_validation/noop_spider_name_validation_20260412_082242_d7c5c433/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/noop_spider_name_validation/noop_spider_name_validation_20260412_082242_d7c5c433/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_noop_spider_name_validation_agent_5ec2137df1",
+      "exit_code": null,
+      "timed_out": true,
+      "duration_sec": 302.366,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/noop_spider_name_validation/noop_spider_name_validation_20260412_082242_d7c5c433/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/noop_spider_name_validation/noop_spider_name_validation_20260412_082242_d7c5c433/agent_stderr.txt"
+    }
+  ]
+}

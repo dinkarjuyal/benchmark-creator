@@ -1,0 +1,33 @@
+{
+  "task_id": "corestats_elapsed_time_missing",
+  "description": "elapsed_time_seconds must be computed from start and finish time",
+  "task_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/benchmarks/scrapy_50/tasks/corestats_elapsed_time_missing",
+  "run_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/corestats_elapsed_time_missing_9j5j9bt1",
+  "artifact_dir": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/corestats_elapsed_time_missing/corestats_elapsed_time_missing_20260412_085418_8d4052f0",
+  "container_task_dir": "/task",
+  "container_run_dir": "/work",
+  "container_artifact_dir": "/artifacts",
+  "prompt": "`CoreStats` records `elapsed_time_seconds` in spider stats by\nsubtracting `start_time` from `finish_time`.  After a recent\nchange this is always set to `0.0` regardless of how long the\ncrawl took.\n\nFix `spider_closed` so `elapsed_time_seconds` reflects the\nactual crawl duration.\n\nVerify with: pytest tests/test_extension_corestats.py -q\n",
+  "steps": [
+    {
+      "step": "setup",
+      "command": "python /task/public/setup.py",
+      "container_name": "harness_corestats_elapsed_time_missing_setup_4dcd9378a9",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 1.772,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/corestats_elapsed_time_missing/corestats_elapsed_time_missing_20260412_085418_8d4052f0/setup_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/corestats_elapsed_time_missing/corestats_elapsed_time_missing_20260412_085418_8d4052f0/setup_stderr.txt"
+    },
+    {
+      "step": "agent",
+      "command": "python /agent_tools/mini_swe_agent.py --workspace /work --prompt-file /task/prompt.txt --model claude-haiku-4-5",
+      "container_name": "harness_corestats_elapsed_time_missing_agent_fbaff38250",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_sec": 151.076,
+      "stdout_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/corestats_elapsed_time_missing/corestats_elapsed_time_missing_20260412_085418_8d4052f0/agent_stdout.txt",
+      "stderr_path": "/Users/dinkarjuyal/Desktop/agents/Take-home/benchmark-creator/results/runs/corestats_elapsed_time_missing/corestats_elapsed_time_missing_20260412_085418_8d4052f0/agent_stderr.txt"
+    }
+  ]
+}

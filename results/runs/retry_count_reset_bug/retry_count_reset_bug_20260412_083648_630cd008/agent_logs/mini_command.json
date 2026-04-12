@@ -1,0 +1,17 @@
+{
+  "cmd": [
+    "mini",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "environment.cwd=/work",
+    "-o",
+    "/work/.agent_logs/mini.traj.json",
+    "-t",
+    "Scrapy's retry middleware tracks retry attempts in\n`request.meta['retry_times']`.  After a recent change this counter\nis always reset to `1` instead of incrementing from the current\nvalue, causing requests to be retried indefinitely beyond the\n`RETRY_TIMES` limit.\n\nFix the retry logic so the counter correctly accumulates across\nretries.\n\nVerify with: pytest tests/test_downloadermiddleware_retry.py -q\n",
+    "-y",
+    "--exit-immediately",
+    "-m",
+    "claude-haiku-4-5"
+  ]
+}

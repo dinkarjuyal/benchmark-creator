@@ -1,0 +1,10 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________________ test_logger_named_after_spider_name ______________________
+_val_visible_0_y1nemdz2.py:8: in test_logger_named_after_spider_name
+    spider = MySpider.from_settings(scrapy.settings.Settings())
+             ^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: type object 'MySpider' has no attribute 'from_settings'. Did you mean: 'custom_settings'?
+=========================== short test summary info ============================
+FAILED _val_visible_0_y1nemdz2.py::test_logger_named_after_spider_name - Attr...
+1 failed in 3.44s
