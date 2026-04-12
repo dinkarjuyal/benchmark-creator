@@ -1,0 +1,5 @@
+`Request.copy()` and `Request.replace()` should preserve cookie contents without reusing the same mutable cookie container.
+
+Update the Scrapy request implementation so that cloned requests do not alias `cookies` with the original request. Keep the existing request semantics intact for both dictionary-style cookies and verbose cookie-list inputs.
+
+Run or reason against `tests/test_request_copy_cookies_regression.py` and make it pass.

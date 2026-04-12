@@ -1,0 +1,5 @@
+The `scrapy version` command should print the expected `Scrapy <version>` prefix in non-verbose mode.
+
+Update the command implementation so that its default output matches the usual human-facing format while leaving verbose output behavior intact.
+
+Run or reason against `tests/test_command_version_prefix.py` and make it pass.

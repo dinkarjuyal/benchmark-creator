@@ -1,0 +1,13 @@
+{
+  "_comment": "This self-contained benchmark keeps its task and Docker assets under the benchmark directory.",
+  "id": "uppercase_file",
+  "description": "Transform input.txt into uppercase and save it as output.txt.",
+  "image": "takehome-harness-mini:py312",
+  "dockerfile": "../../docker/harness-mini.Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template"
+}

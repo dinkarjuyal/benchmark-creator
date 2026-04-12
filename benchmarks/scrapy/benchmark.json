@@ -1,0 +1,11 @@
+{
+  "id": "scrapy",
+  "name": "Scrapy Benchmark",
+  "task_dirs": [
+    "tasks/request_copy_cookies",
+    "tasks/settings_equal_priority_override",
+    "tasks/settings_getbool_lowercase",
+    "tasks/command_genspider_https_default",
+    "tasks/command_version_prefix"
+  ]
+}

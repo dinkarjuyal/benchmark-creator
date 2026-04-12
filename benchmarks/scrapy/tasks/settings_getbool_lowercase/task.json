@@ -1,0 +1,13 @@
+{
+  "_comment": "Settings task: lowercase boolean strings should be accepted by getbool.",
+  "id": "settings_getbool_lowercase",
+  "description": "Fix Scrapy settings boolean coercion so lowercase string booleans behave like the documented values.",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/harness-mini.Dockerfile",
+  "timeout_sec": 180,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template"
+}

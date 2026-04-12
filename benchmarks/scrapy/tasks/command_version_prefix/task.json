@@ -1,0 +1,13 @@
+{
+  "_comment": "Command task: version command should keep the documented Scrapy prefix.",
+  "id": "command_version_prefix",
+  "description": "Fix the Scrapy version command so its non-verbose output keeps the expected human-facing prefix.",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/harness-mini.Dockerfile",
+  "timeout_sec": 180,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template"
+}

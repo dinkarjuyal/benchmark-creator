@@ -1,0 +1,5 @@
+`BaseSettings.getbool()` should accept lowercase string booleans as documented.
+
+Update the Scrapy settings implementation so that values like `"true"` and `"false"` are coerced correctly. Invalid values should still raise `ValueError`.
+
+Run or reason against `tests/test_settings_getbool_lowercase.py` and make it pass.

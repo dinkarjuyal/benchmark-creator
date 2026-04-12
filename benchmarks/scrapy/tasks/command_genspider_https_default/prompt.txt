@@ -1,0 +1,5 @@
+The `genspider` command should normalize bare domains to `https://...` URLs.
+
+Update the genspider URL helper so that inputs like `example.com` default to an https URL, while inputs that already include a scheme keep that scheme unchanged.
+
+Run or reason against `tests/test_command_genspider_https_default.py` and make it pass.

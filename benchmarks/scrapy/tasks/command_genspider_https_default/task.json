@@ -1,0 +1,13 @@
+{
+  "_comment": "Command task: genspider should default bare domains to https URLs.",
+  "id": "command_genspider_https_default",
+  "description": "Fix Scrapy genspider URL normalization so bare domains default to https while explicit schemes are preserved.",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/harness-mini.Dockerfile",
+  "timeout_sec": 180,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template"
+}

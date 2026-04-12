@@ -1,0 +1,1 @@
+Read `input.txt`, convert its contents to uppercase, and write the result to `output.txt`.

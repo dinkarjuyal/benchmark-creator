@@ -1,0 +1,7 @@
+{
+  "id": "take_home_demo",
+  "name": "Take-home Demo Benchmark",
+  "task_dirs": [
+    "tasks/uppercase_file"
+  ]
+}

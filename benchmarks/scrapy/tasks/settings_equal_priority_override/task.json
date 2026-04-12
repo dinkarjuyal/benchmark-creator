@@ -1,0 +1,13 @@
+{
+  "_comment": "Settings task: equal-priority writes should still override earlier values.",
+  "id": "settings_equal_priority_override",
+  "description": "Fix Scrapy settings updates so writes at the same priority still replace the existing value.",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/harness-mini.Dockerfile",
+  "timeout_sec": 180,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template"
+}
