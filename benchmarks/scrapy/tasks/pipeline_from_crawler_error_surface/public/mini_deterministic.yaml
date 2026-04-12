@@ -1,0 +1,14 @@
+model:
+  outputs:
+    - role: assistant
+      content: "I will transform the file and then submit."
+      extra:
+        cost: 0.0
+        actions:
+          - command: "python solve.py"
+    - role: assistant
+      content: "The task is complete, so I will submit now."
+      extra:
+        cost: 0.0
+        actions:
+          - command: "echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT"

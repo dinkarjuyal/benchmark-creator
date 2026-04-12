@@ -1,5 +1,0 @@
-Settings set at the same priority should still override earlier values.
-
-Update the Scrapy settings implementation so that writing a setting twice with the same priority keeps the later value. Lower-priority writes should still be ignored, and higher-priority writes should still win.
-
-Run or reason against `tests/test_settings_equal_priority_override.py` and make it pass.

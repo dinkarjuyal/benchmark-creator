@@ -2,10 +2,17 @@
   "id": "scrapy",
   "name": "Scrapy Benchmark",
   "task_dirs": [
-    "tasks/request_copy_cookies",
-    "tasks/settings_equal_priority_override",
-    "tasks/settings_getbool_lowercase",
-    "tasks/command_genspider_https_default",
-    "tasks/command_version_prefix"
+    "tasks/start_items_pipeline_wait",
+    "tasks/genspider_edit_project_context",
+    "tasks/autothrottle_429_backoff",
+    "tasks/pyproject_project_discovery",
+    "tasks/pipeline_from_crawler_error_surface",
+    "tasks/httpcache_async_storage_contract",
+    "tasks/downloadermiddleware_async_compat",
+    "tasks/shell_schedule_event_loop_contract",
+    "tasks/autothrottle_download_delay_compat",
+    "tasks/parallel_asyncio_queue_bound",
+    "tasks/spider_callback_deferred_warning",
+    "tasks/pipeline_deferred_warning"
   ]
 }

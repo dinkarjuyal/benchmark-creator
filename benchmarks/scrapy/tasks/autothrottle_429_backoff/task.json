@@ -1,0 +1,12 @@
+{
+  "id": "autothrottle_429_backoff",
+  "description": "Scrapy AutoThrottle should back off on HTTP 429 responses and honor Retry-After when present.",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/harness-mini.Dockerfile",
+  "timeout_sec": 180,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template"
+}

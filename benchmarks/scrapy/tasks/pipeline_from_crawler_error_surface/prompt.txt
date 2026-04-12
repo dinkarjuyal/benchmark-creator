@@ -1,0 +1,7 @@
+If an item pipeline fails during `from_crawler()` setup, Scrapy should surface
+that failure clearly instead of proceeding with a misleading or incomplete crawl
+startup.
+
+Update the pipeline loading path so setup-time pipeline errors are surfaced by
+the crawler in the narrow behavior covered by the regression tests, while valid
+pipelines continue to load normally.

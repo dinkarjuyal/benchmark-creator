@@ -1,0 +1,12 @@
+{
+  "id": "parallel_asyncio_queue_bound",
+  "description": "Scrapy _parallel_asyncio() should keep queue growth bounded by the requested concurrency while still processing all items.",
+  "image": "takehome-scrapy-mini:py312-v2",
+  "dockerfile": "../../docker/harness-mini.Dockerfile",
+  "timeout_sec": 180,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "template_dir": "template"
+}

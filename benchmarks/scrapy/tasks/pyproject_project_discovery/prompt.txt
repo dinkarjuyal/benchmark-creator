@@ -1,0 +1,17 @@
+Scrapy should support `pyproject.toml` as a project configuration source and prefer it over `scrapy.cfg` when both exist in the same project tree.
+
+For this task, use the following schema:
+
+```toml
+[tool.scrapy.settings]
+default = "demo.settings"
+custom = "demo.custom_settings"
+```
+
+Update project discovery and config loading so:
+
+- `closest_scrapy_cfg()` can find the nearest supported project config file
+- `get_config()` exposes `tool.scrapy.settings` entries through the same `settings` section used by existing callers
+- `init_env()` uses the preferred config source and still keeps legacy `scrapy.cfg` behavior working
+
+Make all regression tests pass.

@@ -1,0 +1,10 @@
+Scrapy AutoThrottle should back off when a site responds with HTTP 429.
+
+Implement the provided policy:
+
+- normal non-429 responses should keep the current AutoThrottle behavior
+- a 429 without `Retry-After` should increase delay by backing off from the current slot delay
+- a 429 with `Retry-After` should raise the slot delay to at least that value
+- all delays must still respect the configured min/max bounds
+
+Make the regression tests pass without regressing the existing non-429 rules.

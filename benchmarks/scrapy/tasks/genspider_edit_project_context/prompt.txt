@@ -1,0 +1,5 @@
+`python -m scrapy.cmdline genspider --edit ...` should work from the current Python environment without depending on an external `scrapy` shell executable.
+
+Fix the `genspider --edit` flow so it preserves the current project context and successfully opens the generated spider through the configured editor command.
+
+Make the provided regression tests pass while keeping normal `genspider` behavior unchanged.

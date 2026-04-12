@@ -14,6 +14,7 @@ RUN python -m pip install --no-cache-dir \
     hatchling \
     editables \
     pytest \
+    pytest-asyncio \
     "Twisted>=21.7.0,<=25.5.0" \
     cryptography \
     cssselect \

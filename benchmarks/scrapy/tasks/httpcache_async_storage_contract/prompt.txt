@@ -1,0 +1,6 @@
+Scrapy's HTTP cache middleware should support the narrow async storage behavior
+covered by the regression tests.
+
+Add the minimal async cache-storage support needed so awaited cache retrieval
+and storage complete correctly, while preserving the existing synchronous cache
+path and cache round-trip behavior.
