@@ -1,5 +1,5 @@
 # Claude Code — Benchmark Design Notes & Work State
-*Last updated: 2026-04-11. Read this FIRST before touching tasks/, scripts/, or scoring logic.*
+*Last updated: 2026-04-12. Read this FIRST before touching tasks/, scripts/, or scoring logic.*
 
 ---
 
@@ -13,15 +13,56 @@
 - **Verifier builder** at `scripts/verifier_builder.py` — builds `validator.py` from TaskCandidate
 - **Task writer** at `scripts/task_writer.py` — writes harness-compatible directories
 - **Orchestrator** at `scripts/generate_tasks.py` — regenerate tasks from scratch with `--scrapy-root`
-- All code pushed to `https://github.com/dinkarjuyal/benchmark-creator` on branch `main`
+- **`harness/run_tasks.py`** fixed: now uses `python3 -m harness.run_task` (module invocation, not script path)
+- **`scripts/analyze_results.py`** — analysis script complete
+- **Full haiku benchmark run** complete — 50 tasks, results in `results/runs/`
+- All code and results pushed to `https://github.com/dinkarjuyal/benchmark-creator` on branch `main`
 
 ### What is NOT DONE (next steps in order)
-1. **Build Docker image**: `docker build -t takehome-scrapy-mini:py312-v2 benchmarks/scrapy_50/docker/`
-2. **Smoke test 3 tasks** with `python3 harness/run_task.py` to verify the harness end-to-end
-3. **Create agent configs** for 3 models (claude-sonnet-4-6, claude-haiku-4-5, plus one more — e.g. claude-opus-4-6 or a weaker baseline)
-4. **Run full benchmark** on all 50 tasks with 3 agent configs; results go in `results/runs/`
-5. **Write analysis script** — read result JSONs, print per-model mean score table
-6. **Write report** (by hand, NOT by AI) — covers design, scoring, results, shortcomings
+1. ~~Build Docker image~~ ✓
+2. ~~Run full benchmark (haiku)~~ ✓
+3. **Run sonnet benchmark** (optional, for 3-model comparison): `bash scripts/run_benchmark.sh sonnet`
+4. **Write report** (by hand, NOT by AI) — covers design, scoring, results, shortcomings
+
+---
+
+## HAIKU BENCHMARK RESULTS (2026-04-12, all 50 tasks)
+
+**Model**: `mini_claude_haiku_4_5`
+
+| Metric | Value |
+|--------|-------|
+| Total tasks | 50 |
+| Mean score | 0.572 |
+| Score ≥ 0.9 (near-perfect) | 27 (54%) |
+| Score = 0.0 (failure/timeout) | 17 (34%) |
+| Pass (score ≥ 1.0) | 0 (max possible score is 0.967 due to regression_safety=0.667) |
+
+**Score band distribution** (per deduplicated 50 tasks):
+- 0.0–0.2: 17 tasks (34%) — all "agent step timed out" (5 min budget exceeded)
+- 0.2–0.6: 1 task (2%) — `redirect_times_accumulation` = 0.367
+- 0.6–0.9: 5 tasks (10%) — partial or near-miss fixes
+- 0.9–1.0: 27 tasks (54%) — correct fix, regression-safe
+
+**By task type** (deduplicated):
+- `invariant_recovery` (44 tasks): mean ~0.58 — 27 solved cleanly, 17 failed
+- `contract_extension` (3 tasks): low mean — haiku timed out on most
+- `no_op` (3 tasks): 1/3 correct (haiku correctly changed nothing); 2/3 timed out looking for a non-existent bug
+- `impossible` (3 tasks): 2/3 correct (haiku output `CANNOT_COMPLETE_TASK`); 1/3 timed out
+
+**Zero-score tasks** (all agent-step timeout):
+depth_middleware_init_depth, feedexport_overwrite_default, fingerprint_method_excluded,
+genspider_module_name_sanitize, httperror_allow_all_flag, impossible_request_immutable_url,
+noop_request_url_encoding, noop_spider_name_validation, request_add_headers_method,
+settings_copy_method, settings_getbool_int_string, settings_getint_none_default,
+settings_getlist_fallback_kwarg, settings_getwithbase_merge_order, spider_middleware_short_circuit,
+spiderloader_list_wrong_return, spidermw_exception_continue_on_none
+
+**Notable findings for report**:
+- Regression safety is consistently 0.667 on solved tasks (1 of 4 core scrapy test files fails on every passing run) — this is a systematic issue in how the 4 regression test files were chosen; one file likely tests behavior unrelated to the fix area and consistently fails
+- No-op tasks expose overconfident patching: haiku spent 5 min searching for a bug that didn't exist on 2/3 no-op tasks
+- Impossible tasks mostly worked: haiku correctly recognized 2/3 as unsolvable
+- The bimodal score distribution (0.0 or 0.967, very little in between) suggests the tasks are well-differentiated — either the agent finds the fix quickly or it doesn't find it at all within budget
 
 ---
 
