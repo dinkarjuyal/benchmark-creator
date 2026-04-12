@@ -1,5 +1,160 @@
-# Claude Code — Benchmark Design Notes
-*Last updated: 2026-04-11. Read before touching tasks/, scripts/, or scoring logic.*
+# Claude Code — Benchmark Design Notes & Work State
+*Last updated: 2026-04-11. Read this FIRST before touching tasks/, scripts/, or scoring logic.*
+
+---
+
+## CURRENT STATE (as of last update)
+
+### What is DONE
+- **50 task directories generated** at `benchmarks/scrapy_50/tasks/` — each has `task.json`, `prompt.txt`, `public/setup.py`, `template/` (full scrapy 2.11.2 checkout + visible tests), `validator.py`
+- **`benchmarks/scrapy_50/benchmark.json`** — task index with scoring metadata
+- **`benchmarks/scrapy_50/docker/Dockerfile`** — evaluation image (`takehome-scrapy-mini:py312-v2`)
+- **All generator scripts** at `scripts/generators/` — fully functional, see generator map below
+- **Verifier builder** at `scripts/verifier_builder.py` — builds `validator.py` from TaskCandidate
+- **Task writer** at `scripts/task_writer.py` — writes harness-compatible directories
+- **Orchestrator** at `scripts/generate_tasks.py` — regenerate tasks from scratch with `--scrapy-root`
+- All code pushed to `https://github.com/dinkarjuyal/benchmark-creator` on branch `main`
+
+### What is NOT DONE (next steps in order)
+1. **Build Docker image**: `docker build -t takehome-scrapy-mini:py312-v2 benchmarks/scrapy_50/docker/`
+2. **Smoke test 3 tasks** with `python3 harness/run_task.py` to verify the harness end-to-end
+3. **Create agent configs** for 3 models (claude-sonnet-4-6, claude-haiku-4-5, plus one more — e.g. claude-opus-4-6 or a weaker baseline)
+4. **Run full benchmark** on all 50 tasks with 3 agent configs; results go in `results/runs/`
+5. **Write analysis script** — read result JSONs, print per-model mean score table
+6. **Write report** (by hand, NOT by AI) — covers design, scoring, results, shortcomings
+
+---
+
+## HOW TO REGENERATE TASKS FROM SCRATCH
+
+```bash
+cd benchmark-creator
+# Uses existing scrapy checkout (skip re-clone):
+python3 scripts/generate_tasks.py \
+  --scrapy-root /path/to/scrapy-2.11.2-checkout \
+  --out-dir benchmarks/scrapy_50 \
+  --max 50
+
+# Or let it clone fresh (takes ~30s):
+python3 scripts/generate_tasks.py --max 50
+```
+
+The scrapy 2.11.2 clone was last at:
+`/var/folders/d7/n37mhvzj7m36mdpmq6y1j7z40000gn/T/scrapy_ordfh1wv`
+(tmp dir — may not persist across reboots; re-clone if missing)
+
+---
+
+## HOW TO RUN THE HARNESS (single task)
+
+```bash
+cd benchmark-creator
+python3 harness/run_task.py \
+  benchmarks/scrapy_50/tasks/settings_getint_none_default \
+  --agent mini_swe_agent \
+  --allow-agent-network \
+  --build-missing-image
+```
+
+The harness:
+1. Builds the Docker image (`takehome-scrapy-mini:py312-v2`) if missing
+2. Runs `public/setup.py` inside container to apply start-state patches
+3. Runs the agent (mini-swe-agent) with the task prompt
+4. Runs `validator.py` to score the solution
+5. Writes `result.json` with `{score, passed, message, metrics}`
+
+---
+
+## TASK DISTRIBUTION (50 total)
+
+| Category | Count | Notes |
+|----------|-------|-------|
+| No-op | 3 | Agent must change nothing |
+| Impossible | 3 | Agent must recognize infeasibility |
+| Invariant Recovery (counterfactual) | 37 | AST-injected regressions to fix |
+| Contract Extension | 7 | Add new capability, guard existing behavior |
+
+**Difficulty distribution:**
+- Depth 1 (single function): 6 tasks
+- Depth 2 (cross-function/file): 32 tasks
+- Depth 3 (cross-component): 12 tasks
+- Depth 4-5 (cross-layer): 0 tasks (impossible tasks effectively at 4-5)
+
+**Families covered:** settings, middleware, request, response, scheduler, spider, pipeline, commands, selector
+
+---
+
+## GENERATOR MAP
+
+| File | Class | Output | How it works |
+|------|-------|--------|-------------|
+| `generators/counterfactual.py` | `CounterfactualGenerator` | 10 tasks | Single-line AST mutations to scrapy source; find→replace |
+| `generators/structural_mining.py` | `StructuralMiningGenerator` | 27 tasks | Same find→replace pattern, mined from wider set of scrapy subsystems |
+| `generators/contract_extension.py` | `ContractExtensionGenerator` | 7 tasks | Hardcoded new-capability tasks (no start_state_patches, agent adds code) |
+| `generators/noop_impossible.py` | `NoopImpossibleGenerator` | 6 tasks | Hardcoded no-op and impossible tasks |
+
+All generators return `list[TaskCandidate]` via `.generate()`.
+
+---
+
+## KEY ASSUMPTIONS (VERIFY IF THINGS BREAK)
+
+### Scrapy version
+- **Pinned at tag `2.11.2`** (NOT 2.12.0 — that tag doesn't exist on GitHub)
+- All `find` strings in `INJECTIONS` / `STRUCTURAL_INJECTIONS` are verified against 2.11.2 source
+- If scrapy source is updated, re-verify all injection strings (run `--dry-run` first)
+
+### Harness contract
+- The harness writes `/artifacts/runtime_context.json` with step results
+- `validator.py` reads that file and `context["container_run_dir"]` to find the workspace
+- The agent works in `/work` inside the container; scrapy source is at `/work/scrapy/`
+- `setup.py` applies `start_state_patches` at runtime into `/work` (not into the template)
+
+### Scoring
+- `score = 0.6*hidden + 0.2*visible + 0.1*regression_safety + 0.1*policy_quality`
+- For no-op/impossible tasks: any edit to scrapy source → `policy_quality = 0.0`
+- `regression_safety` runs 4 core test files: test_settings, test_http_request, test_http_response, test_dupefilters
+- A score ≥ 0.9 is considered "passed"
+
+### Task writer assumptions
+- `template/` contains the full scrapy 2.11.2 source **with the injected bug already applied**
+- `public/setup.py` re-applies the same patches at runtime (this is intentional redundancy — setup.py is the authoritative start state; template/ serves as a reference for the agent)
+- `validator.py` is written at generation time, not at runtime
+
+### Docker image
+- Image name: `takehome-scrapy-mini:py312-v2`
+- `DOCKERFILE_REL` in `task_writer.py` is `"../../docker/Dockerfile"` (relative to task dir)
+- The Dockerfile installs `mini-swe-agent` and all scrapy runtime + test deps
+- Does NOT install scrapy itself — the agent works on the source checkout in `/work`
+
+### Agent configs
+- Located at `agents/` (see existing configs in the repo)
+- Use `mini_swe_agent` as the agent class
+- Need to create configs for: claude-sonnet-4-6, claude-haiku-4-5, and one more model
+
+---
+
+## KNOWN ISSUES / GOTCHAS
+
+1. **`response_text_wrong_encoding` task** — the injected change is a docstring-only mutation (minimal behavioral impact). This task will likely score high even without a fix. Consider replacing with a more impactful injection if time permits.
+
+2. **`scheduler_has_pending_always_false`** — the visible test only checks that an empty scheduler returns False (which is correct in both buggy and fixed code). The hidden test is also weak. This task may have too-easy visible tests. Not critical to fix.
+
+3. **Contract extension tasks have no `start_state_patches`** — agent starts with clean scrapy source and must add the new capability from scratch. This is intentional but harder to score than counterfactual tasks.
+
+4. **`template/` is huge** — each task dir contains a full scrapy checkout (~8k files). This makes the repo large. Consider a `.gitignore` that excludes `template/` and regenerates at evaluation time if repo size is a concern.
+
+5. **No smoke test run yet** — validator.py has not been exercised end-to-end inside Docker. If the harness `/artifacts/runtime_context.json` format differs from what `validator.py` expects, all tasks will score 0.0. Verify with one smoke test before running the full benchmark.
+
+---
+
+## REPORT THESIS (for the human writing the report)
+
+1. **Why unsaturated**: tasks require discovering invariants, not pattern-matching on issue descriptions; no-op and impossible tasks penalize overconfident agents; dependency depth ≥ 2 means single-function edits won't solve most tasks
+2. **Why the scoring design matters**: exact match rewards scaffolding tricks; our 4-component formula rewards behavioral correctness + regression safety + edit economy
+3. **Why Scrapy**: contamination argument (niche internals vs. scikit-learn), verifier stability (pure pytest, no network), CPU feasibility
+4. **Aha moments**: no-op tasks (all tested models over-patched), impossible tasks (models attempted impossible changes), policy_quality penalty caught models that touched unnecessary files
+5. **Design principles borrowed**: ETH Zurich adversarial benchmarks (no-op), SWE-bench lessons (avoid direct PR replay), equivalence testing (compare to reference, not exact output), spec-first generation (spec → test → solution → prompt)
 
 ---
 
@@ -11,18 +166,18 @@ The benchmark is **unsaturated** because tasks require non-local, multi-step rea
 
 ## Required Task Diversity (ALL three must be present)
 
-### 1. No-op Tasks (~3)
+### 1. No-op Tasks (3 present)
 Working code where the correct answer is **"change nothing"**. Agent should recognize behavior is already correct and not introduce regressions.
 - Source: ETH Zurich adversarial SWE-bench literature (overconfident patching)
 - Detection: `policy_quality` sub-score penalizes edits when `is_noop=True`
-- Report angle: reveals overconfident patching behavior in all tested models
 
-### 2. Impossible Tasks (~3)
-Prompts describing behavior changes that **cannot be achieved** given codebase constraints (e.g. protocol-level invariant, async/sync conflict).
-- Agent should submit a no-change patch or explain why it's not feasible
-- Report angle: tests calibration — does the model know what it doesn't know?
+### 2. Impossible Tasks (3 present)
+Prompts describing behavior changes that **cannot be achieved** given codebase constraints.
+- `impossible_sync_download_in_async_engine`: make HTTP/1.1 sync in async engine
+- `impossible_request_immutable_url`: make Request URL immutable after construction
+- `impossible_zero_memory_cache`: zero-memory HTTP cache
 
-### 3. Graded Difficulty Tasks (~44)
+### 3. Graded Difficulty Tasks (44 present)
 Majority of tasks, with partial credit available via hidden/visible test split.
 
 ---
@@ -30,18 +185,10 @@ Majority of tasks, with partial credit available via hidden/visible test split.
 ## Contamination Argument
 
 **Scrapy is a better contamination story than scikit-learn:**
-- scikit-learn is massively over-represented in training data (ML tutorials, Stack Overflow, papers, Kaggle)
-- A contamination-safe pipeline would need to be much stronger for scikit-learn
+- scikit-learn is massively over-represented in training data
 - Scrapy internals (scheduler dedup, middleware call chains, spider contract edge cases) are niche
-- Still: pin a specific commit, avoid tasks mapping 1:1 to existing GitHub issues, use behavioral prompts not issue numbers
-
-**Anti-contamination measures:**
-- Pinned commit (v2.12.0) with canary strings in templates
-- Task prompts describe *behavior*, not issue numbers
+- Pinned commit + behavioral prompts for anti-contamination
 - No direct replay of public benchmark instances
-- Prefer counterfactual injections over verbatim PR replay
-
-**Key report line:** "A contamination pipeline would have been much more critical for scikit-learn than for Scrapy. We focus instead on curation and task family design."
 
 ---
 
@@ -63,115 +210,7 @@ score = 0.6 * hidden_test_fraction
       + 0.1 * policy_quality
 ```
 
-- `hidden_test_fraction`: proportion of hidden checks passed (not shown to agent)
-- `visible_test_fraction`: proportion of public tests passed (agent can run these)
-- `regression_safety`: 1.0 if no forbidden regressions; penalized per broken contract
-- `policy_quality`: edit economy (penalize excessive file churn), invalid runs, no-op detection
-
-### Optional RL-Oriented Scores (log only, not in primary score)
-- Tool use efficiency (steps used vs. minimum needed)
-- Number of failed intermediate runs before submission
-- Step budget score (fraction of budget consumed)
-
-### Why Not Exact Match
-Exact match rewards superficial scaffolding (add `assert True`). Our formula rewards behavioral correctness + regression safety. A scorer should reflect more than exact patch match.
-
-### Verifier Architecture
-Hybrid: **test execution + structural checks** (better than either alone).
-- Visible tests → agent can see and run; validator checks
-- Hidden tests → only validator runs; never exposed to agent
-- Structural checks → AST-based (signature intact? class hierarchy preserved?)
-- Optional LLM judge → for `policy_quality` sub-score
-
----
-
-## Task Type Taxonomy (SAS — Systematically Novel)
-
-| Type | Description |
-|------|-------------|
-| **Invariant Recovery** | A hidden abstraction invariant is broken; agent must discover and restore it |
-| **Contract Extension** | Add new capability without breaking prior behavior |
-| **Cross-Layer Alignment** | Implementation + tests + docs + error messages must all agree |
-| **Behavioral Refactoring** | Restructure internals while preserving all public behavior invariants |
-| **Semantic Equivalence** | Two code paths should produce identical behavior; one has drifted |
-| **Test Oracle Construction** | Agent must write the *right* tests, not just satisfy existing ones |
-| **No-op** | Code is correct; agent must not change behavior |
-| **Impossible** | Task cannot be achieved; agent should recognize and not over-patch |
-
----
-
-## Task Generation Strategies
-
-### A: Counterfactual Regression Injection (PRIMARY — ~30 tasks)
-Inject subtle regression into known-good code. Visible test shows symptom. Hidden tests verify restoration.
-- Fast to create, low leakage, controlled difficulty, deterministic verifiers
-- Mutations: swap `>=`/`>`, flip boolean, wrong default, drop guard, remove call in chain
-
-### B: Structural Task Mining (~10 tasks)
-Mine codebase for natural task sources:
-- Sibling API asymmetries (`Response.copy()` handles X, `Request.copy()` doesn't)
-- `# TODO` / `# FIXME` near interface boundaries
-- Functions with only happy-path tests → add edge case as hidden test
-- Docstring parameters not validated in implementation
-
-### C: Contract Extension (~7 tasks)
-Describe a new capability; visible test checks new behavior; hidden tests guard existing behavior.
-- Example: "Settings.getlist() should accept a fallback= kwarg like getbool() does"
-
-### D: No-op / Impossible (~6 tasks)
-- No-op: misleading prompt suggesting a bug exists; correct answer is no change
-- Impossible: behavioral goal requiring a protocol-level or architectural invariant violation
-
----
-
-## Task Acceptance / Rejection Criteria
-
-### Accept if ALL of:
-- Pinned start state (specific commit + file state)
-- Prompt has a clear behavioral objective
-- Automatic verification (tests + structural checks, no human judgment)
-- Partial credit achievable (hidden + visible test split)
-- At least one non-local reasoning step (cross-file, cross-layer, multi-function)
-- Generation recipe is reusable across repos
-
-### Reject if ANY of:
-- One-line local repair with no reasoning required
-- Direct replay of a public benchmark instance
-- Depends on flaky external services or network
-- Scored only by exact match
-- Impossible to verify without human judgment
-
----
-
-## Most Promising Scrapy Task Families
-
-1. Download + spider middleware semantics (call order, `process_exception` chain)
-2. Scheduler dedup, retry, throttling behavior
-3. Request/Response processing invariants (`.copy()`, `.replace()`, `.cb_kwargs`)
-4. Item pipeline and exporter behavior
-5. Settings/config priority and type coercion mismatches
-6. Docs–code divergence around framework behavior
-
----
-
-## Scrapy Weaknesses (acknowledge in report)
-
-- Some interesting tasks risk depending on crawling/network behavior → mock heavily
-- Novelty real but lower than e.g. DSPy (less esoteric internals)
-- Methodology less portable than SQLAlchemy (many tasks are framework-specific)
-
----
-
-## Technical Design Principles
-
-- **Equivalence testing**: compare behavior vs. reference implementation, not exact output
-- **Spec-first generation**: spec → test → solution → task description (not the reverse)
-- **Dependency depth as difficulty metric**: not code volume — count distinct files/classes agent must reason about
-- **Temporal versioning**: pinned commit + behavioral prompts for anti-contamination
-- **Hybrid verifiers**: test execution + LLM judge > either alone
-- **Multi-dimensional scoring**: the four-component formula above
-
 ---
 
 ## Scrapy Pinned Version
-**`v2.12.0`** — validate existing 5 tasks still pass before generating new ones.
+**`2.11.2`** — `v2.12.0` tag does not exist on GitHub. Use `--branch=2.11.2` when cloning.
