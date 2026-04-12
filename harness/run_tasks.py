@@ -113,8 +113,7 @@ def load_benchmark(benchmark_registry: Path, benchmark_id: str) -> tuple[str, li
 
 def run_one(task_dir: Path, args: argparse.Namespace, trial_index: int) -> dict[str, Any]:
     cmd = [
-        sys.executable,
-        str(ROOT / "scripts" / "run_task.py"),
+        sys.executable, "-m", "harness.run_task",
         str(task_dir),
         "--results-dir",
         args.results_dir,
