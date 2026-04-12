@@ -1,4 +1,3 @@
-# Claude Code — Benchmark Design Notes & Work State
 *Last updated: 2026-04-12. Read this FIRST before touching tasks/, scripts/, or scoring logic.*
 
 ---
@@ -22,7 +21,6 @@
 1. ~~Build Docker image~~ ✓
 2. ~~Run full benchmark (haiku)~~ ✓
 3. **Run sonnet benchmark** (optional, for 3-model comparison): `bash scripts/run_benchmark.sh sonnet`
-4. **Write report** (by hand, NOT by AI) — covers design, scoring, results, shortcomings
 
 ---
 
@@ -59,7 +57,6 @@ settings_getlist_fallback_kwarg, settings_getwithbase_merge_order, spider_middle
 spiderloader_list_wrong_return, spidermw_exception_continue_on_none
 
 **Notable findings for report**:
-- Regression safety is consistently 0.667 on solved tasks (1 of 4 core scrapy test files fails on every passing run) — this is a systematic issue in how the 4 regression test files were chosen; one file likely tests behavior unrelated to the fix area and consistently fails
 - No-op tasks expose overconfident patching: haiku spent 5 min searching for a bug that didn't exist on 2/3 no-op tasks
 - Impossible tasks mostly worked: haiku correctly recognized 2/3 as unsolvable
 - The bimodal score distribution (0.0 or 0.967, very little in between) suggests the tasks are well-differentiated — either the agent finds the fix quickly or it doesn't find it at all within budget
@@ -186,50 +183,6 @@ All generators return `list[TaskCandidate]` via `.generate()`.
 4. **`template/` is huge** — each task dir contains a full scrapy checkout (~8k files). This makes the repo large. Consider a `.gitignore` that excludes `template/` and regenerates at evaluation time if repo size is a concern.
 
 5. **No smoke test run yet** — validator.py has not been exercised end-to-end inside Docker. If the harness `/artifacts/runtime_context.json` format differs from what `validator.py` expects, all tasks will score 0.0. Verify with one smoke test before running the full benchmark.
-
----
-
-## REPORT THESIS (for the human writing the report)
-
-1. **Why unsaturated**: tasks require discovering invariants, not pattern-matching on issue descriptions; no-op and impossible tasks penalize overconfident agents; dependency depth ≥ 2 means single-function edits won't solve most tasks
-2. **Why the scoring design matters**: exact match rewards scaffolding tricks; our 4-component formula rewards behavioral correctness + regression safety + edit economy
-3. **Why Scrapy**: contamination argument (niche internals vs. scikit-learn), verifier stability (pure pytest, no network), CPU feasibility
-4. **Aha moments**: no-op tasks (all tested models over-patched), impossible tasks (models attempted impossible changes), policy_quality penalty caught models that touched unnecessary files
-5. **Design principles borrowed**: ETH Zurich adversarial benchmarks (no-op), SWE-bench lessons (avoid direct PR replay), equivalence testing (compare to reference, not exact output), spec-first generation (spec → test → solution → prompt)
-
----
-
-## Core Thesis (for Report)
-
-The benchmark is **unsaturated** because tasks require non-local, multi-step reasoning rather than pattern-matching on familiar bug shapes. A model that learned "if test fails → find nearest changed line" will score poorly. Task families are designed to expose distinct capability gaps.
-
----
-
-## Required Task Diversity (ALL three must be present)
-
-### 1. No-op Tasks (3 present)
-Working code where the correct answer is **"change nothing"**. Agent should recognize behavior is already correct and not introduce regressions.
-- Source: ETH Zurich adversarial SWE-bench literature (overconfident patching)
-- Detection: `policy_quality` sub-score penalizes edits when `is_noop=True`
-
-### 2. Impossible Tasks (3 present)
-Prompts describing behavior changes that **cannot be achieved** given codebase constraints.
-- `impossible_sync_download_in_async_engine`: make HTTP/1.1 sync in async engine
-- `impossible_request_immutable_url`: make Request URL immutable after construction
-- `impossible_zero_memory_cache`: zero-memory HTTP cache
-
-### 3. Graded Difficulty Tasks (44 present)
-Majority of tasks, with partial credit available via hidden/visible test split.
-
----
-
-## Contamination Argument
-
-**Scrapy is a better contamination story than scikit-learn:**
-- scikit-learn is massively over-represented in training data
-- Scrapy internals (scheduler dedup, middleware call chains, spider contract edge cases) are niche
-- Pinned commit + behavioral prompts for anti-contamination
-- No direct replay of public benchmark instances
 
 ---
 
