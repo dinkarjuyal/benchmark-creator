@@ -1,0 +1,47 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def __init__(self, ..., observed: bool = True, ...):
+    """observed : bool, default True (changed from False in pandas 2.2)
+        Only relevant for Categorical groupers.
+        If True: only show observed values for categorical groupers.
+        If False: show all values for categorical groupers.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/groupby/groupby.py:
+  Replace: observed: bool = True
+  With:    observed: bool = False
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+cat = pd.Categorical(['a', 'a', 'b'], categories=['a', 'b', 'c'])
+df = pd.DataFrame({'k': cat, 'v': [1, 2, 3]})
+result = df.groupby('k')['v'].sum()
+print(list(result.index))
+
+Answer choices:
+  A. ['a', 'b', 'c', nan]
+  B. ['a', 'b', 'c']
+  C. Raises CategoricalError
+  D. ['a', 'b']
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

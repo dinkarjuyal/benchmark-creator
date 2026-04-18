@@ -1,0 +1,45 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def value_counts(self, normalize=False, sort=True, ascending=False, ...):
+    """Return object containing counts of unique values.
+    sort : bool, default True
+        Sort by frequencies. When False, the result is in order
+        of first occurrence.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/base.py:
+  Replace: sort=True
+  With:    sort=False
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+s = pd.Series(['b', 'a', 'a', 'a', 'b', 'c'])
+print(list(s.value_counts().index))
+
+Answer choices:
+  A. ['a', 'b', 'c'] (sorted alphabetically)
+  B. ['b', 'a', 'c']
+  C. ['c', 'b', 'a']
+  D. ['a', 'b', 'c']
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

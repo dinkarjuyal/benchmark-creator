@@ -1,0 +1,21 @@
+{
+  "id": "skipna_false_mean",
+  "description": "Series.mean(skipna=True) \u2192 skipna=False propagates NaN instead of ignoring it",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "nan_semantics",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "skipna=False causes any NaN in the input to propagate: the result is NaN rather than the mean of the non-NaN values.",
+    "curriculum_note": "Level 1. Classic NaN propagation vs NaN skipping distinction.",
+    "generation_recipe": "pandas_mc injection: Series.mean(skipna=True) \u2192 skipna=False propagates NaN instead of ignoring it"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "loc_scalar_dtype_coercion",
+  "description": ".loc with scalar row key coerces mixed-dtype row to common dtype",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "dtype_coercion",
+    "difficulty": 2,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "df.loc[0] (scalar) returns a Series where all values are cast to a common dtype \u2014 the int column 'a' becomes float 1.0 because 'b' is float. df.loc[[0]] (list) returns a DataFrame, preserving each column's own dtype.",
+    "curriculum_note": "Level 2. Scalar vs list .loc is one of the trickiest pandas type preservation issues.",
+    "generation_recipe": "pandas_mc injection: .loc with scalar row key coerces mixed-dtype row to common dtype"
+  }
+}

@@ -1,0 +1,44 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def reindex(self, *args, fill_value=np.nan, ...):
+    """fill_value : scalar, default np.nan
+        Value to use for missing values. Defaults to NaN.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/frame.py:
+  Replace: fill_value=np.nan
+  With:    fill_value=0
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+s = pd.Series([10, 20], index=[0, 1])
+result = s.reindex([0, 1, 2])
+print(list(result))
+
+Answer choices:
+  A. [10, 20, nan]
+  B. [10, 20, 0]
+  C. Raises KeyError: 2 not in index
+  D. [10.0, 20.0, nan]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

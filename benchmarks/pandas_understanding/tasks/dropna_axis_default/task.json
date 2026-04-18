@@ -1,0 +1,21 @@
+{
+  "id": "dropna_axis_default",
+  "description": "dropna axis=0\u21921 drops columns with NaN instead of rows",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "default_params",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "axis=1 drops columns that contain NaN values. Column 'a' has one NaN \u2192 it is dropped. Column 'b' has no NaN \u2192 it is kept. All 3 rows remain.",
+    "curriculum_note": "Level 1. axis=0 vs axis=1 is a perpetual confusion point.",
+    "generation_recipe": "pandas_mc injection: dropna axis=0\u21921 drops columns with NaN instead of rows"
+  }
+}

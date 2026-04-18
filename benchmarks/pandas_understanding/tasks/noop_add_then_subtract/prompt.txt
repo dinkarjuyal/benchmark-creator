@@ -1,0 +1,44 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Arithmetic on integer Series with NaN-producing operations:
+# Adding and subtracting the same float (e.g., + 0.5 - 0.5) looks like no-op.
+# But intermediate float arithmetic upcasts int64 → float64,
+# and the final result is float64 even if numerically equal to the original.
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/ops/array_ops.py:
+  Replace: # s + 0.5 - 0.5  (hypothetical)
+  With:    # s               (no arithmetic)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+s = pd.Series([1, 2, 3], dtype='int64')
+result = s + 0.5 - 0.5
+print(result.dtype, list(result))
+
+Answer choices:
+  A. int64 [0, 1, 2]
+  B. int64 [1, 2, 3]
+  C. Raises TypeError: unsupported operand type
+  D. float64 [1.0, 2.0, 3.0]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

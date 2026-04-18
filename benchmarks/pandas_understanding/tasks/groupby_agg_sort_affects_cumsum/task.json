@@ -1,0 +1,21 @@
+{
+  "id": "groupby_agg_sort_affects_cumsum",
+  "description": "groupby sort=False affects cumsum order within groups when groups appear interleaved",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "counterfactual_cascade",
+    "family": "sort_order",
+    "difficulty": 4,
+    "is_hard_negative": true,
+    "correct_id": "D",
+    "explanation": "This is a hard negative (Level 4). For TRANSFORM operations (like cumsum), sort= does NOT affect the output. Transform always returns a Series aligned to the original row order. sort= only affects AGGREGATION operations like sum() or mean(). Both sort=True and sort=False give identical cumsum output.",
+    "curriculum_note": "Level 4 HARD NEGATIVE. sort= affects agg output order but NOT transform output. Tests whether agent over-generalizes sort= effect.",
+    "generation_recipe": "pandas_mc injection: groupby sort=False affects cumsum order within groups when groups appear interleaved"
+  }
+}

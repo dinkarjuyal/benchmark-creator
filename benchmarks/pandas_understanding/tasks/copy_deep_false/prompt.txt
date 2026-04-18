@@ -1,0 +1,51 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def copy(self, deep: bool = True) -> NDFrame:
+    """deep : bool, default True
+        Make a deep copy, including a copy of the data and the indices.
+        With deep=False, the new object will be created without copying
+        the calling object's data or index. This is equivalent to
+        copy.copy(self) in Python.
+        Note: In pandas >= 2.0 with Copy-on-Write enabled, deep=False is
+        equivalent to deep=True for mutation purposes.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/generic.py:
+  Replace: deep: bool = True
+  With:    deep: bool = False
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+# pandas < 2.0 behavior (CoW not active)
+df1 = pd.DataFrame({'a': [1, 2, 3]})
+df2 = df1.copy()
+df2.iloc[0, 0] = 99
+print(df1.iloc[0, 0])
+
+Answer choices:
+  A. Raises ValueError: cannot modify copy
+  B. 99
+  C. 1 (CoW prevents mutation)
+  D. 1
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

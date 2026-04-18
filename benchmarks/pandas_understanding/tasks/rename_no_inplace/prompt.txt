@@ -1,0 +1,46 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def rename(self, mapper=None, *, index=None, columns=None,
+           axis=None, copy=True, inplace=False, level=None,
+           errors='ignore'):
+    """inplace : bool, default False
+        Whether to return a new {klass}. If True, then the caller is modified.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/generic.py:
+  Replace: # df.rename(columns=...) without inplace=True
+  With:    # df.rename(columns=..., inplace=True)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+df = pd.DataFrame({'old_col': [1, 2, 3]})
+df.rename(columns={'old_col': 'new_col'})
+print(list(df.columns))
+
+Answer choices:
+  A. ['old_col', 'new_col']
+  B. ['new_col']
+  C. Raises KeyError: 'old_col' not found
+  D. ['old_col']
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

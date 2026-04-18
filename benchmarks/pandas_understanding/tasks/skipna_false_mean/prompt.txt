@@ -1,0 +1,47 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def nanmean(values, axis=None, skipna=True, ...):
+    """skipna : bool, default True
+        Exclude NA/null values when computing the result.
+        If the entire Series is NA, the result will be NA.
+    """
+    if not skipna:
+        if np.any(np.isnan(values)):
+            return np.nan
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/nanops.py:
+  Replace: skipna=True
+  With:    skipna=False
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd, numpy as np
+s = pd.Series([1.0, 2.0, np.nan, 4.0])
+print(s.mean())
+
+Answer choices:
+  A. 1.75
+  B. nan
+  C. Raises ValueError: cannot compute mean with NaN
+  D. 2.3333333333333335
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

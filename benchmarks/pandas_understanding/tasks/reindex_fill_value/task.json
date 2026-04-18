@@ -1,0 +1,21 @@
+{
+  "id": "reindex_fill_value",
+  "description": "reindex fill_value=0 fills missing indices with 0 instead of NaN",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "index_alignment",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "fill_value=0 replaces the default NaN for missing index positions. Note: with fill_value=NaN, the int Series upcasts to float64 to hold NaN. With fill_value=0, the int dtype is preserved.",
+    "curriculum_note": "Level 1. Also illustrates the int\u2192float upcast that fill_value=NaN triggers.",
+    "generation_recipe": "pandas_mc injection: reindex fill_value=0 fills missing indices with 0 instead of NaN"
+  }
+}

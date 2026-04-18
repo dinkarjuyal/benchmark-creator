@@ -1,0 +1,21 @@
+{
+  "id": "sort_values_na_last",
+  "description": "sort_values na_position='last'\u2192'first' moves NaN to front",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "sort_order",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "na_position='first' places NaN values before the sorted non-NaN values. Sorting order of non-NaN values is unchanged.",
+    "curriculum_note": "Level 1. Clean single-parameter, unambiguous output change.",
+    "generation_recipe": "pandas_mc injection: sort_values na_position='last'\u2192'first' moves NaN to front"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "merge_how_outer",
+  "description": "merge how='inner'\u2192'outer' changes row count for non-matching keys",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "index_alignment",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "outer join takes the union of keys: keys 1, 2, 3 all appear. Key=1 has NaN for y, key=3 has NaN for x.",
+    "curriculum_note": "Level 1. The four join types are a frequent confusion point.",
+    "generation_recipe": "pandas_mc injection: merge how='inner'\u2192'outer' changes row count for non-matching keys"
+  }
+}

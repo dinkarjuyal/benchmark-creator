@@ -1,0 +1,47 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def merge(left, right, how='inner', on=None, ...):
+    """how : {'left', 'right', 'outer', 'inner', 'cross'}, default 'inner'
+        Type of merge to be performed.
+        inner: use intersection of keys from both frames (SQL inner join).
+        outer: use union of keys from both frames (SQL full outer join).
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/reshape/merge.py:
+  Replace: how='inner'
+  With:    how='outer'
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+left  = pd.DataFrame({'key': [1, 2],    'x': [10, 20]})
+right = pd.DataFrame({'key': [2, 3],    'y': [200, 300]})
+result = pd.merge(left, right, on='key')
+print(len(result), sorted(result['key'].tolist()))
+
+Answer choices:
+  A. 2 [1, 2]
+  B. 3 [1, 2, 3]
+  C. 2 [2, 3]
+  D. 1 [2]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

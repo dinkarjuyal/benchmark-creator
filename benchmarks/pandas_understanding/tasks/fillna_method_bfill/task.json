@@ -1,0 +1,21 @@
+{
+  "id": "fillna_method_bfill",
+  "description": "fillna ffill\u2192bfill changes direction of forward/backward fill",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "nan_semantics",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "bfill (backward fill) uses the next valid observation to fill gaps. The NaN at index 1 and 2 are filled with 4.0 (the next valid value).",
+    "curriculum_note": "Level 1. Directional fill \u2014 forward vs backward.",
+    "generation_recipe": "pandas_mc injection: fillna ffill\u2192bfill changes direction of forward/backward fill"
+  }
+}

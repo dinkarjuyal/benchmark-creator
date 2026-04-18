@@ -1,0 +1,21 @@
+{
+  "id": "apply_axis_rows",
+  "description": "DataFrame.apply axis=0\u21921 applies function per row instead of per column",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "default_params",
+    "difficulty": 2,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "axis=0: lambda receives each column as a Series \u2192 result is indexed by column names ['a', 'b']. axis=1: lambda receives each row as a Series \u2192 result is indexed by row labels [0, 1, 2].",
+    "curriculum_note": "Level 2. The axis intuition flips: axis=0 iterates over columns, axis=1 over rows.",
+    "generation_recipe": "pandas_mc injection: DataFrame.apply axis=0\u21921 applies function per row instead of per column"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "concat_axis_columns",
+  "description": "concat axis=0\u21921 stacks DataFrames as columns instead of rows",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "index_alignment",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "axis=0 stacks rows: df1 has 2 rows with col 'a', df2 has 2 rows with col 'b'. Result is 4 rows \u00d7 2 cols (each has NaN for the other's column). axis=1 stacks columns: 2 rows \u00d7 2 cols (a and b side by side).",
+    "curriculum_note": "Level 1. axis parameter is a very common confusion point for concat.",
+    "generation_recipe": "pandas_mc injection: concat axis=0\u21921 stacks DataFrames as columns instead of rows"
+  }
+}

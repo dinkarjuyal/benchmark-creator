@@ -1,0 +1,21 @@
+{
+  "id": "read_csv_header_none",
+  "description": "read_csv header=0\u2192None treats first row as data, not column names",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "default_params",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "header=None tells pandas there is no header row. Columns get default integer labels (0, 1, ...). All 3 rows ('name,age', 'Alice,30', 'Bob,25') are treated as data rows.",
+    "curriculum_note": "Level 1. Common source of off-by-one row count and unexpected column names.",
+    "generation_recipe": "pandas_mc injection: read_csv header=0\u2192None treats first row as data, not column names"
+  }
+}

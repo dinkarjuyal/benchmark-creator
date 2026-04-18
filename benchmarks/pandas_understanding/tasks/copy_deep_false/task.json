@@ -1,0 +1,21 @@
+{
+  "id": "copy_deep_false",
+  "description": "DataFrame.copy(deep=True)\u2192deep=False: shallow copy shares underlying data in pandas <2.0",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "copy_semantics",
+    "difficulty": 2,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "In pandas < 2.0, copy(deep=False) creates a shallow copy that shares the data blocks. A direct in-place mutation via iloc on df2 modifies the shared block, changing df1 too. In pandas >= 2.0 with Copy-on-Write, this would NOT affect df1.",
+    "curriculum_note": "Level 2. Version-sensitive: CoW in pandas 2.0 changes this behavior.",
+    "generation_recipe": "pandas_mc injection: DataFrame.copy(deep=True)\u2192deep=False: shallow copy shares underlying data in pandas <2.0"
+  }
+}

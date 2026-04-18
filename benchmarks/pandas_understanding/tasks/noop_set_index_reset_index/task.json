@@ -1,0 +1,21 @@
+{
+  "id": "noop_set_index_reset_index",
+  "description": "set_index then reset_index(drop=False) looks like no-op but adds a column",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "hard_negatives",
+    "difficulty": 2,
+    "is_hard_negative": true,
+    "correct_id": "D",
+    "explanation": "set_index('key') replaces the original index [10, 20] with 'key' as the index. The original RangeIndex [10, 20] is discarded. reset_index(drop=False) creates a new RangeIndex [0, 1], not [10, 20]. This looks like a round-trip but the original index is lost.",
+    "curriculum_note": "Level 2 HARD NEGATIVE. set_index destroys the original index \u2014 round-trip is not identity.",
+    "generation_recipe": "pandas_mc injection: set_index then reset_index(drop=False) looks like no-op but adds a column"
+  }
+}

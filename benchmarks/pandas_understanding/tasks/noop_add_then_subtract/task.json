@@ -1,0 +1,21 @@
+{
+  "id": "noop_add_then_subtract",
+  "description": "Adding and subtracting the same value returns original values but MAY change dtype",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "hard_negatives",
+    "difficulty": 2,
+    "is_hard_negative": true,
+    "correct_id": "D",
+    "explanation": "s + 0.5 promotes int64 to float64 (float arithmetic). Subtracting 0.5 gives numerically correct values, but the dtype remains float64. The result is [1.0, 2.0, 3.0] with dtype=float64, not int64.",
+    "curriculum_note": "Level 2 HARD NEGATIVE. dtype promotion is permanent once float arithmetic is applied.",
+    "generation_recipe": "pandas_mc injection: Adding and subtracting the same value returns original values but MAY change dtype"
+  }
+}

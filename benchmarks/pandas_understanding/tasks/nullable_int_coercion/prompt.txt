@@ -1,0 +1,45 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# pandas provides two integer dtypes:
+# 'int64'  — NumPy integer. Cannot hold NA; None/NaN causes upcast to float64.
+# 'Int64'  — Pandas nullable integer. Holds NA as pd.NA without losing int semantics.
+#
+# When dtype='int64' and None is in the data:
+    # pandas upcasts the entire array to float64 to represent NaN.
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/arrays/masked.py:
+  Replace: dtype='Int64'
+  With:    dtype='int64'
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+s = pd.Series([1, 2, None], dtype='Int64')
+print(s.dtype, repr(s[2]))
+
+Answer choices:
+  A. int64 0
+  B. float64 nan
+  C. Raises TypeError: cannot convert None to int
+  D. Int64 <NA>
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

@@ -1,0 +1,21 @@
+{
+  "id": "nullable_int_coercion",
+  "description": "Int64 (nullable) vs int64 (numpy): None silently promotes to float64",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "dtype_coercion",
+    "difficulty": 2,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "NumPy int64 arrays cannot hold NA values. When None is present, pandas silently upcasts the entire array to float64, converting None to float nan. This is the classic 'integer NaN gotcha' in pandas.",
+    "curriculum_note": "Level 2. The silent float upcast is one of the most common pandas gotchas.",
+    "generation_recipe": "pandas_mc injection: Int64 (nullable) vs int64 (numpy): None silently promotes to float64"
+  }
+}

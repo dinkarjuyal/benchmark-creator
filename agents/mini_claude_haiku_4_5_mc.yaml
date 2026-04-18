@@ -1,0 +1,12 @@
+name: mini_claude_haiku_4_5_mc
+adapter: mini_swe_agent
+env_passthrough:
+  - ANTHROPIC_API_KEY
+adapter_config:
+  model: claude-haiku-4-5
+  system_prompt_suffix: |
+    IMPORTANT: This is a multiple-choice code reasoning task.
+    You must ONLY write a JSON file at /work/answer.json with your answer.
+    Format: {"choice": "X"} where X is A, B, C, or D.
+    Do NOT run any code. Do NOT modify any other files.
+    Do NOT explain your answer. Just write the JSON file and stop.

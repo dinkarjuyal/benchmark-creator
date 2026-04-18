@@ -1,0 +1,47 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def read_csv(filepath_or_buffer, ..., header='infer', ...):
+    """header : int, list of int, default 'infer'
+        Row number(s) containing column labels and marking the start of the data.
+        Default behavior is to infer the header: if no names passed, header=0.
+        Explicitly pass header=None to indicate there are no column labels.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/io/parsers/readers.py:
+  Replace: header=0
+  With:    header=None
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+from io import StringIO
+csv_data = 'name,age\nAlice,30\nBob,25'
+df = pd.read_csv(StringIO(csv_data), header=0)
+print(list(df.columns), len(df))
+
+Answer choices:
+  A. ['0', '1'] 3
+  B. [0, 1] 3
+  C. ['name', 'age'] 3
+  D. ['name', 'age'] 2
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

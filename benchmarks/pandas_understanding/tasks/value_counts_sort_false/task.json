@@ -1,0 +1,21 @@
+{
+  "id": "value_counts_sort_false",
+  "description": "value_counts sort=True\u2192False changes output ordering from count-desc to first-occurrence",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "sort_order",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "sort=False returns values in first-occurrence order: 'b' appears first (index 0), 'a' appears second (index 1), 'c' appears last (index 3).",
+    "curriculum_note": "Level 1. Common trap: sort=False is not alphabetical order.",
+    "generation_recipe": "pandas_mc injection: value_counts sort=True\u2192False changes output ordering from count-desc to first-occurrence"
+  }
+}

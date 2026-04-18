@@ -1,0 +1,21 @@
+{
+  "id": "noop_series_apply_identity",
+  "description": "Applying identity function with apply() returns equal values but MAY change dtype",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "hard_negatives",
+    "difficulty": 3,
+    "is_hard_negative": true,
+    "correct_id": "D",
+    "explanation": "apply(lambda x: x) is NOT a no-op for dtype. The lambda receives Python scalars and returns Python ints. When pandas reconstructs the Series from these Python ints, it uses int64 (the platform default), not the original int32. This is a hard negative: 'identity function' looks like no-op but isn't.",
+    "curriculum_note": "Level 3 HARD NEGATIVE. Tests whether agent assumes apply(identity) preserves all properties.",
+    "generation_recipe": "pandas_mc injection: Applying identity function with apply() returns equal values but MAY change dtype"
+  }
+}

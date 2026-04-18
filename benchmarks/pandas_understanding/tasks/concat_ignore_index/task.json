@@ -1,0 +1,21 @@
+{
+  "id": "concat_ignore_index",
+  "description": "concat ignore_index=False\u2192True resets index to 0-based integer range",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "index_alignment",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "ignore_index=True discards all source index values and replaces with a new RangeIndex(0, n).",
+    "curriculum_note": "Level 1. Essential for understanding when to preserve vs reset index.",
+    "generation_recipe": "pandas_mc injection: concat ignore_index=False\u2192True resets index to 0-based integer range"
+  }
+}

@@ -1,0 +1,46 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# s.apply(lambda x: x) looks like a no-op but can change dtype.
+# When the lambda returns Python int/float, pandas may infer dtype differently
+# from the original numpy dtype.
+#
+# s.apply(func) where func returns scalars reconstructs the Series from scratch,
+# using Python type inference rather than preserving the original numpy dtype.
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/series.py:
+  Replace: s.apply(lambda x: x)     # identity
+  With:    s                        # direct reference
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+s = pd.Series([1, 2, 3], dtype='int32')
+result = s.apply(lambda x: x)
+print(result.dtype)
+
+Answer choices:
+  A. object
+  B. int32
+  C. float64
+  D. int64
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

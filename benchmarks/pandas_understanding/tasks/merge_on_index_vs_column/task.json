@@ -1,0 +1,21 @@
+{
+  "id": "merge_on_index_vs_column",
+  "description": "Merging on index (left_index=True) vs column ('key') gives different row counts when index has duplicates",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "causal_attribution",
+    "family": "index_alignment",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "left_index=True uses left's index [1, 2] as the join key. Right has 'key' values [1, 2, 1]. Left index=1 matches right rows where key=1 (rows 0 and 2): 2 matches. Left index=2 matches right row where key=2 (row 1): 1 match. Total: 3 rows.",
+    "curriculum_note": "Level 3: requires tracing index vs column semantics and understanding duplicate key expansion.",
+    "generation_recipe": "pandas_mc injection: Merging on index (left_index=True) vs column ('key') gives different row counts when index has duplicates"
+  }
+}

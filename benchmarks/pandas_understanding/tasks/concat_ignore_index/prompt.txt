@@ -1,0 +1,46 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def concat(objs, axis=0, join='outer', ignore_index=False, ...):
+    """ignore_index : bool, default False
+        If True, do not use the index values along the concatenation axis.
+        The resulting axis will be labeled 0, 1, ..., n-1.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/reshape/concat.py:
+  Replace: ignore_index=False
+  With:    ignore_index=True
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+df1 = pd.DataFrame({'a': [1, 2]}, index=[10, 20])
+df2 = pd.DataFrame({'a': [3, 4]}, index=[30, 40])
+result = pd.concat([df1, df2])
+print(list(result.index))
+
+Answer choices:
+  A. [0, 10, 20, 30, 40]
+  B. [0, 1, 2, 3]
+  C. Raises IndexError: duplicate labels
+  D. [10, 20, 30, 40]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

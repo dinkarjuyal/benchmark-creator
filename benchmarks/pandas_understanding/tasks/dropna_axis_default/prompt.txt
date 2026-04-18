@@ -1,0 +1,46 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def dropna(self, axis=0, how='any', thresh=None, subset=None, inplace=False):
+    """axis : {0 or 'index', 1 or 'columns'}, default 0
+        Determine if rows or columns which contain missing values are removed.
+        0 or 'index': drop rows containing missing values.
+        1 or 'columns': drop columns containing missing values.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/frame.py:
+  Replace: axis=0
+  With:    axis=1
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd, numpy as np
+df = pd.DataFrame({'a': [1, 2, np.nan], 'b': [4, 5, 6]})
+result = df.dropna(axis=0)
+print(result.shape)
+
+Answer choices:
+  A. (2, 1)
+  B. (3, 1)
+  C. (3, 0)
+  D. (2, 2)
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

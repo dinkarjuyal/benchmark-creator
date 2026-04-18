@@ -1,0 +1,46 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# With sort=True, groupby collects all rows for each group (sorted by key),
+# then applies the operation. Groups are contiguous in the output.
+#
+# With sort=False, groups are processed in first-occurrence order.
+# For transform operations like cumsum, the row ORDER in the output
+# matches the original DataFrame row order, not sorted group order.
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/groupby/groupby.py:
+  Replace: sort=True
+  With:    sort=False
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, which of the following is true about the snippet's output?
+
+Code:
+import pandas as pd
+df = pd.DataFrame({'g': ['b', 'a', 'b', 'a'], 'v': [1, 10, 2, 20]})
+result = df.groupby('g', sort=True)['v'].cumsum()
+print(list(result))
+
+Answer choices:
+  A. [1, 3, 10, 30]
+  B. [10, 1, 30, 3]
+  C. [1, 11, 3, 31]
+  D. [1, 10, 3, 30]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

@@ -1,0 +1,21 @@
+{
+  "id": "categorical_observed_false",
+  "description": "groupby observed=True\u2192False includes unobserved Categorical categories",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "dtype_coercion",
+    "difficulty": 2,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "observed=False causes all Categorical categories to appear in the result, including 'c' which has no data (its sum will be 0). This was the default before pandas 2.2 \u2014 a version-sensitive gotcha.",
+    "curriculum_note": "Level 2. Version-sensitive: behavior changed in pandas 2.2. Tests whether agent knows Categorical semantics.",
+    "generation_recipe": "pandas_mc injection: groupby observed=True\u2192False includes unobserved Categorical categories"
+  }
+}

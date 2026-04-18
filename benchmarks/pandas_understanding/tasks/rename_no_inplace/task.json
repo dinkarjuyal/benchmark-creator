@@ -1,0 +1,21 @@
+{
+  "id": "rename_no_inplace",
+  "description": "rename() returns a new DataFrame by default; the original is unchanged",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "copy_semantics",
+    "difficulty": 1,
+    "is_hard_negative": true,
+    "correct_id": "D",
+    "explanation": "rename() has inplace=False by default. The renamed DataFrame is returned but the return value is discarded here. df still has 'old_col'. This is a hard negative: the question looks like 'what does rename do?' but the answer is 'nothing visible, because the result was thrown away'.",
+    "curriculum_note": "Level 1 HARD NEGATIVE. Exposes the most common pandas mistake: forgetting to assign rename() result.",
+    "generation_recipe": "pandas_mc injection: rename() returns a new DataFrame by default; the original is unchanged"
+  }
+}

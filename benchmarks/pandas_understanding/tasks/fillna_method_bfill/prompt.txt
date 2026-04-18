@@ -1,0 +1,45 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def fillna(self, value=None, method=None, ...):
+    """method : {'backfill', 'bfill', 'pad', 'ffill', None}, default None
+        Method to use for filling holes in reindexed Series.
+        pad/ffill: propagate last valid observation forward.
+        backfill/bfill: use next valid observation to fill gap.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/generic.py:
+  Replace: method='ffill'
+  With:    method='bfill'
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd, numpy as np
+s = pd.Series([1.0, np.nan, np.nan, 4.0])
+print(list(s.fillna(method='ffill')))
+
+Answer choices:
+  A. [1.0, 2.5, 2.5, 4.0]
+  B. [1.0, 4.0, 4.0, 4.0]
+  C. [1.0, nan, nan, 4.0]
+  D. [1.0, 1.0, 1.0, 4.0]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

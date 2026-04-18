@@ -1,0 +1,44 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def sort_values(self, by, axis=0, ascending=True,
+                na_position='last', ...):
+    """na_position : {'first', 'last'}, default 'last'
+        Puts NaNs at the beginning if 'first'; 'last' puts NaNs at the end.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/frame.py:
+  Replace: na_position='last'
+  With:    na_position='first'
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd, numpy as np
+s = pd.Series([3.0, 1.0, np.nan, 2.0])
+print(list(s.sort_values()))
+
+Answer choices:
+  A. [nan, 3.0, 2.0, 1.0]
+  B. [nan, 1.0, 2.0, 3.0]
+  C. Raises TypeError: cannot compare NaN
+  D. [1.0, 2.0, 3.0, nan]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

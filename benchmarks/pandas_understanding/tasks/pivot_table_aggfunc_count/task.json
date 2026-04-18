@@ -1,0 +1,21 @@
+{
+  "id": "pivot_table_aggfunc_count",
+  "description": "pivot_table aggfunc='mean'\u2192'count' changes what values are computed",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "default_params",
+    "difficulty": 2,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "aggfunc='count' counts the number of non-NaN values in each group. Group 'x' has 2 entries, group 'y' has 1 entry.",
+    "curriculum_note": "Level 2. Tests understanding of aggregation function semantics.",
+    "generation_recipe": "pandas_mc injection: pivot_table aggfunc='mean'\u2192'count' changes what values are computed"
+  }
+}

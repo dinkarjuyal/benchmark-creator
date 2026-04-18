@@ -1,0 +1,47 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# When df.loc[scalar] selects a single row, the result is a Series.
+# Mixed-dtype columns (e.g., int + float) are coerced to a common dtype.
+# df.loc[[scalar]] (list) returns a DataFrame and preserves column dtypes.
+#
+# _LocIndexer._getitem_axis:
+    # scalar key → calls _get_label → returns Series (coercion happens here)
+    # list key   → calls _getitem_axis with list → returns DataFrame
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/indexing.py:
+  Replace: df.loc[0]          # scalar — returns Series with dtype coercion
+  With:    df.loc[[0]]        # list   — returns DataFrame, preserves dtypes
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+df = pd.DataFrame({'a': [1, 2], 'b': [1.5, 2.5]})
+row = df.loc[0]
+print(type(row['a']).__name__, row['a'])
+
+Answer choices:
+  A. int 1
+  B. int64 1
+  C. object 1
+  D. float64 1.0
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

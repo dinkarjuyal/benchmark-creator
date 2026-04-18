@@ -1,0 +1,47 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Merging on 'key' with duplicates in the left DataFrame:
+# Each left row matching a key is paired with each right row matching that key.
+# If left has 2 rows for key=1 and right has 1 row for key=1,
+# the result has 2 rows for key=1 (NOT 1 row).
+#
+# This is standard SQL inner join behavior (Cartesian product within each key group).
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/reshape/merge.py:
+  Replace: # merge with how='inner' (default)
+  With:    # merge with how='inner', validate='1:1'  # would raise MergeError
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+left  = pd.DataFrame({'key': [1, 1, 2], 'x': [10, 11, 20]})
+right = pd.DataFrame({'key': [1, 2],    'y': [100, 200]})
+result = pd.merge(left, right, on='key')
+print(len(result), list(result['key']))
+
+Answer choices:
+  A. 2 [1, 2]
+  B. Raises MergeError: Merge keys are not unique in left dataset
+  C. 3 [1, 1, 2] (unchanged)
+  D. 3 [1, 1, 2]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

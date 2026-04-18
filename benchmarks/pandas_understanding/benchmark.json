@@ -1,0 +1,63 @@
+{
+  "name": "pandas-understanding",
+  "description": "Counterfactual curriculum benchmark for pandas code understanding. Each task is a multiple-choice question: given a proposed change to pandas internals, predict the output of a short snippet. Tests causal reasoning, not code generation.",
+  "version": "1.0",
+  "task_dirs": [
+    "tasks/groupby_sort_false",
+    "tasks/value_counts_sort_false",
+    "tasks/sort_values_na_last",
+    "tasks/groupby_dropna_false",
+    "tasks/skipna_false_mean",
+    "tasks/fillna_method_bfill",
+    "tasks/nullable_int_coercion",
+    "tasks/categorical_observed_false",
+    "tasks/loc_scalar_dtype_coercion",
+    "tasks/merge_how_outer",
+    "tasks/concat_ignore_index",
+    "tasks/concat_axis_columns",
+    "tasks/reindex_fill_value",
+    "tasks/merge_duplicate_key_expansion",
+    "tasks/copy_deep_false",
+    "tasks/rename_no_inplace",
+    "tasks/read_csv_header_none",
+    "tasks/dropna_axis_default",
+    "tasks/apply_axis_rows",
+    "tasks/pivot_table_aggfunc_count",
+    "tasks/noop_series_apply_identity",
+    "tasks/noop_add_then_subtract",
+    "tasks/noop_set_index_reset_index",
+    "tasks/groupby_agg_sort_affects_cumsum",
+    "tasks/merge_on_index_vs_column"
+  ],
+  "stats": {
+    "total_tasks": 25,
+    "hard_negatives": 5,
+    "by_family": {
+      "sort_order": 4,
+      "nan_semantics": 3,
+      "dtype_coercion": 3,
+      "index_alignment": 6,
+      "copy_semantics": 2,
+      "default_params": 4,
+      "hard_negatives": 3
+    },
+    "by_difficulty": {
+      "1": 12,
+      "2": 9,
+      "3": 3,
+      "4": 1
+    }
+  },
+  "scoring": {
+    "formula": "score = 1.0 if correct and clean_workspace else 0.8 if correct else 0.0",
+    "correct": "agent chose the right answer (matched correct_id in validator)",
+    "clean_workspace": "agent only wrote /work/answer.json, no other file edits",
+    "curriculum_levels": {
+      "1": "single function, local semantics",
+      "2": "cross-type or cross-parameter reasoning",
+      "3": "cross-function or non-local effect",
+      "4": "transform-level cascade or emergent behavior",
+      "5": "hard negatives, false positives"
+    }
+  }
+}

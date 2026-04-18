@@ -1,0 +1,50 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# df.set_index('col') moves 'col' from columns to index.
+# df.reset_index(drop=False) moves the index back to columns.
+# If the original index was RangeIndex, reset_index adds an 'index' column.
+#
+# set_index('col').reset_index(drop=False) is NOT a no-op:
+#   - Original: RangeIndex + columns [col, val]
+#   - After: RangeIndex + columns [col, val, 'index'... wait, no]
+#   Actually: set_index('col') → index=col, columns=[val]
+#             reset_index(drop=False) → index=RangeIndex, columns=[col, val]
+#   So this IS a no-op in terms of column content, but index is reset.
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/frame.py:
+  Replace: # df.set_index('key').reset_index(drop=False)
+  With:    # df  (direct reference, no transforms)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+df = pd.DataFrame({'key': ['a', 'b'], 'val': [1, 2]}, index=[10, 20])
+result = df.set_index('key').reset_index(drop=False)
+print(list(result.columns), list(result.index))
+
+Answer choices:
+  A. ['index', 'key', 'val'] [0, 1]
+  B. ['key', 'val'] [10, 20]
+  C. ['key', 'val'] [10, 20, 10, 20]
+  D. ['key', 'val'] [0, 1]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

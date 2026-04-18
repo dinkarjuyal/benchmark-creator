@@ -1,0 +1,51 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def merge(left, right, how='inner', on=None,
+          left_on=None, right_on=None,
+          left_index=False, right_index=False, ...):
+    """left_index : bool, default False
+        Use the index from the left DataFrame as the join key(s).
+        If it is a MultiIndex, the number of keys in the other DataFrame
+        (either the index or a number of columns) must match the number of levels.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/reshape/merge.py:
+  Replace: on='key'
+  With:    left_index=True, right_on='key'
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, which of the following best describes the outcome?
+
+Code:
+import pandas as pd
+left  = pd.DataFrame({'val': [10, 20]}, index=[1, 2])
+right = pd.DataFrame({'key': [1, 2, 1], 'y': [100, 200, 300]})
+# Original: left has column 'key'=[1,2]; merge on='key'
+# Change: use left index as key instead
+result = pd.merge(left, right, left_index=True, right_on='key')
+print(len(result))
+
+Answer choices:
+  A. 4
+  B. 3
+  C. Raises KeyError: 'key' not in left
+  D. 2
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

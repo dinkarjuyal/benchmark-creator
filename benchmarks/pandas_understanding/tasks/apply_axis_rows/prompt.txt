@@ -1,0 +1,46 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+def apply(self, func, axis=0, raw=False, result_type=None, args=(), **kwargs):
+    """axis : {0 or 'index', 1 or 'columns'}, default 0
+        Axis along which the function is applied:
+        0 or 'index': apply function to each column.
+        1 or 'columns': apply function to each row.
+    """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/frame.py:
+  Replace: axis=0
+  With:    axis=1
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
+result = df.apply(lambda x: x.sum(), axis=0)
+print(list(result.index))
+
+Answer choices:
+  A. [6, 15]
+  B. [0, 1, 2]
+  C. ['a', 'b', 0, 1, 2]
+  D. ['a', 'b']
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

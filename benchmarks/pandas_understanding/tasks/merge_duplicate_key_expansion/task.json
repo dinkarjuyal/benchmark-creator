@@ -1,0 +1,21 @@
+{
+  "id": "merge_duplicate_key_expansion",
+  "description": "merge with duplicate keys in left DataFrame creates a Cartesian product",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "index_alignment",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "validate='1:1' checks that merge keys are unique in BOTH frames before merging. Since key=1 appears twice in the left DataFrame, this raises MergeError. Without validate, the merge silently creates a Cartesian product for duplicate keys.",
+    "curriculum_note": "Level 3: requires understanding merge key uniqueness and validate parameter semantics.",
+    "generation_recipe": "pandas_mc injection: merge with duplicate keys in left DataFrame creates a Cartesian product"
+  }
+}

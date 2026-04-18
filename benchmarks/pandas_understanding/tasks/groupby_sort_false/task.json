@@ -1,0 +1,21 @@
+{
+  "id": "groupby_sort_false",
+  "description": "groupby sort=True\u2192False changes group key iteration order",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "sort_order",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "sort=False causes groupby to preserve first-occurrence order of group keys. Key 3 appears first in the DataFrame (row 0), then 1 (row 1), then 2 (row 2).",
+    "curriculum_note": "Level 1: single-parameter, immediate output change.",
+    "generation_recipe": "pandas_mc injection: groupby sort=True\u2192False changes group key iteration order"
+  }
+}

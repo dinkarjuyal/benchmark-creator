@@ -1,0 +1,21 @@
+{
+  "id": "groupby_dropna_false",
+  "description": "groupby dropna=True\u2192False includes NaN as a group key",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "behavioral_prediction",
+    "family": "nan_semantics",
+    "difficulty": 2,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "With dropna=False, rows with NaN keys are not dropped \u2014 they form their own group (key=NaN). The sum for that group is 30 (the single row where k=None).",
+    "curriculum_note": "Level 2: requires understanding that the NaN row has value 30 (not dropped).",
+    "generation_recipe": "pandas_mc injection: groupby dropna=True\u2192False includes NaN as a group key"
+  }
+}

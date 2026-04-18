@@ -1,0 +1,46 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+class GroupBy:
+    def __init__(self, obj, keys=None, ..., dropna: bool = True, ...):
+        """dropna : bool, default True
+            If True, and if group keys contain NA values, NA values
+            together with row/column will be dropped.
+        """
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/groupby/groupby.py:
+  Replace: dropna: bool = True
+  With:    dropna: bool = False
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd, numpy as np
+df = pd.DataFrame({'k': [1.0, 2.0, None, 1.0], 'v': [10, 20, 30, 40]})
+result = df.groupby('k')['v'].sum()
+print(len(result), sorted(result.index, key=lambda x: (x != x, x)))
+
+Answer choices:
+  A. 4 [1.0, 1.0, 2.0, nan]
+  B. 3 [1.0, 2.0, nan]
+  C. 3 [1.0, 2.0, 0]
+  D. 2 [1.0, 2.0]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

@@ -1,0 +1,45 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+class GroupBy:
+    def __init__(self, obj, keys=None, ..., sort: bool = True, ...):
+        ...
+        self.sort = sort
+    # sort=True means group keys are sorted before aggregation
+    # sort=False means group keys appear in first-occurrence order
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+In pandas/core/groupby/groupby.py:
+  Replace: sort: bool = True
+  With:    sort: bool = False
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+After the proposed change is applied, what does the code snippet print (or do)?
+
+Code:
+import pandas as pd
+df = pd.DataFrame({'k': [3, 1, 2, 1], 'v': [10, 20, 30, 40]})
+print(list(df.groupby('k').groups.keys()))
+
+Answer choices:
+  A. [1, 1, 2, 3]
+  B. [3, 1, 2]
+  C. Raises ValueError
+  D. [1, 2, 3]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.
