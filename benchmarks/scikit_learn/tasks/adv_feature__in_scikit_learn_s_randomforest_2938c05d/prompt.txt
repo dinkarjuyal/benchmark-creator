@@ -1,0 +1,56 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# In scikit-learn's RandomForestClassifier, Gini (MDI) feature importances sum to exactly 1.0 regardless of the number of features or trees.
+#
+# Confirming case (rule holds):
+# from sklearn.ensemble import RandomForestClassifier
+# from sklearn.datasets import make_classification
+# X, y = make_classification(n_samples=200, n_features=10, random_state=42)
+# rf = RandomForestClassifier(n_estimators=50, random_state=42).fit(X, y)
+# print(round(rf.feature_importances_.sum(), 10) == 1.0)
+# → prints: True
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  from sklearn.datasets import make_classification
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets import make_classification
+import numpy as np
+X, y = make_classification(n_samples=200, n_features=10, random_state=42)
+rf = RandomForestClassifier(n_estimators=50, random_state=42, max_features=1, max_samples=0.1).fit(X, y)
+# Some trees may not use all features; check if importances still sum to 1
+importances = rf.feature_importances_
+# Manually zero out features that appear unimportant and renormalize - simulating what a user might do
+mask = importances > np.mean(importances)
+print(round(importances[mask].sum(), 10) == 1.0)
+
+Answer choices:
+  A. None
+  B. True
+  C. 0.0
+  D. False
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

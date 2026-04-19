@@ -1,0 +1,62 @@
+[
+  {
+    "name": "preprocessing_scaling_behavior",
+    "description": "How scalers handle data types, sparse matrices, and fitting/transforming edge cases",
+    "seed_rules": [
+      "StandardScaler centers data to mean=0 and scales to unit variance by default",
+      "Calling transform() before fit() raises a NotFittedError",
+      "StandardScaler with_mean=True cannot be applied to sparse matrices because centering destroys sparsity"
+    ],
+    "install": "pip install scikit-learn"
+  },
+  {
+    "name": "cross_validation_data_leakage",
+    "description": "How Pipeline, ColumnTransformer, and CV interact to prevent or inadvertently allow data leakage",
+    "seed_rules": [
+      "Wrapping a scaler inside a Pipeline ensures the scaler is fit only on training folds during cross-validation",
+      "Fitting a scaler on the full dataset before cross_val_score causes data leakage even if the model is not pre-fit",
+      "StratifiedKFold preserves class proportions across folds for classification tasks"
+    ],
+    "install": "pip install scikit-learn"
+  },
+  {
+    "name": "random_state_reproducibility",
+    "description": "Which estimators and functions require random_state and when results are truly deterministic",
+    "seed_rules": [
+      "Setting random_state=42 in an estimator makes repeated calls to fit() produce identical results",
+      "train_test_split with the same random_state always produces the same split regardless of input order",
+      "RandomForestClassifier with random_state set is reproducible, but only when n_jobs=1; parallel jobs can alter output ordering"
+    ],
+    "install": "pip install scikit-learn"
+  },
+  {
+    "name": "feature_importance_interpretation",
+    "description": "Ordering guarantees, bias, and meaning of feature_importances_ across different estimators",
+    "seed_rules": [
+      "feature_importances_ in tree-based models sums to 1.0 across all features",
+      "Higher feature_importances_ means the feature is more useful for prediction in all cases",
+      "Permutation importance and Gini importance can produce different rankings especially for high-cardinality features"
+    ],
+    "install": "pip install scikit-learn"
+  },
+  {
+    "name": "nan_handling_in_estimators",
+    "description": "How NaN values are handled, propagated, or rejected across different estimators and transformers",
+    "seed_rules": [
+      "Most scikit-learn estimators raise a ValueError if NaN values are present in the input data",
+      "SimpleImputer with strategy='mean' replaces NaNs with the column mean computed during fit",
+      "HistGradientBoostingClassifier natively supports NaN values without imputation, unlike GradientBoostingClassifier"
+    ],
+    "install": "pip install scikit-learn"
+  },
+  {
+    "name": "predict_proba_calibration",
+    "description": "When predicted probabilities from classifiers are well-calibrated versus miscalibrated by default",
+    "seed_rules": [
+      "predict_proba() returns values between 0 and 1 that can be interpreted as probabilities",
+      "SVC does not support predict_proba by default; it must be enabled with probability=True which uses Platt scaling",
+      "RandomForestClassifier's predicted probabilities tend to be pushed away from 0 and 1 and are not automatically well-calibrated"
+    ],
+    "install": "pip install scikit-learn"
+  }
+]

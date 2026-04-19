@@ -53,8 +53,9 @@ class MCTaskCandidate:
         choices_text = "\n".join(f"  {c['id']}. {c['text']}" for c in self.choices)
         source = textwrap.dedent(self.source_excerpt).strip()
         snippet = textwrap.dedent(self.snippet).strip()
+        library = self.metadata.get("library_name", "pandas")
         parts = [
-            "You are given a short excerpt from the pandas source code and a proposed change.",
+            f"You are given a short excerpt from the {library} source code and a proposed change.",
             "Read carefully, then answer the multiple-choice question below.",
             "",
             "─" * 50,

@@ -1,0 +1,52 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When StandardScaler is fit on training data and used to transform test data, the scaler applies the training set's mean and variance to the test set, not the test set's own statistics.
+#
+# Confirming case (rule holds):
+# import numpy as np
+# from sklearn.preprocessing import StandardScaler
+# scaler = StandardScaler()
+# scaler.fit([[10], [20], [30]])
+# print(scaler.transform([[100]])[0][0])  # Uses train mean=20, std≈8.165; result ≈ 9.8
+# → prints: 9.797958971132712
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  from sklearn.preprocessing import StandardScaler
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+scaler.fit([[10], [20], [30]])
+scaler.fit([[100]])
+print(scaler.transform([[100]])[0][0])
+
+Answer choices:
+  A. 9.797958971132712
+  B. 0.0
+  C. 1.0
+  D. -9.797958971132712
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

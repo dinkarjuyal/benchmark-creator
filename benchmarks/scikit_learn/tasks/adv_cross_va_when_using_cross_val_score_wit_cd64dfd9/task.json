@@ -1,0 +1,21 @@
+{
+  "id": "adv_cross_va_when_using_cross_val_score_wit_cd64dfd9",
+  "description": "Confounder: The model assumes fold means always differ because different training samples ar",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "cross_validation_data_leakage",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "The rule 'When using cross_val_score with a Pipeline containing StandardScaler, the scaler's mean_ is refit on each training fold, so the means across folds differ \u2014 proving no leakage from the full dataset.' does NOT hold here. The model assumes fold means always differ because different training samples are used, but when the feature is constant across all samples, every fold's scaler computes the same mean (5.0), so the means do NOT differ even though the folds contain different subsets.",
+    "curriculum_note": "Rule 'When using cross_val_score with a Pipeline containing StandardScaler, the scaler's mean_ is refit on each training fold, so the means across folds differ \u2014 proving no leakage from the full dataset.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

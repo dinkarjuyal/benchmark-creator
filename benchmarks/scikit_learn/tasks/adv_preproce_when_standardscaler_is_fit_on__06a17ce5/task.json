@@ -1,0 +1,21 @@
+{
+  "id": "adv_preproce_when_standardscaler_is_fit_on__06a17ce5",
+  "description": "Confounder: The model assumes the scaler retains the original training statistics, but calli",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "preprocessing_scaling_behavior",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'When StandardScaler is fit on training data and used to transform test data, the scaler applies the training set's mean and variance to the test set, not the test set's own statistics.' does NOT hold here. The model assumes the scaler retains the original training statistics, but calling fit() a second time completely replaces the stored mean and variance with the new data's statistics, so the transform uses mean=100 and std=0 (resulting in 0.0, not the expected ~9.8).",
+    "curriculum_note": "Rule 'When StandardScaler is fit on training data and used to transform test data, the scaler applies the training set's mean and variance to the test set, not the test set's own statistics.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

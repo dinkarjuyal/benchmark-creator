@@ -1,0 +1,40 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# StandardScaler's fit() computes the mean and standard deviation from the training data, and subsequent transform() calls use those stored statistics — not recomputed ones from the new data.
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+(No change — this is a direct behavioral prediction question)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+What does the following code print?
+
+Code:
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+scaler = StandardScaler()
+scaler.fit(np.array([[0], [0], [0], [8]]))
+print(scaler.transform(np.array([[4]]))[0][0])  # uses training mean=2, std≈3.46 → (4-2)/3.46 ≈ 0.577
+
+Answer choices:
+  A. -0.5773502691896258
+  B. 0.0
+  C. 1.0
+  D. 0.5773502691896258
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

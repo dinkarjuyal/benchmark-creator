@@ -1,0 +1,44 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Wrapping a scaler and model inside a sklearn Pipeline passed to cross_val_score prevents data leakage because the scaler is re-fit only on each fold's training split, never seeing the validation data.
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+(No change — this is a direct behavioral prediction question)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+What does the following code print?
+
+Code:
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+from sklearn.datasets import make_classification
+X, y = make_classification(n_samples=100, random_state=42)
+pipe = Pipeline([("scaler", StandardScaler()), ("clf", LogisticRegression())])
+scores = cross_val_score(pipe, X, y, cv=5)
+print(f"Pipeline CV refits scaler per fold — no leakage; mean accuracy: {scores.mean():.3f}")
+
+Answer choices:
+  A. Pipeline CV refits scaler per fold — no leakage; mean accuracy: 0.950
+  B. Pipeline CV refits scaler per fold — no leakage; mean accuracy: 0.960
+  C. Pipeline CV refits scaler per fold — no leakage; mean accuracy: 1.000
+  D. Pipeline CV refits scaler per fold — no leakage; mean accuracy: 0.930
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

@@ -1,0 +1,42 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Setting random_state=42 in KMeans ensures that calling fit() multiple times on the same data produces identical cluster center coordinates.
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+(No change — this is a direct behavioral prediction question)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+What does the following code print?
+
+Code:
+from sklearn.cluster import KMeans
+import numpy as np
+X = np.array([[1,2],[1,4],[1,0],[10,2],[10,4],[10,0]])
+labels_a = KMeans(n_clusters=2, random_state=42).fit(X).labels_
+labels_b = KMeans(n_clusters=2, random_state=42).fit(X).labels_
+print(np.array_equal(labels_a, labels_b))
+
+Answer choices:
+  A. Error: RandomState is deprecated, use random_seed instead
+  B. False
+  C. [1 1 1 0 0 0]
+[0 0 0 1 1 1]
+  D. True
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

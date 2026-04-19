@@ -1,0 +1,21 @@
+{
+  "id": "adv_know_ran_setting_random_state_42_in_kme_7c876c53",
+  "description": "Knowledge: Setting random_state=42 in KMeans ensures that calling fit() multiple times on t",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "knowledge_mc",
+    "family": "random_state_reproducibility",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "Output is 'True'. Rule: Setting random_state=42 in KMeans ensures that calling fit() multiple times on the same data produces identical cluster center coordinates.",
+    "curriculum_note": "Direct behavioral prediction: Setting random_state=42 in KMeans ensures that calling fit() multiple times on the same data produces identical cluster center coordinates.",
+    "generation_recipe": "knowledge_mc_player1_only"
+  }
+}

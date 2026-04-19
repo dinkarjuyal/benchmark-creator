@@ -1,0 +1,21 @@
+{
+  "id": "adv_cross_va_when_using_cross_val_score_wit_8051a339",
+  "description": "Confounder: The model applies the rule that means differ across folds because subsets vary, ",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "cross_validation_data_leakage",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'When using cross_val_score with a Pipeline containing StandardScaler and a classifier, the scaler's mean_ is refit on each training fold, so the printed mean_ values differ across folds rather than being a single global value.' does NOT hold here. The model applies the rule that means differ across folds because subsets vary, but when the feature is constant, every training fold yields the exact same mean_ for that feature, so the set has only one element and the result is False.",
+    "curriculum_note": "Rule 'When using cross_val_score with a Pipeline containing StandardScaler and a classifier, the scaler's mean_ is refit on each training fold, so the printed mean_ values differ across folds rather than being a single global value.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

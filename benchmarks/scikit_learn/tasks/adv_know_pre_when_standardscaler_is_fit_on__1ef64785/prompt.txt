@@ -1,0 +1,40 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# When StandardScaler is fit on training data and used to transform test data, the scaler uses the training mean and variance (not the test set statistics), so the transformed test data will not necessarily have mean=0 or variance=1.
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+(No change — this is a direct behavioral prediction question)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+What does the following code print?
+
+Code:
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler().fit(np.array([[1],[2],[3]]))
+transformed = scaler.transform(np.array([[10],[20],[30]]))
+print(round(transformed.mean(), 4))
+
+Answer choices:
+  A. 1.0
+  B. 22.0454
+  C. 13.0
+  D. 0.0
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

@@ -68,6 +68,8 @@ def _load_families(args: argparse.Namespace, api_key: str) -> list[dict]:
             library_name = args.repo.rstrip("/").split("/")[-1]
             analyzer = RepoAnalyzer(api_key=api_key)
             families = analyzer.extract_families(readme, library_name=library_name)
+            for f in families:
+                f.setdefault("library_name", library_name)
             print(f"[analyzer] Extracted {len(families)} families: {[f['name'] for f in families]}")
             return families
         except Exception as e:
@@ -78,7 +80,8 @@ def _load_families(args: argparse.Namespace, api_key: str) -> list[dict]:
 
 def _infer_output_dir(args: argparse.Namespace) -> Path:
     if args.output:
-        return Path(args.output)
+        p = Path(args.output)
+        return p if p.is_absolute() else ROOT / p
     if args.repo:
         name = args.repo.rstrip("/").split("/")[-1]
         return ROOT / "benchmarks" / name

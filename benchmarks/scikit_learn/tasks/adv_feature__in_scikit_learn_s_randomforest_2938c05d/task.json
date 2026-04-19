@@ -1,0 +1,21 @@
+{
+  "id": "adv_feature__in_scikit_learn_s_randomforest_2938c05d",
+  "description": "Confounder: The rule states importances sum to 1.0 unconditionally, but after applying a boo",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "feature_importance_interpretation",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "The rule 'In scikit-learn's RandomForestClassifier, Gini (MDI) feature importances sum to exactly 1.0 regardless of the number of features or trees.' does NOT hold here. The rule states importances sum to 1.0 unconditionally, but after applying a boolean mask selecting only above-average features, the subset sum is less than 1.0, not equal to it.",
+    "curriculum_note": "Rule 'In scikit-learn's RandomForestClassifier, Gini (MDI) feature importances sum to exactly 1.0 regardless of the number of features or trees.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "adv_know_pre_when_standardscaler_is_fit_on__1ef64785",
+  "description": "Knowledge: When StandardScaler is fit on training data and used to transform test data, the",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "knowledge_mc",
+    "family": "preprocessing_scaling_behavior",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "Output is '22.0454'. Rule: When StandardScaler is fit on training data and used to transform test data, the scaler uses the training mean and variance (not the test set statistics), so the transformed test data will not necessarily have mean=0 or variance=1.",
+    "curriculum_note": "Direct behavioral prediction: When StandardScaler is fit on training data and used to transform test data, the scaler uses the training mean and variance (not the test set statistics), so the transformed test data will not necessarily have mean=0 or variance=1.",
+    "generation_recipe": "knowledge_mc_player1_only"
+  }
+}

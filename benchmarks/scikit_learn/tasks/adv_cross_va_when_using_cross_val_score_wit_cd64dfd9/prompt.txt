@@ -1,0 +1,69 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When using cross_val_score with a Pipeline containing StandardScaler, the scaler's mean_ is refit on each training fold, so the means across folds differ — proving no leakage from the full dataset.
+#
+# Confirming case (rule holds):
+# from sklearn.pipeline import Pipeline
+# from sklearn.preprocessing import StandardScaler
+# from sklearn.linear_model import LogisticRegression
+# from sklearn.model_selection import cross_val_score
+# import numpy as np
+# from sklearn.datasets import make_classification
+# X, y = make_classification(n_samples=100, random_state=42)
+# pipe = Pipeline([("scaler", StandardScaler()), ("clf", LogisticRegression())])
+# means = []
+# from sklearn.model_selection import StratifiedKFold
+# for train, _ in StratifiedKFold(n_splits=3).split(X, y):
+#     pipe.named_steps["scaler"].fit(X[train]); means.append(pipe.named_steps["scaler"].mean_[0])
+# print(f"Fold scaler means differ: {np.allclose(means[0], means[1])==False}")
+# → prints: Fold scaler means differ: True
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  from sklearn.preprocessing import StandardScaler
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+import numpy as np
+from sklearn.datasets import make_classification
+X, y = make_classification(n_samples=100, random_state=42)
+pipe = Pipeline([("scaler", StandardScaler()), ("clf", LogisticRegression())])
+means = []
+from sklearn.model_selection import StratifiedKFold
+# Use a constant feature column instead of first feature
+X[:, 0] = 5.0
+for train, _ in StratifiedKFold(n_splits=3).split(X, y):
+    pipe.named_steps["scaler"].fit(X[train]); means.append(pipe.named_steps["scaler"].mean_[0])
+print(f"Fold scaler means differ: {np.allclose(means[0], means[1])==False}")
+
+Answer choices:
+  A. Fold scaler means differ: None
+  B. Fold scaler means differ: True
+  C. Fold scaler means differ: Error
+  D. Fold scaler means differ: False
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

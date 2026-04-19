@@ -1,0 +1,74 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When using cross_val_score with a Pipeline containing StandardScaler and a classifier, the scaler's mean_ is refit on each training fold, so the printed mean_ values differ across folds rather than being a single global value.
+#
+# Confirming case (rule holds):
+# from sklearn.pipeline import Pipeline
+# from sklearn.preprocessing import StandardScaler
+# from sklearn.linear_model import LogisticRegression
+# from sklearn.model_selection import cross_val_score
+# from sklearn.datasets import make_classification
+# import numpy as np
+# 
+# X, y = make_classification(n_samples=100, random_state=42)
+# means = []
+# pipe = Pipeline([("scaler", StandardScaler()), ("clf", LogisticRegression())])
+# from sklearn.model_selection import StratifiedKFold
+# for train, _ in StratifiedKFold(n_splits=3).split(X, y):
+#     pipe.fit(X[train], y[train])
+#     means.append(round(pipe.named_steps["scaler"].mean_[0], 4))
+# print(len(set(means)) > 1)
+# → prints: True
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  from sklearn.preprocessing import StandardScaler
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+from sklearn.datasets import make_classification
+import numpy as np
+
+# Use data where feature 0 is constant across all samples
+X, y = make_classification(n_samples=100, random_state=42)
+X[:, 0] = 5.0  # constant feature
+
+means = []
+from sklearn.model_selection import StratifiedKFold
+pipe = Pipeline([("scaler", StandardScaler()), ("clf", LogisticRegression())])
+for train, _ in StratifiedKFold(n_splits=3).split(X, y):
+    pipe.fit(X[train], y[train])
+    means.append(round(pipe.named_steps["scaler"].mean_[0], 4))
+print(len(set(means)) > 1)
+
+Answer choices:
+  A. None
+  B. False
+  C. 5.0
+  D. True
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

@@ -440,6 +440,7 @@ class KnowledgeMCGenerator:
                 "rule": proposal["rule"],
                 "correct_output": proposal["correct_output"],
                 "generation_recipe": "knowledge_mc_player1_only",
+                "library_name": family.get("library_name", "the library"),
             },
         )
 
@@ -630,7 +631,7 @@ class AdversarialMCGenerator:
         d_mis = self._tag(raw, "misconception_d") or ""
         return c_text, d_text, c_mis, d_mis
 
-    def _build_candidate(self, r: _RoundResult) -> MCTaskCandidate:
+    def _build_candidate(self, r: _RoundResult, library_name: str = "the library") -> MCTaskCandidate:
         """Assemble MCTaskCandidate with shuffled choices."""
         import random
         task_id = _task_id_from_rule(r.rule, r.family)
@@ -704,6 +705,7 @@ class AdversarialMCGenerator:
                 "actual_output": r.actual_output,
                 "why_model_gets_it_wrong": r.why_wrong,
                 "generation_recipe": "adversarial_two_player",
+                "library_name": library_name,
             },
         )
 
@@ -751,7 +753,7 @@ class AdversarialMCGenerator:
             family=family["name"],
             seed_rule=seed_rule,
         )
-        return self._build_candidate(round_result)
+        return self._build_candidate(round_result, library_name=family.get("library_name", "the library"))
 
     def generate(
         self,

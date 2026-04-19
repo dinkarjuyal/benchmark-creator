@@ -1,0 +1,21 @@
+{
+  "id": "adv_know_pre_standardscaler_s_fit_computes__8c44259e",
+  "description": "Knowledge: StandardScaler's fit() computes the mean and standard deviation from the trainin",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "knowledge_mc",
+    "family": "preprocessing_scaling_behavior",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "Output is '0.5773502691896258'. Rule: StandardScaler's fit() computes the mean and standard deviation from the training data, and subsequent transform() calls use those stored statistics \u2014 not recomputed ones from the new data.",
+    "curriculum_note": "Direct behavioral prediction: StandardScaler's fit() computes the mean and standard deviation from the training data, and subsequent transform() calls use those stored statistics \u2014 not recomputed ones from the new data.",
+    "generation_recipe": "knowledge_mc_player1_only"
+  }
+}

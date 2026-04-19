@@ -1,0 +1,21 @@
+{
+  "id": "adv_know_cro_wrapping_a_scaler_and_model_in_c0b942a8",
+  "description": "Knowledge: Wrapping a scaler and model inside a sklearn Pipeline passed to cross_val_score ",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "knowledge_mc",
+    "family": "cross_validation_data_leakage",
+    "difficulty": 1,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "Output is 'Pipeline CV refits scaler per fold \u2014 no leakage; mean accuracy: 0.960'. Rule: Wrapping a scaler and model inside a sklearn Pipeline passed to cross_val_score prevents data leakage because the scaler is re-fit only on each fold's training split, never seeing the validation data.",
+    "curriculum_note": "Direct behavioral prediction: Wrapping a scaler and model inside a sklearn Pipeline passed to cross_val_score prevents data leakage because the scaler is re-fit only on each fold's training split, never seeing the validation data.",
+    "generation_recipe": "knowledge_mc_player1_only"
+  }
+}
