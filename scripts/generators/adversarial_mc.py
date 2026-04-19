@@ -293,6 +293,197 @@ class RepoAnalyzer:
         raise ValueError(f"Could not fetch README from {repo_url}")
 
 
+# ── Shared prompts for knowledge component ───────────────────────────────────
+
+_KNOWLEDGE_DISTRACTORS_SYSTEM = """\
+You are building a multiple-choice quiz. Given a Python snippet and its correct output,
+generate three plausible wrong answers — each representing a specific misconception.
+
+Respond using ONLY these tags:
+
+<distractor_b>wrong answer text</distractor_b>
+<misconception_b>one-sentence wrong mental model</misconception_b>
+<distractor_c>wrong answer text</distractor_c>
+<misconception_c>one-sentence wrong mental model</misconception_c>
+<distractor_d>wrong answer text</distractor_d>
+<misconception_d>one-sentence wrong mental model</misconception_d>"""
+
+_KNOWLEDGE_DISTRACTORS_USER = """\
+Rule: {rule}
+Snippet:
+{snippet}
+Correct output: {correct_output}
+
+Generate three wrong answers. Requirements:
+- Each must be distinct from the correct output and from each other
+- Each represents a plausible but wrong mental model about this API
+- Format as printed output strings"""
+
+
+class KnowledgeMCGenerator:
+    """Generate direct behavioral-prediction MC questions for any Python library.
+
+    Uses the same Player 1 flow as AdversarialMCGenerator (rule + confirming snippet +
+    execution-verified output) but skips Player 2 — the question is simply
+    "what does this code print?" rather than a confounder.
+
+    This is the generic replacement for the pandas-specific PANDAS_INJECTIONS list.
+    Any repo whose families are extracted by RepoAnalyzer works here.
+
+    Usage:
+        families = RepoAnalyzer(api_key="...").extract_families(readme, library_name="requests")
+        gen = KnowledgeMCGenerator(api_key="...")
+        candidates = gen.generate(families=families, n_per_family=3)
+    """
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model: str = "claude-sonnet-4-6",
+        max_retries: int = 3,
+        verbose: bool = True,
+    ):
+        self.client = anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
+        self.model = model
+        self.max_retries = max_retries
+        self.verbose = verbose
+
+    def _chat(self, system: str, user: str) -> str:
+        for attempt in range(self.max_retries):
+            try:
+                msg = self.client.messages.create(
+                    model=self.model,
+                    max_tokens=1024,
+                    system=system,
+                    messages=[{"role": "user", "content": user}],
+                )
+                return msg.content[0].text.strip()
+            except Exception as e:
+                if attempt == self.max_retries - 1:
+                    raise
+                time.sleep(2 ** attempt)
+        raise RuntimeError("unreachable")
+
+    def _propose(self, family: dict, seed_rule: str) -> dict | None:
+        """Player 1 only: get a rule + snippet + verified output."""
+        install_line = family.get("install") or "pip install pandas numpy"
+        raw = self._chat(
+            _PLAYER1_SYSTEM,
+            _PLAYER1_USER.format(
+                family_name=family["name"],
+                family_description=family["description"],
+                seed_rule=seed_rule,
+                install_line=install_line,
+            ),
+        )
+        rule = _tag(raw, "rule")
+        snippet = _tag(raw, "snippet")
+        if not rule or not snippet:
+            if self.verbose:
+                print(f"  [know P1] missing tags: {raw[:80]}")
+            return None
+        ok, actual = _run_snippet(snippet)
+        if not ok:
+            if self.verbose:
+                print(f"  [know P1] snippet error: {actual}")
+            return None
+        return {"rule": rule, "snippet": snippet, "correct_output": actual}
+
+    def _distractors(self, proposal: dict) -> tuple[str, str, str] | None:
+        raw = self._chat(
+            _KNOWLEDGE_DISTRACTORS_SYSTEM,
+            _KNOWLEDGE_DISTRACTORS_USER.format(
+                rule=proposal["rule"],
+                snippet=proposal["snippet"],
+                correct_output=proposal["correct_output"],
+            ),
+        )
+        b = _tag(raw, "distractor_b") or "Raises TypeError"
+        c = _tag(raw, "distractor_c") or "Raises ValueError"
+        d = _tag(raw, "distractor_d") or "None"
+        return b, c, d
+
+    def _build_candidate(self, proposal: dict, family: dict) -> MCTaskCandidate:
+        import random
+        task_id = _task_id_from_rule(proposal["rule"], "know_" + family["name"])
+
+        raw_choices = [
+            {"text": proposal["correct_output"], "type": "correct"},
+            {"text": proposal.get("distractor_b", "Raises TypeError"), "type": "plausible_misconception"},
+            {"text": proposal.get("distractor_c", "Raises ValueError"), "type": "plausible_misconception"},
+            {"text": proposal.get("distractor_d", "None"),              "type": "plausible_misconception"},
+        ]
+        rng = random.Random(hash(task_id))
+        rng.shuffle(raw_choices)
+        labeled = [{"id": chr(65 + i), "text": c["text"], "type": c["type"]} for i, c in enumerate(raw_choices)]
+        correct_id = next(lc["id"] for lc, orig in zip(labeled, raw_choices) if orig["type"] == "correct")
+
+        return MCTaskCandidate(
+            task_id=task_id,
+            question_type="knowledge_mc",
+            family=family["name"],
+            difficulty=1,
+            description=f"Knowledge: {proposal['rule'][:80]}",
+            is_hard_negative=False,
+            curriculum_note=f"Direct behavioral prediction: {proposal['rule']}",
+            source_excerpt=f"# {proposal['rule']}\n",
+            proposed_change="(No change — this is a direct behavioral prediction question)",
+            snippet=proposal["snippet"],
+            question_stem="What does the following code print?",
+            choices=labeled,
+            correct_id=correct_id,
+            explanation=f"Output is {proposal['correct_output']!r}. Rule: {proposal['rule']}",
+            metadata={
+                "rule": proposal["rule"],
+                "correct_output": proposal["correct_output"],
+                "generation_recipe": "knowledge_mc_player1_only",
+            },
+        )
+
+    def generate(
+        self,
+        families: list[dict] | None = None,
+        n_per_family: int = 3,
+    ) -> list[MCTaskCandidate]:
+        families = families or FAMILIES
+        candidates: list[MCTaskCandidate] = []
+        seen_ids: set[str] = set()
+
+        for family in families:
+            produced = 0
+            for seed_rule in family["seed_rules"]:
+                if produced >= n_per_family:
+                    break
+                proposal = self._propose(family, seed_rule)
+                if proposal is None:
+                    continue
+                distractors = self._distractors(proposal)
+                if distractors is None:
+                    continue
+                proposal["distractor_b"], proposal["distractor_c"], proposal["distractor_d"] = distractors
+
+                cand = self._build_candidate(proposal, family)
+                if cand.task_id in seen_ids:
+                    continue
+                seen_ids.add(cand.task_id)
+                candidates.append(cand)
+                produced += 1
+                if self.verbose:
+                    print(f"  [know] ✓ {cand.task_id}")
+
+        return candidates
+
+
+def _tag(text: str, tag: str) -> str | None:
+    """Module-level helper: extract first <tag>...</tag> from text."""
+    open_tag, close_tag = f"<{tag}>", f"</{tag}>"
+    start = text.find(open_tag)
+    end = text.find(close_tag)
+    if start == -1 or end == -1:
+        return None
+    return text[start + len(open_tag):end].strip()
+
+
 # ── Generator ─────────────────────────────────────────────────────────────────
 
 @dataclass
@@ -346,14 +537,7 @@ class AdversarialMCGenerator:
 
     @staticmethod
     def _tag(text: str, tag: str) -> str | None:
-        """Extract content between <tag>...</tag>. Returns None if not found."""
-        open_tag = f"<{tag}>"
-        close_tag = f"</{tag}>"
-        start = text.find(open_tag)
-        end = text.find(close_tag)
-        if start == -1 or end == -1:
-            return None
-        return text[start + len(open_tag):end].strip()
+        return _tag(text, tag)
 
     def _player1_propose(self, family: dict, seed_rule: str) -> dict | None:
         """Player 1: propose a belief + confirming snippet."""

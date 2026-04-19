@@ -48,7 +48,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from scripts.generators.adversarial_mc import FAMILIES as PANDAS_FAMILIES
-from scripts.generators.adversarial_mc import AdversarialMCGenerator, RepoAnalyzer
+from scripts.generators.adversarial_mc import (
+    AdversarialMCGenerator,
+    KnowledgeMCGenerator,
+    RepoAnalyzer,
+)
 from scripts.task_writer_mc import write_mc_task
 
 
@@ -125,17 +129,12 @@ def main() -> None:
         print(f"[adversarial] {len(candidates)} questions verified")
 
     if "knowledge" in types:
-        # knowledge MC uses pre-built pandas injections — repo-specific injection
-        # libraries are a future extension; for now only pandas is supported
-        try:
-            from scripts.generators.pandas_mc import PandasMCGenerator
-            print(f"\n[knowledge] Generating pandas knowledge/calibration questions ...")
-            knowledge_cands = PandasMCGenerator().generate()
-            stats["knowledge"] = {"generated": len(knowledge_cands)}
-            all_candidates.extend(knowledge_cands)
-            print(f"[knowledge] {len(knowledge_cands)} questions")
-        except Exception as e:
-            print(f"[knowledge] Warning: {e}")
+        print(f"\n[knowledge] Generating behavioral-prediction questions ...")
+        know_gen = KnowledgeMCGenerator(api_key=api_key, verbose=True)
+        knowledge_cands = know_gen.generate(families=families, n_per_family=args.n)
+        stats["knowledge"] = {"generated": len(knowledge_cands)}
+        all_candidates.extend(knowledge_cands)
+        print(f"[knowledge] {len(knowledge_cands)} questions")
 
     if args.dry_run:
         print(f"\n--- DRY RUN: {len(all_candidates)} questions, not written ---")
