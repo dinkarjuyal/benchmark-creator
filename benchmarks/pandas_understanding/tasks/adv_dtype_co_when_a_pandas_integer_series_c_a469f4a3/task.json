@@ -1,0 +1,21 @@
+{
+  "id": "adv_dtype_co_when_a_pandas_integer_series_c_a469f4a3",
+  "description": "Confounder: The model assumes ALL integer Series with NaN must become float64, but pandas nu",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "dtype_coercion",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'When a pandas integer Series contains even one NaN value, it is automatically cast to float64 dtype because standard NumPy int types cannot represent NaN.' does NOT hold here. The model assumes ALL integer Series with NaN must become float64, but pandas nullable integer dtype \"Int64\" (capital I) can represent NaN natively without casting to float.",
+    "curriculum_note": "Rule 'When a pandas integer Series contains even one NaN value, it is automatically cast to float64 dtype because standard NumPy int types cannot represent NaN.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

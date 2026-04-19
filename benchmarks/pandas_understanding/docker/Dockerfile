@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends bash ca-certificates git \
-    && rm -rf /var/lib/lib/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # Install mini-swe-agent + pandas + numpy
 RUN python -m pip install --no-cache-dir \

@@ -1,0 +1,21 @@
+{
+  "id": "adv_groupby__when_using_groupby_transform_w_a5a97f1d",
+  "description": "Confounder: The model assumes the output order follows group membership order, but transform",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "groupby_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'When using groupby().transform() with a aggregation function like 'mean', the result is a Series with the same index as the original DataFrame, where each element is replaced by its group's mean value.' does NOT hold here. The model assumes the output order follows group membership order, but transform preserves the original DataFrame's index order, so with a non-default index the values align to the shuffled positions correctly yet tolist() reflects the original row order [3,1,2,0] giving [1.5, 3.5, 1.5, 3.5] instead of the expected [1.5, 1.5, 3.5, 3.5]",
+    "curriculum_note": "Rule 'When using groupby().transform() with a aggregation function like 'mean', the result is a Series with the same index as the original DataFrame, where each element is replaced by its group's mean value.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

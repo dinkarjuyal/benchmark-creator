@@ -36,6 +36,7 @@ class AgentConfig:
 class AgentRunContext:
     root: Path
     image: str
+    runtime: str
     task_id: str
     task_description: str
     artifact_dir: Path
@@ -118,11 +119,56 @@ class AgentAdapter(ABC):
         raise NotImplementedError
 
     def run(self, context: AgentRunContext) -> dict[str, Any]:
-        """Run the adapter-managed agent step inside an isolated Docker container."""
+        """Run the adapter-managed agent step inside Docker or a local fallback."""
         started_at = time.time()
-        container_name = f"harness_{context.task_id}_agent_{uuid.uuid4().hex[:10]}"
         stdout_path = context.artifact_dir / "agent_stdout.txt"
         stderr_path = context.artifact_dir / "agent_stderr.txt"
+        command = self.build_agent_command(context)
+
+        if context.runtime == "local":
+            # Rewrite Docker paths (/work, /task, /agent_tools, /artifacts) to host paths
+            _path_map = {
+                "/agent_tools": str(context.root / "harness" / "agents"),
+                "/work": str(context.run_dir),
+                "/task": str(context.task_mount_dir),
+                "/artifacts": str(context.artifact_dir),
+            }
+            for docker_path, host_path in _path_map.items():
+                command = command.replace(docker_path, host_path)
+
+            env = os.environ.copy()
+            env["TASK_ID"] = context.task_id
+            env["TASK_DESCRIPTION"] = context.task_description
+            env["HARNESS_WORK_DIR"] = str(context.run_dir)
+            env["HARNESS_TASK_DIR"] = str(context.task_mount_dir)
+            env["HARNESS_ARTIFACT_DIR"] = str(context.artifact_dir)
+            for env_var in self.env_passthrough:
+                if os.getenv(env_var):
+                    env[env_var] = os.getenv(env_var, "")
+            for env_var, value in self.env_set.items():
+                env[env_var] = value
+            completed = subprocess.run(
+                ["/bin/bash", "-lc", command],
+                cwd=str(context.run_dir),
+                text=True,
+                capture_output=True,
+                env=env,
+                timeout=context.timeout_sec,
+            )
+            stdout_path.write_text(completed.stdout)
+            stderr_path.write_text(completed.stderr)
+            return {
+                "step": "agent",
+                "command": command,
+                "container_name": None,
+                "exit_code": completed.returncode,
+                "timed_out": False,
+                "duration_sec": round(time.time() - started_at, 3),
+                "stdout_path": str(stdout_path),
+                "stderr_path": str(stderr_path),
+            }
+
+        container_name = f"harness_{context.task_id}_agent_{uuid.uuid4().hex[:10]}"
         docker_cmd = [
             "docker",
             "run",
@@ -149,7 +195,6 @@ class AgentAdapter(ABC):
                 docker_cmd.extend(["-e", env_var])
         for env_var, value in self.env_set.items():
             docker_cmd.extend(["-e", f"{env_var}={value}"])
-        command = self.build_agent_command(context)
         docker_cmd.extend([context.image, "/bin/bash", "-lc", command])
 
         proc = subprocess.Popen(

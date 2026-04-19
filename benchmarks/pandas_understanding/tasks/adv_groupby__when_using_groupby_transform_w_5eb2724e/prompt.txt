@@ -1,0 +1,49 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When using groupby().transform() with a aggregation function like 'mean', the result is a Series with the same index as the original DataFrame, where each value is replaced by its group's mean.
+#
+# Confirming case (rule holds):
+# import pandas as pd
+# df = pd.DataFrame({'group': ['A', 'A', 'B', 'B'], 'val': [1, 3, 2, 4]})
+# result = df.groupby('group')['val'].transform('mean')
+# print(result.tolist())
+# → prints: [2.0, 2.0, 3.0, 3.0]
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  df = pd.DataFrame({'group': ['A', 'B', 'A', 'B'], 'val': [1, 3, 2, 4]}, index=[3, 1, 2, 0])
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import pandas as pd
+df = pd.DataFrame({'group': ['A', 'B', 'A', 'B'], 'val': [1, 3, 2, 4]}, index=[3, 1, 2, 0])
+result = df.groupby('group')['val'].transform('mean')
+print(result.tolist())
+
+Answer choices:
+  A. [1.5, 3.5, 1.5, 3.5]
+  B. [1, 3, 2, 4]
+  C. [1.5, 1.5, 3.5, 3.5]
+  D. [1.5, 3.5, 3.5, 1.5]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

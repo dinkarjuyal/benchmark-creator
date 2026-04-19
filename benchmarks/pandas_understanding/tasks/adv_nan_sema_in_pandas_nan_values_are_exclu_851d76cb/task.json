@@ -1,0 +1,21 @@
+{
+  "id": "adv_nan_sema_in_pandas_nan_values_are_exclu_851d76cb",
+  "description": "Confounder: The model applies the rule that NaN groups are always excluded, but the dropna=F",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "nan_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "The rule 'In pandas, NaN values are excluded from groupby aggregations by default, so a group consisting entirely of NaN values will not appear in the result.' does NOT hold here. The model applies the rule that NaN groups are always excluded, but the dropna=False parameter causes the NaN key group to appear in the result.",
+    "curriculum_note": "Rule 'In pandas, NaN values are excluded from groupby aggregations by default, so a group consisting entirely of NaN values will not appear in the result.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

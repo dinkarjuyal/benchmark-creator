@@ -1,0 +1,21 @@
+{
+  "id": "adv_copy_sem_using_df_loc_mask_col_value_re_cff376f6",
+  "description": "Confounder: The model assumes df.loc always modifies the original DataFrame in-place, but he",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "copy_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'Using df.loc[mask, 'col'] = value reliably modifies the DataFrame in-place, while chained indexing df['col'][mask] = value may silently fail due to operating on a copy.' does NOT hold here. The model assumes df.loc always modifies the original DataFrame in-place, but here loc is called on `view`, which is itself a copy/slice of df, so the original df remains unchanged despite using the \"safe\" loc syntax.",
+    "curriculum_note": "Rule 'Using df.loc[mask, 'col'] = value reliably modifies the DataFrame in-place, while chained indexing df['col'][mask] = value may silently fail due to operating on a copy.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "adv_dtype_co_when_a_pandas_series_of_intege_f51db02a",
+  "description": "Confounder: The model assumes apply() with a lambda returning floats always yields float64, ",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "dtype_coercion",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C",
+    "explanation": "The rule 'When a pandas Series of integer dtype has apply() called with a lambda that returns floats, the resulting Series automatically promotes to float64 dtype.' does NOT hold here. The model assumes apply() with a lambda returning floats always yields float64, but when even one element returns a non-numeric type (string), the result promotes to object dtype instead.",
+    "curriculum_note": "Rule 'When a pandas Series of integer dtype has apply() called with a lambda that returns floats, the resulting Series automatically promotes to float64 dtype.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

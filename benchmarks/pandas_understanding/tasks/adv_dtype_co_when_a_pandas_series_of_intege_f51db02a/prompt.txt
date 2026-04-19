@@ -1,0 +1,49 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When a pandas Series of integer dtype has apply() called with a lambda that returns floats, the resulting Series automatically promotes to float64 dtype.
+#
+# Confirming case (rule holds):
+# import pandas as pd
+# s = pd.Series([1, 2, 3], dtype="int64")
+# result = s.apply(lambda x: x * 1.5)
+# print(result.dtype)
+# → prints: float64
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  s = pd.Series([1, 2, 3], dtype="int64")
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import pandas as pd
+s = pd.Series([1, 2, 3], dtype="int64")
+result = s.apply(lambda x: x * 1.0 if x != 2 else "2.0")
+print(result.dtype)
+
+Answer choices:
+  A. int64
+  B. str
+  C. object
+  D. float64
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

@@ -1,0 +1,21 @@
+{
+  "id": "adv_index_al_when_concatenating_two_series__70235f1a",
+  "description": "Confounder: The model applies the \"duplicates preserved\" rule to axis=1 concatenation, but a",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "index_alignment",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'When concatenating two Series with overlapping index labels using pd.concat, duplicate index labels are preserved rather than aligned or deduplicated.' does NOT hold here. The model applies the \"duplicates preserved\" rule to axis=1 concatenation, but axis=1 aligns on the index, deduplicating overlapping labels into a single unified index.",
+    "curriculum_note": "Rule 'When concatenating two Series with overlapping index labels using pd.concat, duplicate index labels are preserved rather than aligned or deduplicated.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

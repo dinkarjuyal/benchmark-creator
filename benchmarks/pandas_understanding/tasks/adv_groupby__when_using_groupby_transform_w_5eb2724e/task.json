@@ -1,0 +1,21 @@
+{
+  "id": "adv_groupby__when_using_groupby_transform_w_5eb2724e",
+  "description": "Confounder: The model assumes the output order follows group membership order, but transform",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "groupby_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A",
+    "explanation": "The rule 'When using groupby().transform() with a aggregation function like 'mean', the result is a Series with the same index as the original DataFrame, where each value is replaced by its group's mean.' does NOT hold here. The model assumes the output order follows group membership order, but transform preserves the original DataFrame's index order \u2014 so with a non-default index the values are still aligned to the original row positions, giving [1.5, 3.5, 1.5, 3.5] rather than the group-sorted order the model might predict.",
+    "curriculum_note": "Rule 'When using groupby().transform() with a aggregation function like 'mean', the result is a Series with the same index as the original DataFrame, where each value is replaced by its group's mean.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

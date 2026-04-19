@@ -1,63 +1,82 @@
-{
-  "name": "pandas-understanding",
-  "description": "Counterfactual curriculum benchmark for pandas code understanding. Each task is a multiple-choice question: given a proposed change to pandas internals, predict the output of a short snippet. Tests causal reasoning, not code generation.",
-  "version": "1.0",
-  "task_dirs": [
-    "tasks/groupby_sort_false",
-    "tasks/value_counts_sort_false",
-    "tasks/sort_values_na_last",
-    "tasks/groupby_dropna_false",
-    "tasks/skipna_false_mean",
-    "tasks/fillna_method_bfill",
-    "tasks/nullable_int_coercion",
-    "tasks/categorical_observed_false",
-    "tasks/loc_scalar_dtype_coercion",
-    "tasks/merge_how_outer",
-    "tasks/concat_ignore_index",
-    "tasks/concat_axis_columns",
-    "tasks/reindex_fill_value",
-    "tasks/merge_duplicate_key_expansion",
-    "tasks/copy_deep_false",
-    "tasks/rename_no_inplace",
-    "tasks/read_csv_header_none",
-    "tasks/dropna_axis_default",
-    "tasks/apply_axis_rows",
-    "tasks/pivot_table_aggfunc_count",
-    "tasks/noop_series_apply_identity",
-    "tasks/noop_add_then_subtract",
-    "tasks/noop_set_index_reset_index",
-    "tasks/groupby_agg_sort_affects_cumsum",
-    "tasks/merge_on_index_vs_column"
-  ],
-  "stats": {
-    "total_tasks": 25,
-    "hard_negatives": 5,
-    "by_family": {
-      "sort_order": 4,
-      "nan_semantics": 3,
-      "dtype_coercion": 3,
-      "index_alignment": 6,
-      "copy_semantics": 2,
-      "default_params": 4,
-      "hard_negatives": 3
-    },
-    "by_difficulty": {
-      "1": 12,
-      "2": 9,
-      "3": 3,
-      "4": 1
-    }
+[
+  {
+    "id": "adv_groupby__when_using_groupby_transform_w_5eb2724e",
+    "path": "benchmarks/pandas_understanding/tasks/adv_groupby__when_using_groupby_transform_w_5eb2724e",
+    "family": "groupby_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A"
   },
-  "scoring": {
-    "formula": "score = 1.0 if correct and clean_workspace else 0.8 if correct else 0.0",
-    "correct": "agent chose the right answer (matched correct_id in validator)",
-    "clean_workspace": "agent only wrote /work/answer.json, no other file edits",
-    "curriculum_levels": {
-      "1": "single function, local semantics",
-      "2": "cross-type or cross-parameter reasoning",
-      "3": "cross-function or non-local effect",
-      "4": "transform-level cascade or emergent behavior",
-      "5": "hard negatives, false positives"
-    }
+  {
+    "id": "adv_groupby__when_using_groupby_transform_w_a5a97f1d",
+    "path": "benchmarks/pandas_understanding/tasks/adv_groupby__when_using_groupby_transform_w_a5a97f1d",
+    "family": "groupby_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B"
+  },
+  {
+    "id": "adv_dtype_co_when_a_pandas_integer_series_c_a469f4a3",
+    "path": "benchmarks/pandas_understanding/tasks/adv_dtype_co_when_a_pandas_integer_series_c_a469f4a3",
+    "family": "dtype_coercion",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B"
+  },
+  {
+    "id": "adv_dtype_co_when_a_pandas_series_of_intege_f51db02a",
+    "path": "benchmarks/pandas_understanding/tasks/adv_dtype_co_when_a_pandas_series_of_intege_f51db02a",
+    "family": "dtype_coercion",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C"
+  },
+  {
+    "id": "adv_nan_sema_in_pandas_nan_values_are_exclu_914114a0",
+    "path": "benchmarks/pandas_understanding/tasks/adv_nan_sema_in_pandas_nan_values_are_exclu_914114a0",
+    "family": "nan_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D"
+  },
+  {
+    "id": "adv_nan_sema_in_pandas_nan_values_are_exclu_851d76cb",
+    "path": "benchmarks/pandas_understanding/tasks/adv_nan_sema_in_pandas_nan_values_are_exclu_851d76cb",
+    "family": "nan_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D"
+  },
+  {
+    "id": "adv_index_al_when_concatenating_two_series__25ba3127",
+    "path": "benchmarks/pandas_understanding/tasks/adv_index_al_when_concatenating_two_series__25ba3127",
+    "family": "index_alignment",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C"
+  },
+  {
+    "id": "adv_index_al_when_concatenating_two_series__70235f1a",
+    "path": "benchmarks/pandas_understanding/tasks/adv_index_al_when_concatenating_two_series__70235f1a",
+    "family": "index_alignment",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B"
+  },
+  {
+    "id": "adv_copy_sem_using_df_loc_mask_col_value_re_cff376f6",
+    "path": "benchmarks/pandas_understanding/tasks/adv_copy_sem_using_df_loc_mask_col_value_re_cff376f6",
+    "family": "copy_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B"
+  },
+  {
+    "id": "adv_copy_sem_using_loc_with_a_boolean_mask__c540964e",
+    "path": "benchmarks/pandas_understanding/tasks/adv_copy_sem_using_loc_with_a_boolean_mask__c540964e",
+    "family": "copy_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D"
   }
-}
+]

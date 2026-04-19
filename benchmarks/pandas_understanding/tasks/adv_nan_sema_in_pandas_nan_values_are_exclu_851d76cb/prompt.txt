@@ -1,0 +1,49 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# In pandas, NaN values are excluded from groupby aggregations by default, so a group consisting entirely of NaN values will not appear in the result.
+#
+# Confirming case (rule holds):
+# import pandas as pd
+# import numpy as np
+# s = pd.Series([1, 2, np.nan], index=['a', 'b', np.nan])
+# print(s.groupby(s.index).sum().to_dict())
+# → prints: {'a': 1.0, 'b': 2.0}
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  import numpy as np
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import pandas as pd
+import numpy as np
+s = pd.Series([1, 2, np.nan], index=['a', 'b', np.nan])
+print(s.groupby(s.index, dropna=False).sum().to_dict())
+
+Answer choices:
+  A. {'a': 1.0, 'b': 2.0, nan: nan}
+  B. {'a': 1, 'b': 2, nan: 0}
+  C. {'a': 1.0, 'b': 2.0}
+  D. {'a': 1.0, 'b': 2.0, nan: 0.0}
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

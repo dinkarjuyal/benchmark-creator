@@ -1,0 +1,21 @@
+{
+  "id": "adv_copy_sem_using_loc_with_a_boolean_mask__c540964e",
+  "description": "Confounder: The model assumes .loc in-place modification propagates back to the original Dat",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "copy_semantics",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "The rule 'Using .loc with a boolean mask and column name in a single indexing operation (df.loc[mask, 'col'] = value) reliably modifies the DataFrame in-place, unlike chained assignment.' does NOT hold here. The model assumes .loc in-place modification propagates back to the original DataFrame, but df2 is already a copy created by the boolean slice, so modifying df2 with .loc never affects df.",
+    "curriculum_note": "Rule 'Using .loc with a boolean mask and column name in a single indexing operation (df.loc[mask, 'col'] = value) reliably modifies the DataFrame in-place, unlike chained assignment.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

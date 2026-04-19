@@ -1,0 +1,49 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When concatenating two Series with overlapping indices using pd.concat, duplicate index labels are preserved and the result contains all values from both Series without any alignment or aggregation.
+#
+# Confirming case (rule holds):
+# import pandas as pd
+# s1 = pd.Series([1, 2], index=['a', 'b'])
+# s2 = pd.Series([3, 4], index=['b', 'c'])
+# print(pd.concat([s1, s2]).tolist())
+# → prints: [1, 2, 3, 4]
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  s1 = pd.Series([1, 2], index=['a', 'b'])
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import pandas as pd
+s1 = pd.Series([1, 2], index=['a', 'b'])
+s2 = pd.Series([3, 4], index=['b', 'c'])
+print(pd.concat([s1, s2], axis=1).stack().tolist())
+
+Answer choices:
+  A. [1.0, 2.0, 3.0, 4.0]
+  B. [1.0, nan, 2.0, 2.0, 3.0, nan, 4.0]
+  C. [1.0, nan, 2.0, 3.0, nan, 4.0]
+  D. [1, 2, 3, 4]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

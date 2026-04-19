@@ -1,0 +1,50 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# Using .loc with a boolean mask and column name in a single indexing operation (df.loc[mask, 'col'] = value) reliably modifies the DataFrame in-place, unlike chained assignment.
+#
+# Confirming case (rule holds):
+# import pandas as pd
+# df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
+# df.loc[df['a'] > 1, 'b'] = 99
+# print(df['b'].tolist())
+# → prints: [4, 99, 99]
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import pandas as pd
+df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
+df2 = df[df['a'] > 0]
+df2.loc[df2['a'] > 1, 'b'] = 99
+print(df['b'].tolist())
+
+Answer choices:
+  A. [4, 99, 99]
+  B. [4, 5, 99]
+  C. [99, 99, 99]
+  D. [4, 5, 6]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

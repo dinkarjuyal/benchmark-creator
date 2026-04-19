@@ -1,0 +1,21 @@
+{
+  "id": "adv_index_al_when_concatenating_two_series__25ba3127",
+  "description": "Confounder: The model assumes all values are preserved without aggregation, but stacking aft",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "index_alignment",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C",
+    "explanation": "The rule 'When concatenating two Series with overlapping indices using pd.concat, duplicate index labels are preserved and the result contains all values from both Series without any alignment or aggregation.' does NOT hold here. The model assumes all values are preserved without aggregation, but stacking after axis=1 concat aligns on index first, causing NaN-dropped restructuring that drops no values but reorders them non-obviously \u2014 specifically 'b' appears with both values while 'a' and 'c' each appear once, yielding [1.0, 2.0, 3.0, 4.0] reordered as [1.0, 2.0, 3.0, 4.0] but the model misses that axis=1 concat aligns indices producing NaNs before stack drops them, resulting in [1.0, 2.0, 3.0, 4.0] vs expected [1, 2, 3, 4]",
+    "curriculum_note": "Rule 'When concatenating two Series with overlapping indices using pd.concat, duplicate index labels are preserved and the result contains all values from both Series without any alignment or aggregation.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}
