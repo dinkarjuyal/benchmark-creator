@@ -335,7 +335,7 @@ class KnowledgeMCGenerator:
 
     Usage:
         families = RepoAnalyzer(api_key="...").extract_families(readme, library_name="requests")
-        gen = KnowledgeMCGenerator(api_key="...")
+        gen = KnowledgeMCGenerator(api_key="...", seed=42)
         candidates = gen.generate(families=families, n_per_family=3)
     """
 
@@ -345,11 +345,13 @@ class KnowledgeMCGenerator:
         model: str = "claude-sonnet-4-6",
         max_retries: int = 3,
         verbose: bool = True,
+        seed: int | None = None,
     ):
         self.client = anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
         self.model = model
         self.max_retries = max_retries
         self.verbose = verbose
+        self.seed = seed
 
     def _chat(self, system: str, user: str) -> str:
         for attempt in range(self.max_retries):
@@ -416,7 +418,8 @@ class KnowledgeMCGenerator:
             {"text": proposal.get("distractor_c", "Raises ValueError"), "type": "plausible_misconception"},
             {"text": proposal.get("distractor_d", "None"),              "type": "plausible_misconception"},
         ]
-        rng = random.Random(hash(task_id))
+        rng_seed = hash(task_id) ^ (self.seed if self.seed is not None else 0)
+        rng = random.Random(rng_seed)
         rng.shuffle(raw_choices)
         labeled = [{"id": chr(65 + i), "text": c["text"], "type": c["type"]} for i, c in enumerate(raw_choices)]
         correct_id = next(lc["id"] for lc, orig in zip(labeled, raw_choices) if orig["type"] == "correct")
@@ -517,11 +520,13 @@ class AdversarialMCGenerator:
         model: str = "claude-sonnet-4-6",
         max_retries: int = 3,
         verbose: bool = True,
+        seed: int | None = None,
     ):
         self.client = anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
         self.model = model
         self.max_retries = max_retries
         self.verbose = verbose
+        self.seed = seed
 
     def _chat(self, system: str, user: str) -> str:
         for attempt in range(self.max_retries):
@@ -636,14 +641,15 @@ class AdversarialMCGenerator:
         import random
         task_id = _task_id_from_rule(r.rule, r.family)
 
-        # Build the 4 choices deterministically shuffled
+        # Build the 4 choices deterministically shuffled (seed-mixed for fresh draws)
         raw_choices = [
             {"text": r.actual_output,  "type": "correct",             "explanation": "Actual execution output — rule breaks here"},
             {"text": r.rule_predicts,  "type": "hard_negative",       "explanation": r.why_wrong},
             {"text": r.distractor_c,   "type": "plausible_misconception", "explanation": r.misconception_c},
             {"text": r.distractor_d,   "type": "plausible_misconception", "explanation": r.misconception_d},
         ]
-        rng = random.Random(hash(task_id))
+        rng_seed = hash(task_id) ^ (self.seed if self.seed is not None else 0)
+        rng = random.Random(rng_seed)
         rng.shuffle(raw_choices)
 
         labeled = [

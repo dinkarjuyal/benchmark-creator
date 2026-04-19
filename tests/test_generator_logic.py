@@ -46,6 +46,7 @@ class TestAdversarialConfounderFilter:
         gen.model = "test"
         gen.max_retries = 1
         gen.verbose = False
+        gen.seed = None
         return gen
 
     def test_rejects_when_actual_equals_rule_predicts(self):

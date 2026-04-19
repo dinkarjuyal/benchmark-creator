@@ -51,7 +51,10 @@ ANTHROPIC_API_KEY=sk-ant-... python3 -m benchmark_creator \
   --n 2 \
   --max-tasks 5 \
   --output benchmarks/my_benchmark
+# [seed] 1745123456  (rerun with --seed 1745123456 to reproduce this question set)
 ```
+
+**Each run generates a fresh question set by default** (seed = Unix timestamp). To reproduce an exact set, pass `--seed <N>` with the printed value. Keep your evaluation seeds private — don't commit `generation_stats.json` to a public repo if you're running a blind evaluation.
 
 **Output:**
 ```
@@ -233,11 +236,14 @@ python3 -m benchmark_creator [OPTIONS]
   --types LIST     adversarial,knowledge  (default: adversarial)
   --n N            Questions per family per seed rule (default: 3)
   --max-tasks N    Cap tasks per type (e.g. --max-tasks 5)
+  --seed N         RNG seed for choice shuffling (default: Unix timestamp — fresh each run)
   --families PATH  Pre-extracted families JSON (skips RepoAnalyzer)
   --output DIR     Output directory (default: benchmarks/<repo_name>)
   --api-key KEY    Anthropic API key (or set ANTHROPIC_API_KEY)
   --dry-run        Generate without writing task directories
 ```
+
+The seed is printed at startup and stored in `meta/generation_stats.json`. Pass `--seed <N>` to reproduce a previous run's choice ordering; omit it to get a fresh draw each time (recommended for evaluations to prevent answer memorization).
 
 ---
 

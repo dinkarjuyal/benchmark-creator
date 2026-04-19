@@ -42,6 +42,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -103,12 +104,18 @@ def main() -> None:
     parser.add_argument("--api-key", help="Anthropic API key")
     parser.add_argument("--max-tasks", type=int, default=None,
                         help="Cap total tasks per type (default: unlimited)")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="RNG seed for reproducibility (default: Unix timestamp at run start)")
     parser.add_argument("--dry-run", action="store_true", help="Generate but do not write task dirs")
     args = parser.parse_args()
 
     api_key = args.api_key or os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         sys.exit("Set ANTHROPIC_API_KEY or pass --api-key")
+
+    # Resolve seed: explicit flag or fresh timestamp (unique per run)
+    seed = args.seed if args.seed is not None else int(time.time())
+    print(f"[seed] {seed}  (rerun with --seed {seed} to reproduce this question set)")
 
     types = [t.strip() for t in args.types.split(",")]
     output_dir = _infer_output_dir(args)
@@ -127,7 +134,7 @@ def main() -> None:
 
     if "adversarial" in types:
         print(f"\n[adversarial] Running two-player game ({args.n} per family per seed) ...")
-        gen = AdversarialMCGenerator(api_key=api_key, verbose=True)
+        gen = AdversarialMCGenerator(api_key=api_key, verbose=True, seed=seed)
         candidates = gen.generate(families=families, n_per_family=args.n)
         if args.max_tasks:
             candidates = candidates[:args.max_tasks]
@@ -137,7 +144,7 @@ def main() -> None:
 
     if "knowledge" in types:
         print(f"\n[knowledge] Generating behavioral-prediction questions ...")
-        know_gen = KnowledgeMCGenerator(api_key=api_key, verbose=True)
+        know_gen = KnowledgeMCGenerator(api_key=api_key, verbose=True, seed=seed)
         knowledge_cands = know_gen.generate(families=families, n_per_family=args.n)
         if args.max_tasks:
             knowledge_cands = knowledge_cands[:args.max_tasks]
@@ -165,11 +172,13 @@ def main() -> None:
             "correct_id": cand.correct_id,
         })
 
-    # Write benchmark.json
+    # Write benchmark.json (flat task list — backward-compatible with harness)
     benchmark_path = output_dir / "benchmark.json"
     benchmark_path.write_text(json.dumps(written, indent=2) + "\n")
 
-    # Write generation stats
+    # Write generation stats (seed + repo stored here for traceability)
+    stats["seed"] = seed
+    stats["repo"] = args.repo or "pandas_defaults"
     stats_path = meta_dir / "generation_stats.json"
     stats_path.write_text(json.dumps(stats, indent=2) + "\n")
 
