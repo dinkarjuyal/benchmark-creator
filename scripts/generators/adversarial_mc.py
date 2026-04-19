@@ -191,12 +191,15 @@ NaN/null handling, ordering guarantees, or any library-specific gotcha area."""
 
 def _run_snippet(snippet: str, timeout: int = 10) -> tuple[bool, str]:
     """Execute snippet in a subprocess. Returns (success, stdout_or_error)."""
-    result = subprocess.run(
-        [sys.executable, "-c", snippet],
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", snippet],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return False, f"ERROR: timed out after {timeout}s"
     if result.returncode != 0:
         return False, f"ERROR: {result.stderr.strip()[:200]}"
     return True, result.stdout.strip()
