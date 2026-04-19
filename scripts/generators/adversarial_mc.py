@@ -95,7 +95,7 @@ Respond using ONLY these tags — no other text:
 
 <rule>One-sentence true pandas rule</rule>
 <snippet>
-Short Python snippet demonstrating the rule (include import pandas as pd, print exactly one line)
+Short Python snippet demonstrating the rule (include necessary imports, print exactly one line)
 </snippet>"""
 
 _PLAYER1_USER = """\
@@ -117,7 +117,7 @@ Given a rule that a model believes, find a case where the rule BREAKS non-obviou
 Respond using ONLY these tags — no other text:
 
 <snippet>
-Short Python snippet that VIOLATES the rule non-obviously (include import pandas as pd, print one line)
+Short Python snippet that VIOLATES the rule non-obviously (include necessary imports, print one line)
 </snippet>
 <why_wrong>One sentence: which part of the rule the model incorrectly applies here</why_wrong>
 <rule_predicts>The EXACT output string the model would expect (e.g. "[1, 2, 3]" or "float64") — no explanation</rule_predicts>"""

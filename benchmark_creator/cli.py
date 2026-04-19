@@ -98,6 +98,8 @@ def main() -> None:
     parser.add_argument("--families", help="Path to pre-extracted families JSON (skips RepoAnalyzer)")
     parser.add_argument("--output", help="Output directory (default: benchmarks/<repo_name>)")
     parser.add_argument("--api-key", help="Anthropic API key")
+    parser.add_argument("--max-tasks", type=int, default=None,
+                        help="Cap total tasks per type (default: unlimited)")
     parser.add_argument("--dry-run", action="store_true", help="Generate but do not write task dirs")
     args = parser.parse_args()
 
@@ -124,6 +126,8 @@ def main() -> None:
         print(f"\n[adversarial] Running two-player game ({args.n} per family per seed) ...")
         gen = AdversarialMCGenerator(api_key=api_key, verbose=True)
         candidates = gen.generate(families=families, n_per_family=args.n)
+        if args.max_tasks:
+            candidates = candidates[:args.max_tasks]
         stats["adversarial"] = {"generated": len(candidates)}
         all_candidates.extend(candidates)
         print(f"[adversarial] {len(candidates)} questions verified")
@@ -132,6 +136,8 @@ def main() -> None:
         print(f"\n[knowledge] Generating behavioral-prediction questions ...")
         know_gen = KnowledgeMCGenerator(api_key=api_key, verbose=True)
         knowledge_cands = know_gen.generate(families=families, n_per_family=args.n)
+        if args.max_tasks:
+            knowledge_cands = knowledge_cands[:args.max_tasks]
         stats["knowledge"] = {"generated": len(knowledge_cands)}
         all_candidates.extend(knowledge_cands)
         print(f"[knowledge] {len(knowledge_cands)} questions")
