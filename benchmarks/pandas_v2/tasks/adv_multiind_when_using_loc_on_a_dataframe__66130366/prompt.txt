@@ -1,0 +1,63 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When using .loc on a DataFrame with a MultiIndex, passing an integer key to select from a level that has an object dtype (string labels) raises a KeyError even if integer-labeled rows exist in that level, because MultiIndex performs exact dtype-sensitive key matching without implicit type coercion.
+#
+# Confirming case (rule holds):
+# import pandas as pd
+# idx = pd.MultiIndex.from_tuples([("a", 1), ("b", 2)], names=["letter", "number"])
+# df = pd.DataFrame({"val": [10, 20]}, index=idx)
+# try:
+#     result = df.loc["a"].loc[1]
+#     print(result["val"])
+# except KeyError as e:
+#     print(f"KeyError: {e}")
+# → prints: 10
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  idx = pd.MultiIndex.from_tuples([(1, "a"), (2, "b")], names=["number", "letter"])
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import pandas as pd
+idx = pd.MultiIndex.from_tuples([(1, "a"), (2, "b")], names=["number", "letter"])
+df = pd.DataFrame({"val": [10, 20]}, index=idx)
+try:
+    result = df.loc[1]
+    print(result["val"])
+except KeyError as e:
+    print(f"KeyError: {e}")
+
+Answer choices:
+  A. val
+letter   
+a     10
+b     20
+  B. val    10
+dtype: int64
+  C. letter
+a    10
+Name: val, dtype: int64
+  D. KeyError: 1
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

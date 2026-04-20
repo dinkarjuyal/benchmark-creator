@@ -1,0 +1,35 @@
+[
+  {
+    "name": "na_type_semantic_divergence",
+    "description": "NaN, pd.NA, and NaT follow different comparison and propagation semantics that look identical on the surface",
+    "seed_rules": [
+      "`NaN != NaN` returns True because float NaN follows IEEE 754 arithmetic \u2014 but `pd.NA != pd.NA` returns `pd.NA` (not True) because pd.NA uses three-valued SQL logic, not float arithmetic. The identical-looking inequality silently changes behavior depending on which NA type the column contains, and this depends entirely on the column's dtype (float64 vs nullable Int64/boolean).",
+      "`pd.array([pd.NA], dtype=\"boolean\").any()` can return False while `.all()` returns True on a single-element NA array (confirmed bug #65223) \u2014 because the SQL three-valued logic was implemented per-reduction independently, and the boundary case where the array contains only NA values was handled inconsistently. Practitioners who assume `any` and `all` are duals over nullable arrays will get contradictory results.",
+      "Checking `if pd.isna(x)` is not equivalent to `x is pd.NA`: `pd.isna(None)` is True, `pd.isna(float('nan'))` is True, and `pd.isna(pd.NaT)` is True \u2014 all different Python types. Using `== pd.NA` instead of `pd.isna()` always returns `pd.NA` (not True) because pd.NA propagates through all comparisons by design, so `value == pd.NA` can never be used as a boolean guard."
+    ],
+    "install": "pip install pandas",
+    "library_name": "pandas"
+  },
+  {
+    "name": "multiindex_loc_dtype_trap",
+    "description": "MultiIndex .loc/.at silently returns wrong results or raises cryptic errors on cross-dtype key comparisons",
+    "seed_rules": [
+      "On a simple Index, `df.loc[\"1\"]` on an integer Index raises `KeyError` cleanly. On a MultiIndex, `df.loc[(\"1\", ...)]` where the first level is integer silently passes the string \"1\" to `numpy.searchsorted` against an integer array \u2014 which is cross-dtype undefined behavior in numpy \u2014 returning wrong positional results without any error (confirmed bug #65230). The MultiIndex fast-path skips the type coercion that the scalar Index path performs.",
+      "`df.at[(\"AMZN\", \"2021-08-02\"), \"col\"]` on a MultiIndex where one level is DatetimeIndex raised `TypeError: unsupported operand type(s) for +: 'slice' and 'int'` (bug #65221) \u2014 because `DataFrame._get_value` used an engine fast-path that assumed all index levels were fully resolved, and partial date strings (which need timestamp parsing) caused a slice object to leak into arithmetic. The same partial string key that works on a plain DatetimeIndex breaks silently on MultiIndex.",
+      "Slicing a MultiIndex with a `datetime.date` object (not `datetime.datetime`) on a DatetimeIndex level raised `TypeError: Level type mismatch` (bug #65245) \u2014 even though the same slice works on a standalone DatetimeIndex with a deprecation warning. MultiIndex level slicing has stricter type-matching than scalar Index slicing because each level's type coercion is implemented separately per index type combination."
+    ],
+    "install": "pip install pandas",
+    "library_name": "pandas"
+  },
+  {
+    "name": "loc_setitem_value_shape_inference",
+    "description": "loc/iloc setitem routes assignment through different code paths based on shape inference that misclassifies tuples and nested lists",
+    "seed_rules": [
+      "`df.loc[bool_mask, \"col\"] = [(1, 2), (3, 4)]` raised `ValueError` on a mixed-dtype DataFrame (bug #65264) because the internal `_is_2d_value` heuristic classified a list of tuples as a 2D array (since numpy treats `[(1,2),(3,4)]` as shape (2,2)), routing to the 2D assignment path where numpy's boolean-indexed assignment unpacked the tuples. The fix added a special-case: lists whose elements are all tuples are treated as a list of scalar tuple objects, not a 2D array.",
+      "Assigning a list of tuples vs a list of lists to the same `df.loc[mask, col]` takes fundamentally different internal paths: list-of-lists is correctly treated as 2D (each inner list = a row of values), while list-of-tuples should be treated as 1D (each tuple = a scalar cell value). This distinction breaks down when the DataFrame has mixed dtypes that trigger the block-based code path rather than the array-based path.",
+      "`df.loc[:, col] = scalar` on a boolean-masked, mixed-dtype DataFrame can trigger NumPy's broadcasting rules before pandas can apply its own type coercion \u2014 meaning the effective dtype of the column after assignment depends on whether pandas handled it in the pandas layer or fell through to a numpy boolean-index assignment, which can silently upcast or fail depending on the scalar type."
+    ],
+    "install": "pip install pandas",
+    "library_name": "pandas"
+  }
+]

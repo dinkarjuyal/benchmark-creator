@@ -1,0 +1,47 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When you use `pd.isna()` to check for missing values, it returns True for all three NA types (float NaN, pd.NA, and pd.NaT), but using `== np.nan` only catches float NaN and silently returns False for pd.NA and pd.NaT.
+#
+# Confirming case (rule holds):
+# import pandas as pd, numpy as np
+# vals = [float('nan'), pd.NA, pd.NaT]
+# print([pd.isna(v) for v in vals], [v == np.nan for v in vals])
+# → prints: [True, True, True] [False, <NA>, False]
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  vals = [float('nan'), pd.NA, pd.NaT]
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import pandas as pd, numpy as np
+vals = [float('nan'), pd.NA, pd.NaT]
+print([v == np.nan for v in vals])
+
+Answer choices:
+  A. [True, False, False]
+  B. [False, False, False]
+  C. [False, <NA>, False]
+  D. [True, True, True]
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

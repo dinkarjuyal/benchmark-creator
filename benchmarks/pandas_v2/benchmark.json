@@ -1,0 +1,38 @@
+[
+  {
+    "id": "adv_na_type__in_a_pandas_nullable_integer_i_49eec182",
+    "path": "benchmarks/pandas_v2/tasks/adv_na_type__in_a_pandas_nullable_integer_i_49eec182",
+    "type": "adversarial_confounder",
+    "family": "na_type_semantic_divergence",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A"
+  },
+  {
+    "id": "adv_na_type__when_you_use_pd_isna_to_check__c8c1551b",
+    "path": "benchmarks/pandas_v2/tasks/adv_na_type__when_you_use_pd_isna_to_check__c8c1551b",
+    "type": "adversarial_confounder",
+    "family": "na_type_semantic_divergence",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C"
+  },
+  {
+    "id": "adv_multiind_when_using_loc_on_a_dataframe__66130366",
+    "path": "benchmarks/pandas_v2/tasks/adv_multiind_when_using_loc_on_a_dataframe__66130366",
+    "type": "adversarial_confounder",
+    "family": "multiindex_loc_dtype_trap",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C"
+  },
+  {
+    "id": "adv_multiind_when_using_loc_on_a_dataframe__72993742",
+    "path": "benchmarks/pandas_v2/tasks/adv_multiind_when_using_loc_on_a_dataframe__72993742",
+    "type": "adversarial_confounder",
+    "family": "multiindex_loc_dtype_trap",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C"
+  }
+]

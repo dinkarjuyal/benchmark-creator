@@ -1,0 +1,21 @@
+{
+  "id": "adv_na_type__in_a_pandas_nullable_integer_i_49eec182",
+  "description": "Confounder: The model assumes only missing entries yield NA in comparisons, but comparing an",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "na_type_semantic_divergence",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A",
+    "explanation": "The rule 'In a pandas nullable integer (Int64) Series, comparing the Series to itself with `==` returns a Series of `pd.NA` values for missing entries (not `True`), because `pd.NA` uses three-valued logic \u2014 whereas in a float64 Series, missing entries compared to themselves yield `False` due to IEEE 754 NaN semantics.' does NOT hold here. The model assumes only missing entries yield NA in comparisons, but comparing any Int64 value (including non-missing ones) to `pd.NA` propagates NA for all elements, so result[0] is also `<NA>`, not `False`.",
+    "curriculum_note": "Rule 'In a pandas nullable integer (Int64) Series, comparing the Series to itself with `==` returns a Series of `pd.NA` values for missing entries (not `True`), because `pd.NA` uses three-valued logic \u2014 whereas in a float64 Series, missing entries compared to themselves yield `False` due to IEEE 754 NaN semantics.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

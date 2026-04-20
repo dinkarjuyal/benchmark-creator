@@ -1,0 +1,21 @@
+{
+  "id": "adv_na_type__when_you_use_pd_isna_to_check__c8c1551b",
+  "description": "Confounder: The model predicts pd.NA == np.nan returns False (like NaT), but pd.NA propagate",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "na_type_semantic_divergence",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C",
+    "explanation": "The rule 'When you use `pd.isna()` to check for missing values, it returns True for all three NA types (float NaN, pd.NA, and pd.NaT), but using `== np.nan` only catches float NaN and silently returns False for pd.NA and pd.NaT.' does NOT hold here. The model predicts pd.NA == np.nan returns False (like NaT), but pd.NA propagates NA through comparisons, returning <NA> not False, so the output differs from the expected [False, False, False]",
+    "curriculum_note": "Rule 'When you use `pd.isna()` to check for missing values, it returns True for all three NA types (float NaN, pd.NA, and pd.NaT), but using `== np.nan` only catches float NaN and silently returns False for pd.NA and pd.NaT.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

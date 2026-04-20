@@ -1,0 +1,21 @@
+{
+  "id": "adv_multiind_when_using_loc_on_a_dataframe__66130366",
+  "description": "Confounder: The rule claims integer keys on object-dtype levels raise KeyError, but when the",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "multiindex_loc_dtype_trap",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C",
+    "explanation": "The rule 'When using .loc on a DataFrame with a MultiIndex, passing an integer key to select from a level that has an object dtype (string labels) raises a KeyError even if integer-labeled rows exist in that level, because MultiIndex performs exact dtype-sensitive key matching without implicit type coercion.' does NOT hold here. The rule claims integer keys on object-dtype levels raise KeyError, but when the first level actually has integer dtype (not object), .loc[1] matches exactly and succeeds \u2014 the model wrongly assumes the integer key will fail due to dtype mismatch.",
+    "curriculum_note": "Rule 'When using .loc on a DataFrame with a MultiIndex, passing an integer key to select from a level that has an object dtype (string labels) raises a KeyError even if integer-labeled rows exist in that level, because MultiIndex performs exact dtype-sensitive key matching without implicit type coercion.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

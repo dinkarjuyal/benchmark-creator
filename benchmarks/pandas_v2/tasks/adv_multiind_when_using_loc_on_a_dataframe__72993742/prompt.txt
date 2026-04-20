@@ -1,0 +1,59 @@
+You are given a short excerpt from the pandas source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When using .loc on a DataFrame with a MultiIndex, passing an integer key to select from a level defined as object dtype (string labels) raises a KeyError even if string representations would match, because MultiIndex .loc performs exact dtype-aware key matching without implicit type coercion.
+#
+# Confirming case (rule holds):
+# import pandas as pd
+# idx = pd.MultiIndex.from_tuples([("a", 1), ("b", 2)], names=["x", "y"])
+# df = pd.DataFrame({"val": [10, 20]}, index=idx)
+# try:
+#     result = df.loc[1]  # integer key on object-dtype level "x"
+# except KeyError:
+#     print("KeyError: integer key not found on object-dtype MultiIndex level")
+# → prints: KeyError: integer key not found on object-dtype MultiIndex level
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  idx = pd.MultiIndex.from_tuples([(1, "a"), (2, "b")], names=["x", "y"])
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import pandas as pd
+idx = pd.MultiIndex.from_tuples([(1, "a"), (2, "b")], names=["x", "y"])
+df = pd.DataFrame({"val": [10, 20]}, index=idx)
+try:
+    result = df.loc[1]
+    print(result["val"])
+except KeyError:
+    print("KeyError: integer key not found on object-dtype MultiIndex level")
+
+Answer choices:
+  A. 10
+  B. val    10
+Name: 1, dtype: int64
+  C. y
+a    10
+Name: val, dtype: int64
+  D. KeyError: integer key not found on object-dtype MultiIndex level
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.
