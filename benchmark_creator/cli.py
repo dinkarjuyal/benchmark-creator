@@ -58,23 +58,54 @@ from scripts.task_writer_mc import write_mc_task
 
 
 def _load_families(args: argparse.Namespace, api_key: str) -> list[dict]:
-    """Resolve families: from file, from repo URL, or pandas defaults."""
+    """Resolve families: from file, from repo URL (README + issues + commits), or pandas defaults."""
     if args.families:
         return json.loads(Path(args.families).read_text())
 
     if args.repo:
-        print(f"[analyzer] Fetching README from {args.repo} ...")
+        library_name = args.repo.rstrip("/").split("/")[-1]
+        analyzer = RepoAnalyzer(api_key=api_key)
+        sources: dict[str, str] = {}
+        token = getattr(args, "github_token", None)
+
+        # README (always attempted)
         try:
-            readme = RepoAnalyzer.from_github(args.repo)
-            library_name = args.repo.rstrip("/").split("/")[-1]
-            analyzer = RepoAnalyzer(api_key=api_key)
-            families = analyzer.extract_families(readme, library_name=library_name)
-            for f in families:
-                f.setdefault("library_name", library_name)
-            print(f"[analyzer] Extracted {len(families)} families: {[f['name'] for f in families]}")
-            return families
+            print(f"[analyzer] Fetching README from {args.repo} ...")
+            sources["readme"] = RepoAnalyzer.from_github(args.repo)
         except Exception as e:
-            print(f"[analyzer] Warning: could not extract families from repo ({e}). Using pandas defaults.")
+            print(f"[analyzer] Warning: README fetch failed ({e})")
+
+        # GitHub issues (graceful degradation — returns "" on failure)
+        issues = RepoAnalyzer.from_github_issues(args.repo, token=token)
+        if issues:
+            sources["issues"] = issues
+            print(f"[analyzer] Fetched issues context ({len(issues)} chars)")
+
+        # Recent fix commits (graceful degradation)
+        commits = RepoAnalyzer.from_github_commits(args.repo, token=token)
+        if commits:
+            sources["commits"] = commits
+            print(f"[analyzer] Fetched commits context ({len(commits)} chars)")
+
+        if not sources:
+            print("[analyzer] Warning: no sources fetched. Using pandas defaults.")
+            return PANDAS_FAMILIES
+
+        try:
+            families = analyzer.extract_families(sources, library_name=library_name)
+        except Exception as e:
+            print(f"[analyzer] Warning: extract_families failed ({e}). Using pandas defaults.")
+            return PANDAS_FAMILIES
+
+        # Optional REPL probe pass — verifies rules against installed version
+        if getattr(args, "probe", False) and families:
+            print("[analyzer] Running REPL probe verification (1 session + 1 LLM call per family) ...")
+            families = analyzer.probe_and_filter(families, verbose=True)
+
+        for f in families:
+            f.setdefault("library_name", library_name)
+        print(f"[analyzer] Extracted {len(families)} families: {[f['name'] for f in families]}")
+        return families
 
     return PANDAS_FAMILIES
 
@@ -106,6 +137,10 @@ def main() -> None:
                         help="Cap total tasks per type (default: unlimited)")
     parser.add_argument("--seed", type=int, default=None,
                         help="RNG seed for reproducibility (default: Unix timestamp at run start)")
+    parser.add_argument("--github-token",
+                        help="GitHub personal access token for higher API rate limits (optional)")
+    parser.add_argument("--probe", action="store_true",
+                        help="Run REPL probe verification on extracted seed_rules (drops version-mismatched rules)")
     parser.add_argument("--dry-run", action="store_true", help="Generate but do not write task dirs")
     args = parser.parse_args()
 

@@ -162,29 +162,85 @@ Requirements:
 
 
 _REPO_ANALYZER_SYSTEM = """\
-You are analyzing a Python library to design a behavioral benchmark.
-Extract the behavioral families that are most likely to produce confident-but-wrong answers
-— areas where practitioners learn a rule that has non-obvious exceptions.
+You are a Python library behavioral archaeologist. Your job is to extract deep,
+causally-grounded behavioral traps that real users encounter — not surface facts,
+but the WHY behind surprising behavior.
 
-Respond using ONLY these tags, repeated once per family (3–6 families total):
+You may receive multiple evidence sources: README excerpts, real GitHub bug reports,
+and fix commits. Treat each bug report and fix commit as a confirmed real-world
+confounder — a place where a practitioner's mental model failed.
 
+Apply the 5 Whys framework before writing each seed_rule:
+  Why 1: What is the observable symptom?
+  Why 2: What immediate mechanism causes it?
+  Why 3: Why was that mechanism designed that way?
+  Why 4: What deeper constraint forced that design?
+  Why 5: What is the root-cause trap for a practitioner?
+
+BAD seed_rule (surface fact):
+  "NaN != NaN is True"
+GOOD seed_rule (causal mechanism):
+  "NaN != NaN returns True because pandas float NaN follows IEEE 754 float semantics —
+   but pd.NA != pd.NA returns pd.NA (not True) because pd.NA uses Python object-identity
+   semantics, not float arithmetic. The same-looking inequality silently changes behavior
+   depending on which NA type the column contains."
+
+Respond using ONLY these tags, repeated once per family (3–6 families total).
+Show your 5-Whys reasoning in a <reasoning> block before each <family>:
+
+<reasoning>Your 5-Whys analysis for this family (scratchpad — not shown to users)</reasoning>
 <family>
 <name>short_snake_case_name</name>
 <description>one-line description of the behavioral area</description>
-<seed_rule>A true rule a practitioner would know</seed_rule>
-<seed_rule>Another true rule in this family</seed_rule>
-<seed_rule>A third true rule</seed_rule>
+<seed_rule>A causally-grounded rule encoding the WHY, not just the WHAT</seed_rule>
+<seed_rule>Another causally-grounded rule</seed_rule>
+<seed_rule>A third rule, ideally grounded in a bug report or fix commit</seed_rule>
 <install>pip install package_name</install>
 </family>"""
 
 _REPO_ANALYZER_USER = """\
 Library: {library_name}
-README / documentation excerpt (first 3000 chars):
-{readme_excerpt}
+
+{readme_section}
+
+{issues_section}
+
+{commits_section}
 
 Extract 3–6 behavioral families where a practitioner might overgeneralize a known rule.
 Focus on: default parameter values, dtype/type coercion, alignment semantics, copy-vs-view,
-NaN/null handling, ordering guarantees, or any library-specific gotcha area."""
+NaN/null handling, ordering guarantees, or any library-specific gotcha area.
+
+Bug reports and fix commits are confirmed real confounders — prioritize families that
+appear in the issue/commit data over purely README-derived families.
+Show your 5-Whys reasoning in <reasoning> blocks. seed_rules must encode causal
+mechanisms ("because X due to Y"), not just observable facts."""
+
+# ── Probe prompts (used by RepoAnalyzer.probe_and_filter) ────────────────────
+
+_PROBE_BATCH_SYSTEM = """\
+Given a list of seed rules about a Python library, generate one probe snippet per rule
+that CONFIRMS the rule holds for the currently installed version.
+
+Respond ONLY with numbered probe blocks, one per rule:
+
+<probe_1>
+<snippet>self-contained executable Python — include imports, print exactly one line</snippet>
+<expected>exact string that would be printed if the rule holds</expected>
+</probe_1>
+<probe_2>...</probe_2>
+(continue for all N rules)"""
+
+_PROBE_BATCH_USER = """\
+Library: {install}
+Rules to probe ({n} total):
+{numbered_rules}
+
+For each rule write a minimal probe snippet that CONFIRMS it is true.
+Requirements:
+- Each snippet must be self-contained (include all imports)
+- Each snippet must print exactly one line
+- expected must be the EXACT printed string if the rule holds (no explanation)"""
 
 
 # ── Core execution ────────────────────────────────────────────────────────────
@@ -230,6 +286,110 @@ def _tag_all(text: str, tag: str) -> list[str]:
     return results
 
 
+class REPLSession:
+    """A long-running Python process that amortizes library import cost.
+
+    Instead of spawning a fresh `python3 -c` process per snippet (which pays
+    the full import cost each time), REPLSession keeps one process alive and
+    sends snippets over stdin/stdout. For heavy libraries (pandas, sklearn)
+    this eliminates 0.5–1s of startup overhead per snippet.
+
+    Usage:
+        with REPLSession("pip install pandas numpy") as repl:
+            ok, out = repl.run("import pandas as pd; s = pd.Series([1,2]); print(s.sum())")
+            ok, out = repl.run("import pandas as pd; print(pd.Series([]).dtype)")
+
+    Note: Uses select.select for non-blocking reads (Unix only). Windows would
+    need a threading fallback — add if cross-platform support is required.
+    """
+
+    _SENTINEL = "__REPL_DONE__"
+    _END_MARKER = "__END__"
+
+    # Bootstrap code runs in the subprocess — reads snippets from stdin, executes
+    # each in a shared namespace, writes result + sentinel back to stdout.
+    # Shared namespace (g) means pre-warmed imports persist across all snippets.
+    _BOOTSTRAP = '''\
+import sys, io, contextlib
+
+SENTINEL = "__REPL_DONE__"
+END = "__END__"
+g = {}  # shared namespace — imports and variables persist across snippets
+while True:
+    lines = []
+    while True:
+        line = sys.stdin.readline()
+        if not line or line.rstrip() == END:
+            break
+        lines.append(line)
+    if not lines:
+        break
+    code = "".join(lines)
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            exec(compile(code, "<snippet>", "exec"), g)
+        result = "OK:" + buf.getvalue().strip()
+    except Exception as exc:
+        result = "ERR:" + repr(exc)[:200]
+    sys.stdout.write(result + SENTINEL + "\\n")
+    sys.stdout.flush()
+'''
+
+    def __init__(self, install: str = "", timeout: int = 15):
+        self._proc = subprocess.Popen(
+            [sys.executable, "-u", "-c", self._BOOTSTRAP],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+        self._timeout = timeout
+        # Pre-warm: import the library so all subsequent snippets skip import cost
+        if install:
+            libs = [w for w in install.split() if not w.startswith(("-", "pip", "install"))]
+            if libs:
+                self._exec(f"import {', '.join(libs)}")
+
+    def _exec(self, snippet: str) -> tuple[bool, str]:
+        import select
+        payload = (snippet.strip() + f"\n{self._END_MARKER}\n").encode()
+        self._proc.stdin.write(payload)
+        self._proc.stdin.flush()
+        output = ""
+        deadline = time.time() + self._timeout
+        while self._SENTINEL not in output:
+            if time.time() > deadline:
+                return False, f"ERROR: timed out after {self._timeout}s"
+            rlist, _, _ = select.select([self._proc.stdout], [], [], 0.1)
+            if rlist:
+                output += self._proc.stdout.readline().decode()
+        result = output.replace(self._SENTINEL, "").strip()
+        if result.startswith("OK:"):
+            return True, result[3:]
+        if result.startswith("ERR:"):
+            return False, result[4:]
+        return False, result
+
+    def run(self, snippet: str) -> tuple[bool, str]:
+        try:
+            return self._exec(snippet)
+        except Exception as e:
+            return False, str(e)
+
+    def close(self) -> None:
+        try:
+            self._proc.stdin.close()
+            self._proc.wait(timeout=2)
+        except Exception:
+            self._proc.kill()
+
+    def __enter__(self) -> "REPLSession":
+        return self
+
+    def __exit__(self, *args) -> None:
+        self.close()
+
+
 class RepoAnalyzer:
     """Extract behavioral families and seed rules from a repo's README/docs.
 
@@ -248,16 +408,176 @@ class RepoAnalyzer:
         self.client = anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
         self.model = model
 
-    def extract_families(self, readme_text: str, library_name: str = "the library") -> list[dict]:
-        """Return families list compatible with AdversarialMCGenerator."""
+    # ── Data source fetchers ──────────────────────────────────────────────────
+
+    @staticmethod
+    def _parse_owner_name(repo_url: str) -> tuple[str, str]:
+        """Extract (owner, name) from a GitHub URL."""
+        parts = repo_url.rstrip("/").split("github.com/")[-1].split("/")
+        if len(parts) < 2 or not parts[0] or not parts[1]:
+            raise ValueError(f"Cannot parse owner/name from: {repo_url}")
+        return parts[0], parts[1]
+
+    @staticmethod
+    def from_github(repo_url: str) -> str:
+        """Fetch README text from a GitHub repo URL."""
+        import urllib.request
+        repo_url = repo_url.rstrip("/")
+        if "github.com" not in repo_url:
+            raise ValueError(f"Not a GitHub URL: {repo_url}")
+        owner, name = RepoAnalyzer._parse_owner_name(repo_url)
+        for branch in ("main", "master"):
+            for fname in ("README.md", "README.rst", "README.txt", "README"):
+                raw_url = f"https://raw.githubusercontent.com/{owner}/{name}/{branch}/{fname}"
+                try:
+                    with urllib.request.urlopen(raw_url, timeout=10) as r:
+                        return r.read().decode("utf-8", errors="replace")
+                except Exception:
+                    continue
+        raise ValueError(f"Could not fetch README from {repo_url}")
+
+    @staticmethod
+    def from_github_issues(
+        repo_url: str,
+        max_issues: int = 20,
+        token: str | None = None,
+    ) -> str:
+        """Fetch closed bug-labeled issues + keyword-matched issues.
+
+        Returns a formatted string for LLM context, or "" on any failure.
+        Requires only public repo access (60 unauthenticated req/hour; pass token
+        for 5000/hour).
+        """
+        import urllib.request, urllib.error, json as _json
+        if "github.com" not in repo_url:
+            return ""
+        try:
+            owner, name = RepoAnalyzer._parse_owner_name(repo_url)
+
+            def _fetch(url: str) -> list[dict]:
+                req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json"})
+                if token:
+                    req.add_header("Authorization", f"Bearer {token}")
+                with urllib.request.urlopen(req, timeout=10) as r:
+                    return _json.loads(r.read().decode())
+
+            base = f"https://api.github.com/repos/{owner}/{name}/issues"
+
+            # Fetch 1: bug-labeled closed issues
+            labeled = _fetch(f"{base}?state=closed&labels=bug&per_page={max_issues}")
+
+            # Fetch 2: all closed issues, client-side keyword filter
+            keywords = {"unexpected", "surprising", "behavior", "gotcha", "wrong", "incorrect"}
+            all_closed = _fetch(f"{base}?state=closed&per_page=50")
+            keyword_matched = [
+                i for i in all_closed
+                if any(kw in i.get("title", "").lower() for kw in keywords)
+            ]
+
+            # Deduplicate by issue number
+            seen: set[int] = set()
+            entries: list[str] = []
+            for issue in labeled + keyword_matched:
+                num = issue.get("number", 0)
+                if num in seen:
+                    continue
+                seen.add(num)
+                title = issue.get("title", "")
+                body = (issue.get("body") or "")[:300].replace("\r\n", " ").replace("\n", " ")
+                entries.append(f"#{num}: {title}\n  {body}")
+                if len(entries) >= max_issues:
+                    break
+
+            if not entries:
+                return ""
+            return "=== GITHUB ISSUES (closed bugs / unexpected behavior reports) ===\n" + "\n\n".join(entries)
+        except Exception:
+            return ""
+
+    @staticmethod
+    def from_github_commits(
+        repo_url: str,
+        max_commits: int = 30,
+        token: str | None = None,
+    ) -> str:
+        """Fetch recent commits, filter for fix/bug messages.
+
+        Returns a formatted string or "" on failure.
+        """
+        import urllib.request, json as _json
+        if "github.com" not in repo_url:
+            return ""
+        try:
+            owner, name = RepoAnalyzer._parse_owner_name(repo_url)
+            url = f"https://api.github.com/repos/{owner}/{name}/commits?per_page={max_commits}"
+            req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json"})
+            if token:
+                req.add_header("Authorization", f"Bearer {token}")
+            with urllib.request.urlopen(req, timeout=10) as r:
+                commits = _json.loads(r.read().decode())
+
+            fix_prefixes = ("fix:", "bug:", "fix ", "fixes ", "fixed ")
+            entries: list[str] = []
+            for c in commits:
+                msg = c.get("commit", {}).get("message", "")
+                subject = msg.split("\n")[0]
+                if not subject.lower().startswith(fix_prefixes):
+                    continue
+                sha = c.get("sha", "")[:7]
+                body_lines = [l.strip() for l in msg.split("\n")[1:] if l.strip()]
+                body = " ".join(body_lines)[:200]
+                entry = f"[{sha}] {subject}"
+                if body:
+                    entry += f"\n  {body}"
+                entries.append(entry)
+
+            if not entries:
+                return ""
+            return "=== RECENT FIX COMMITS ===\n" + "\n\n".join(entries)
+        except Exception:
+            return ""
+
+    # ── Family extraction ─────────────────────────────────────────────────────
+
+    def extract_families(
+        self,
+        sources: "dict[str, str] | str",
+        library_name: str = "the library",
+    ) -> list[dict]:
+        """Return families list compatible with AdversarialMCGenerator.
+
+        sources: dict with keys "readme", "issues", "commits" (all optional).
+                 For backward compatibility, a bare str is treated as {"readme": s}.
+        """
+        # Backward compat: existing callers pass readme_text directly
+        if isinstance(sources, str):
+            sources = {"readme": sources}
+
+        readme_section = (
+            f"README / documentation excerpt (first 3000 chars):\n{sources['readme'][:3000]}"
+            if sources.get("readme") else ""
+        )
+        issues_section = (
+            f"GITHUB ISSUES (real user bug reports — each is a confirmed confounder):\n{sources['issues']}"
+            if sources.get("issues") else ""
+        )
+        commits_section = (
+            f"RECENT FIX COMMITS (confirmed bugs that were fixed):\n{sources['commits']}"
+            if sources.get("commits") else ""
+        )
+
+        user_content = _REPO_ANALYZER_USER.format(
+            library_name=library_name,
+            readme_section=readme_section,
+            issues_section=issues_section,
+            commits_section=commits_section,
+        ).strip()
+
         msg = self.client.messages.create(
             model=self.model,
-            max_tokens=2048,
+            max_tokens=4096,
             system=_REPO_ANALYZER_SYSTEM,
-            messages=[{"role": "user", "content": _REPO_ANALYZER_USER.format(
-                library_name=library_name,
-                readme_excerpt=readme_text[:3000],
-            )}],
+            messages=[{"role": "user", "content": user_content}],
         )
         raw = msg.content[0].text
 
@@ -272,28 +592,100 @@ class RepoAnalyzer:
                     "name": name,
                     "description": description,
                     "seed_rules": seed_rules,
-                    "install": install,  # e.g. "pip install requests" for snippet preamble
+                    "install": install,
                 })
         return families
 
-    @staticmethod
-    def from_github(repo_url: str) -> str:
-        """Fetch README text from a GitHub repo URL (converts to raw content URL)."""
-        import urllib.request
-        # Convert https://github.com/user/repo → raw README
-        repo_url = repo_url.rstrip("/")
-        if "github.com" in repo_url:
-            parts = repo_url.split("github.com/")[-1].split("/")
-            owner, name = parts[0], parts[1]
-            for branch in ("main", "master"):
-                for fname in ("README.md", "README.rst", "README.txt", "README"):
-                    raw_url = f"https://raw.githubusercontent.com/{owner}/{name}/{branch}/{fname}"
-                    try:
-                        with urllib.request.urlopen(raw_url, timeout=10) as r:
-                            return r.read().decode("utf-8", errors="replace")
-                    except Exception:
+    # ── Probe verification ────────────────────────────────────────────────────
+
+    def _chat(self, system: str, user: str) -> str:
+        for attempt in range(3):
+            try:
+                msg = self.client.messages.create(
+                    model=self.model,
+                    max_tokens=1024,
+                    system=system,
+                    messages=[{"role": "user", "content": user}],
+                )
+                return msg.content[0].text.strip()
+            except Exception:
+                if attempt == 2:
+                    raise
+                time.sleep(2 ** attempt)
+        raise RuntimeError("unreachable")
+
+    def probe_and_filter(
+        self,
+        families: list[dict],
+        timeout: int = 15,
+        verbose: bool = True,
+    ) -> list[dict]:
+        """Verify seed_rules by running probe snippets. Drop rules that fail or contradict.
+        Drop families with fewer than 2 surviving rules.
+
+        Cost: 1 LLM call + 1 REPLSession per family (not per rule).
+        This is the correct granularity: amortize import cost within a family,
+        batch the LLM call across all rules in the family.
+        """
+        kept_families = []
+        for family in families:
+            rules = family["seed_rules"]
+            install = family.get("install", "")
+            n = len(rules)
+
+            # One LLM call for all rules in this family
+            numbered = "\n".join(f"{i+1}. {r}" for i, r in enumerate(rules))
+            try:
+                raw = self._chat(
+                    _PROBE_BATCH_SYSTEM,
+                    _PROBE_BATCH_USER.format(install=install, n=n, numbered_rules=numbered),
+                )
+            except Exception as e:
+                if verbose:
+                    print(f"  [probe] LLM call failed for family '{family['name']}': {e}")
+                kept_families.append(family)  # keep as-is on LLM failure
+                continue
+
+            # Parse probe_i blocks
+            probes: list[tuple[str, str] | None] = []
+            for i in range(1, n + 1):
+                block = _tag(raw, f"probe_{i}")
+                if block:
+                    snip = _tag(block, "snippet")
+                    exp = _tag(block, "expected")
+                    probes.append((snip, exp) if snip and exp else None)
+                else:
+                    probes.append(None)
+
+            # One REPLSession for the whole family — imports once, runs all probes
+            surviving_rules: list[str] = []
+            with REPLSession(install=install, timeout=timeout) as repl:
+                for rule, probe in zip(rules, probes):
+                    if probe is None:
+                        if verbose:
+                            print(f"  [probe] no snippet generated for: {rule[:55]}")
                         continue
-        raise ValueError(f"Could not fetch README from {repo_url}")
+                    snip, expected = probe
+                    ok, actual = repl.run(snip)
+                    if not ok:
+                        if verbose:
+                            print(f"  [probe] ✗ execution error for: {rule[:55]}")
+                        continue
+                    if actual.strip() != expected.strip():
+                        if verbose:
+                            print(f"  [probe] ✗ expected {expected!r}, got {actual!r} — dropping: {rule[:45]}")
+                        continue
+                    if verbose:
+                        print(f"  [probe] ✓ {rule[:65]}")
+                    surviving_rules.append(rule)
+
+            if len(surviving_rules) >= 2:
+                kept_families.append({**family, "seed_rules": surviving_rules})
+            else:
+                if verbose:
+                    print(f"  [probe] dropping family '{family['name']}' — {len(surviving_rules)}/2 rules survived")
+
+        return kept_families
 
 
 # ── Shared prompts for knowledge component ───────────────────────────────────

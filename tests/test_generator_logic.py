@@ -15,6 +15,7 @@ import pytest
 from scripts.generators.adversarial_mc import (
     AdversarialMCGenerator,
     KnowledgeMCGenerator,
+    REPLSession,
     RepoAnalyzer,
     _tag,
     _tag_all,
@@ -202,3 +203,240 @@ class TestRepoAnalyzerParsing:
 
         families = analyzer.extract_families("readme", library_name="lib")
         assert families == []
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# New tests: data sources, prompts, REPLSession, probe_and_filter
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestParseOwnerName:
+    def test_standard_url(self):
+        owner, name = RepoAnalyzer._parse_owner_name("https://github.com/pandas-dev/pandas")
+        assert owner == "pandas-dev"
+        assert name == "pandas"
+
+    def test_trailing_slash(self):
+        owner, name = RepoAnalyzer._parse_owner_name("https://github.com/user/repo/")
+        assert owner == "user"
+        assert name == "repo"
+
+    def test_invalid_url_raises(self):
+        with pytest.raises(ValueError):
+            RepoAnalyzer._parse_owner_name("https://notgithub.com/foo")
+
+
+class TestFromGithubIssuesFormatting:
+    """from_github_issues must format correctly and degrade gracefully."""
+
+    def _mock_urlopen(self, data):
+        import json
+        from unittest.mock import patch, MagicMock
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps(data).encode()
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        return patch("urllib.request.urlopen", return_value=mock_resp)
+
+    def test_formats_number_and_title(self):
+        issues = [{"number": 42, "title": "NaN bug", "body": "It breaks."}]
+        with self._mock_urlopen(issues):
+            result = RepoAnalyzer.from_github_issues("https://github.com/pandas-dev/pandas")
+        assert "#42" in result
+        assert "NaN bug" in result
+
+    def test_body_truncated_to_300_chars(self):
+        long_body = "x" * 500
+        issues = [{"number": 1, "title": "T", "body": long_body}]
+        with self._mock_urlopen(issues):
+            result = RepoAnalyzer.from_github_issues("https://github.com/pandas-dev/pandas")
+        assert "x" * 301 not in result
+
+    def test_returns_empty_string_on_network_error(self):
+        with patch("urllib.request.urlopen", side_effect=Exception("network down")):
+            result = RepoAnalyzer.from_github_issues("https://github.com/pandas-dev/pandas")
+        assert result == ""
+
+    def test_returns_empty_string_for_non_github_url(self):
+        result = RepoAnalyzer.from_github_issues("https://gitlab.com/foo/bar")
+        assert result == ""
+
+
+class TestFromGithubCommitsFormatting:
+    """from_github_commits must filter non-fix commits and degrade gracefully."""
+
+    def _mock_urlopen(self, commits):
+        import json
+        from unittest.mock import patch, MagicMock
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps(commits).encode()
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        return patch("urllib.request.urlopen", return_value=mock_resp)
+
+    def test_includes_fix_commits(self):
+        commits = [
+            {"sha": "abc1234ef", "commit": {"message": "fix: NaN propagation in rolling"}},
+            {"sha": "def5678ab", "commit": {"message": "Fix groupby edge case"}},
+        ]
+        with self._mock_urlopen(commits):
+            result = RepoAnalyzer.from_github_commits("https://github.com/pandas-dev/pandas")
+        assert "abc1234" in result
+        assert "def5678" in result
+
+    def test_filters_non_fix_commits(self):
+        commits = [
+            {"sha": "abc1234ef", "commit": {"message": "fix: NaN"}},
+            {"sha": "zzz9999zz", "commit": {"message": "chore: update deps"}},
+            {"sha": "yyy8888yy", "commit": {"message": "docs: improve readme"}},
+        ]
+        with self._mock_urlopen(commits):
+            result = RepoAnalyzer.from_github_commits("https://github.com/pandas-dev/pandas")
+        assert "zzz9999" not in result
+        assert "yyy8888" not in result
+        assert "abc1234" in result
+
+    def test_returns_empty_string_on_network_error(self):
+        with patch("urllib.request.urlopen", side_effect=Exception("network down")):
+            result = RepoAnalyzer.from_github_commits("https://github.com/pandas-dev/pandas")
+        assert result == ""
+
+    def test_returns_empty_string_for_non_github_url(self):
+        result = RepoAnalyzer.from_github_commits("https://gitlab.com/foo/bar")
+        assert result == ""
+
+
+class TestRepoAnalyzerBackwardCompat:
+    """extract_families must accept both a bare string (old API) and a dict."""
+
+    _FAMILY = "<family><name>x</name><description>d</description><seed_rule>r</seed_rule><install>pip install x</install></family>"
+
+    def _analyzer(self, llm_response: str):
+        a = RepoAnalyzer.__new__(RepoAnalyzer)
+        a.client = _mock_client([llm_response])
+        a.model = "test"
+        return a
+
+    def test_bare_string_accepted(self):
+        a = self._analyzer(self._FAMILY)
+        families = a.extract_families("some readme text", library_name="pandas")
+        assert len(families) == 1
+
+    def test_dict_readme_only(self):
+        a = self._analyzer(self._FAMILY)
+        families = a.extract_families({"readme": "some readme"}, library_name="pandas")
+        assert len(families) == 1
+
+    def test_all_sources_passed_to_llm(self):
+        a = self._analyzer(self._FAMILY)
+        sources = {
+            "readme": "readme text",
+            "issues": "=== GITHUB ISSUES ===\n#42: NaN bug",
+            "commits": "=== RECENT FIX COMMITS ===\n[abc] fix: NaN",
+        }
+        a.extract_families(sources, library_name="testlib")
+        call_kwargs = a.client.messages.create.call_args
+        user_content = call_kwargs.kwargs["messages"][0]["content"]
+        assert "GITHUB ISSUES" in user_content
+        assert "RECENT FIX COMMITS" in user_content
+
+    def test_readme_only_no_issues_section_in_prompt(self):
+        a = self._analyzer(self._FAMILY)
+        a.extract_families({"readme": "readme text"}, library_name="testlib")
+        call_kwargs = a.client.messages.create.call_args
+        user_content = call_kwargs.kwargs["messages"][0]["content"]
+        assert "GITHUB ISSUES" not in user_content
+        assert "RECENT FIX COMMITS" not in user_content
+
+
+class TestREPLSession:
+    """REPLSession must run snippets in a persistent process."""
+
+    def test_simple_print(self):
+        with REPLSession() as repl:
+            ok, out = repl.run("print(1 + 1)")
+        assert ok
+        assert out == "2"
+
+    def test_runtime_error_returns_false(self):
+        with REPLSession() as repl:
+            ok, out = repl.run("print(1 / 0)")
+        assert not ok
+        assert "ZeroDivisionError" in out
+
+    def test_multiple_runs_share_state(self):
+        with REPLSession() as repl:
+            ok1, _ = repl.run("x = 42")
+            ok2, out2 = repl.run("print(x)")
+        assert ok1
+        assert ok2
+        assert out2 == "42"
+
+    def test_multiline_snippet(self):
+        with REPLSession() as repl:
+            ok, out = repl.run("result = sum(range(5))\nprint(result)")
+        assert ok
+        assert out == "10"
+
+
+class TestProbeAndFilter:
+    """probe_and_filter must drop rules that fail execution or contradict expected output."""
+
+    def _analyzer(self, llm_response: str):
+        a = RepoAnalyzer.__new__(RepoAnalyzer)
+        a.client = _mock_client([llm_response])
+        a.model = "test"
+        return a
+
+    def _family(self, rules):
+        return {"name": "f", "description": "d", "seed_rules": rules, "install": ""}
+
+    def test_keeps_verified_rules(self):
+        probe_resp = (
+            "<probe_1><snippet>print(1)</snippet><expected>1</expected></probe_1>"
+            "<probe_2><snippet>print(2)</snippet><expected>2</expected></probe_2>"
+        )
+        a = self._analyzer(probe_resp)
+        result = a.probe_and_filter([self._family(["rA", "rB"])], verbose=False)
+        assert len(result) == 1
+        assert result[0]["seed_rules"] == ["rA", "rB"]
+
+    def test_drops_rule_on_wrong_output(self):
+        # rule A: expected "99" but print(42) → "42"; rule B: correct
+        probe_resp = (
+            "<probe_1><snippet>print(42)</snippet><expected>99</expected></probe_1>"
+            "<probe_2><snippet>print(42)</snippet><expected>42</expected></probe_2>"
+        )
+        a = self._analyzer(probe_resp)
+        result = a.probe_and_filter([self._family(["rA", "rB"])], verbose=False)
+        # only rB survives → 1 < 2 → family dropped
+        assert result == []
+
+    def test_family_kept_when_two_rules_survive_one_bad(self):
+        probe_resp = (
+            "<probe_1><snippet>print(1)</snippet><expected>1</expected></probe_1>"
+            "<probe_2><snippet>print(2)</snippet><expected>2</expected></probe_2>"
+            "<probe_3><snippet>print(0)</snippet><expected>99</expected></probe_3>"
+        )
+        a = self._analyzer(probe_resp)
+        result = a.probe_and_filter([self._family(["rA", "rB", "rC"])], verbose=False)
+        assert len(result) == 1
+        assert result[0]["seed_rules"] == ["rA", "rB"]
+
+    def test_family_dropped_when_fewer_than_two_survive(self):
+        probe_resp = (
+            "<probe_1><snippet>print(1)</snippet><expected>1</expected></probe_1>"
+            "<probe_2><snippet>print(0)</snippet><expected>99</expected></probe_2>"
+        )
+        a = self._analyzer(probe_resp)
+        result = a.probe_and_filter([self._family(["rA", "rB"])], verbose=False)
+        assert result == []
+
+    def test_family_kept_as_is_on_llm_failure(self):
+        a = RepoAnalyzer.__new__(RepoAnalyzer)
+        mock_client = MagicMock()
+        mock_client.messages.create.side_effect = RuntimeError("LLM down")
+        a.client = mock_client
+        a.model = "test"
+        family = self._family(["rA", "rB"])
+        result = a.probe_and_filter([family], verbose=False)
+        assert result == [family]
