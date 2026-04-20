@@ -63,6 +63,14 @@ def run_mini_swe_agent(
     env["MSWEA_SILENT_STARTUP"] = "1"
     env["MSWEA_CONFIGURED"] = "true"
 
+    if model_class == "deterministic" or model == "deterministic":
+        return run_deterministic_agent(
+            workspace_path=workspace_path,
+            config_specs=config_specs or [],
+            logs_dir=logs_dir,
+            output_path=output_path,
+        )
+
     cmd = [
         "mini",
         "-c",
@@ -99,6 +107,61 @@ def run_mini_swe_agent(
     if completed.stderr:
         print(completed.stderr, end="", file=os.sys.stderr)
     return completed.returncode
+
+
+def run_deterministic_agent(
+    *,
+    workspace_path: Path,
+    config_specs: list[str],
+    logs_dir: Path,
+    output_path: Path,
+) -> int:
+    commands: list[str] = []
+    for spec in config_specs:
+        spec_path = Path(spec)
+        if not spec_path.exists():
+            continue
+        for raw_line in spec_path.read_text().splitlines():
+            stripped = raw_line.strip()
+            if stripped.startswith("- command:"):
+                command = stripped.split(":", 1)[1].strip().strip("'\"")
+                commands.append(command)
+
+    transcript: list[dict[str, str | int]] = []
+    combined_stdout: list[str] = []
+    combined_stderr: list[str] = []
+    for command in commands:
+        completed = subprocess.run(
+            ["/bin/bash", "-lc", command],
+            cwd=str(workspace_path),
+            text=True,
+            capture_output=True,
+        )
+        transcript.append(
+            {
+                "command": command,
+                "returncode": completed.returncode,
+                "stdout": completed.stdout,
+                "stderr": completed.stderr,
+            }
+        )
+        combined_stdout.append(completed.stdout)
+        combined_stderr.append(completed.stderr)
+        if completed.returncode != 0:
+            break
+
+    stdout = "".join(combined_stdout)
+    stderr = "".join(combined_stderr)
+    (logs_dir / "mini_stdout.txt").write_text(stdout)
+    (logs_dir / "mini_stderr.txt").write_text(stderr)
+    output_path.write_text(json.dumps({"steps": transcript}, indent=2))
+
+    print(stdout, end="")
+    if stderr:
+        print(stderr, end="", file=os.sys.stderr)
+    if transcript and transcript[-1]["returncode"] != 0:
+        return int(transcript[-1]["returncode"])
+    return 0
 
 
 class MiniSweAgentAdapter(AgentAdapter):

@@ -147,6 +147,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Allow outbound network access during the agent step.",
     )
+    parser.add_argument(
+        "--runtime",
+        choices=["docker", "local"],
+        default="docker",
+        help="Execution runtime. Use local when Docker is unavailable in the current session.",
+    )
     return parser.parse_args()
 
 
@@ -329,7 +335,30 @@ def resolve_agent_runtime(args: argparse.Namespace) -> tuple[Path | None, str, s
     return agent_config_path, agent_name, None, requested_envs, adapter
 
 
-def run_container_step(
+def rewrite_local_command(
+    command: str,
+    *,
+    task_mount_dir: Path,
+    run_dir: Path,
+    artifact_dir: Path,
+    agent_config_path: Path | None,
+) -> str:
+    rewritten = command
+    replacements = {
+        "/task": str(task_mount_dir),
+        "/work": str(run_dir),
+        "/artifacts": str(artifact_dir),
+        "/agent_tools": str(ROOT / "harness" / "agents"),
+    }
+    if agent_config_path is not None:
+        replacements["/agent_config/agent_config.yaml"] = str(agent_config_path)
+        replacements["/agent_config"] = str(agent_config_path.parent)
+    for src, dst in replacements.items():
+        rewritten = rewritten.replace(src, dst)
+    return rewritten
+
+
+def run_step(
     task: TaskSpec,
     command: str,
     artifact_dir: Path,
@@ -341,12 +370,55 @@ def run_container_step(
     timeout_sec: int,
     mount_artifacts: bool,
     allow_network: bool,
+    runtime: str,
 ) -> dict[str, Any]:
     started_at = time.time()
-    container_name = f"harness_{task.task_id}_{step_name}_{uuid.uuid4().hex[:10]}"
     stdout_path = artifact_dir / f"{step_name}_stdout.txt"
     stderr_path = artifact_dir / f"{step_name}_stderr.txt"
 
+    if runtime == "local":
+        env = os.environ.copy()
+        env["TASK_ID"] = task.task_id
+        env["TASK_DESCRIPTION"] = task.description
+        env["HARNESS_AGENT_TOOLS_DIR"] = str(ROOT / "harness" / "agents")
+        env["HARNESS_TASK_DIR"] = str(task_mount_dir)
+        env["HARNESS_WORK_DIR"] = str(run_dir)
+        env["HARNESS_ARTIFACT_DIR"] = str(artifact_dir)
+        for env_var in agent_env_vars:
+            if os.getenv(env_var):
+                env[env_var] = os.getenv(env_var, "")
+        completed = subprocess.run(
+            [
+                "/bin/bash",
+                "-lc",
+                rewrite_local_command(
+                    command,
+                    task_mount_dir=task_mount_dir,
+                    run_dir=run_dir,
+                    artifact_dir=artifact_dir,
+                    agent_config_path=agent_config_path,
+                ),
+            ],
+            cwd=str(run_dir),
+            text=True,
+            capture_output=True,
+            env=env,
+            timeout=timeout_sec,
+        )
+        stdout_path.write_text(completed.stdout)
+        stderr_path.write_text(completed.stderr)
+        return {
+            "step": step_name,
+            "command": command,
+            "container_name": None,
+            "exit_code": completed.returncode,
+            "timed_out": False,
+            "duration_sec": round(time.time() - started_at, 3),
+            "stdout_path": str(stdout_path),
+            "stderr_path": str(stderr_path),
+        }
+
+    container_name = f"harness_{task.task_id}_{step_name}_{uuid.uuid4().hex[:10]}"
     docker_cmd = [
         "docker",
         "run",
@@ -480,8 +552,9 @@ def main() -> int:
 
     try:
         task = load_task(task_dir)
-        ensure_docker_available()
-        ensure_image(task, build_missing=args.build_missing_image)
+        if args.runtime == "docker":
+            ensure_docker_available()
+            ensure_image(task, build_missing=args.build_missing_image)
 
         artifact_dir, run_dir = prepare_run_dir(task, results_root, args.keep_run_dir)
         public_task_dir = prepare_public_task_dir(task, artifact_dir)
@@ -498,7 +571,7 @@ def main() -> int:
 
         if task.setup_command:
             step_results.append(
-                run_container_step(
+                run_step(
                     task,
                     task.setup_command,
                     artifact_dir,
@@ -510,12 +583,13 @@ def main() -> int:
                     timeout_sec=task.timeout_sec,
                     mount_artifacts=True,
                     allow_network=False,
+                    runtime=args.runtime,
                 )
             )
 
         if agent_adapter is None:
             step_results.append(
-                run_container_step(
+                run_step(
                     task,
                     agent_command,
                     artifact_dir,
@@ -527,6 +601,7 @@ def main() -> int:
                     timeout_sec=task.timeout_sec,
                     mount_artifacts=False,
                     allow_network=args.allow_agent_network,
+                    runtime=args.runtime,
                 )
             )
         else:
@@ -535,6 +610,7 @@ def main() -> int:
                     AgentRunContext(
                         root=ROOT,
                         image=task.image,
+                        runtime=args.runtime,
                         task_id=task.task_id,
                         task_description=task.description,
                         artifact_dir=artifact_dir,
@@ -548,7 +624,7 @@ def main() -> int:
         agent_logs_dir = collect_agent_logs(run_dir, artifact_dir)
 
         context_path = write_runtime_context(task, artifact_dir, run_dir, prompt_text, step_results)
-        validator_step = run_container_step(
+        validator_step = run_step(
             task,
             task.validator_command,
             artifact_dir,
@@ -560,6 +636,7 @@ def main() -> int:
             timeout_sec=task.timeout_sec,
             mount_artifacts=True,
             allow_network=False,
+            runtime=args.runtime,
         )
         step_results.append(validator_step)
         validation = parse_validation_output(Path(validator_step["stdout_path"]).read_text())
