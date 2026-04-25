@@ -54,6 +54,7 @@ from scripts.generators.adversarial_mc import (
     KnowledgeMCGenerator,
     RepoAnalyzer,
 )
+from scripts.generators.strategy_registry import get_strategy, list_strategies
 from scripts.task_writer_mc import write_mc_task
 
 
@@ -142,6 +143,14 @@ def main() -> None:
     parser.add_argument("--probe", action="store_true",
                         help="Run REPL probe verification on extracted seed_rules (drops version-mismatched rules)")
     parser.add_argument("--dry-run", action="store_true", help="Generate but do not write task dirs")
+    parser.add_argument(
+        "--strategy", default=None,
+        help=(
+            "Generation strategy (comma-separated for multiple). "
+            f"Available: {', '.join(list_strategies())}. "
+            "Default: inferred from --types for backward compatibility."
+        ),
+    )
     args = parser.parse_args()
 
     api_key = args.api_key or os.environ.get("ANTHROPIC_API_KEY")
@@ -167,25 +176,26 @@ def main() -> None:
     all_candidates = []
     stats: dict[str, dict] = {}
 
-    if "adversarial" in types:
-        print(f"\n[adversarial] Running two-player game ({args.n} per family per seed) ...")
-        gen = AdversarialMCGenerator(api_key=api_key, verbose=True, seed=seed)
-        candidates = gen.generate(families=families, n_per_family=args.n)
+    # --strategy takes precedence; fall back to --types for backward compat
+    strategy_names = (
+        [s.strip() for s in args.strategy.split(",")]
+        if args.strategy
+        else types
+    )
+
+    for strategy_name in strategy_names:
+        try:
+            StrategyCls = get_strategy(strategy_name)
+        except ValueError as e:
+            sys.exit(f"[error] {e}")
+        print(f"\n[{strategy_name}] Generating ({args.n} per family per seed) ...")
+        strategy = StrategyCls(api_key=api_key, verbose=True, seed=seed)
+        candidates = strategy.generate(families=families, n_per_family=args.n)
         if args.max_tasks:
             candidates = candidates[:args.max_tasks]
-        stats["adversarial"] = {"generated": len(candidates)}
+        stats[strategy_name] = {"generated": len(candidates)}
         all_candidates.extend(candidates)
-        print(f"[adversarial] {len(candidates)} questions verified")
-
-    if "knowledge" in types:
-        print(f"\n[knowledge] Generating behavioral-prediction questions ...")
-        know_gen = KnowledgeMCGenerator(api_key=api_key, verbose=True, seed=seed)
-        knowledge_cands = know_gen.generate(families=families, n_per_family=args.n)
-        if args.max_tasks:
-            knowledge_cands = knowledge_cands[:args.max_tasks]
-        stats["knowledge"] = {"generated": len(knowledge_cands)}
-        all_candidates.extend(knowledge_cands)
-        print(f"[knowledge] {len(knowledge_cands)} questions")
+        print(f"[{strategy_name}] {len(candidates)} questions")
 
     if args.dry_run:
         print(f"\n--- DRY RUN: {len(all_candidates)} questions, not written ---")

@@ -1109,7 +1109,11 @@ class AdversarialMCGenerator:
 
     def _run_one_round(
         self, family: dict, seed_rule: str
-    ) -> MCTaskCandidate | None:
+    ) -> "_RoundResult | None":
+        """Run one adversarial round. Returns the intermediate _RoundResult so
+        callers (e.g. AdversarialSGSStrategy) can inspect/score it before
+        building the final MCTaskCandidate.
+        """
         if self.verbose:
             print(f"\n[{family['name']}] Seed: {seed_rule[:60]}")
 
@@ -1136,7 +1140,7 @@ class AdversarialMCGenerator:
             return None
         c_text, d_text, c_mis, d_mis = distractors
 
-        round_result = _RoundResult(
+        return _RoundResult(
             rule=proposal["rule"],
             confirming_snippet=proposal["confirming_snippet"],
             confirming_output=proposal["confirming_output"],
@@ -1151,7 +1155,6 @@ class AdversarialMCGenerator:
             family=family["name"],
             seed_rule=seed_rule,
         )
-        return self._build_candidate(round_result, library_name=family.get("library_name", "the library"))
 
     def generate(
         self,
@@ -1172,13 +1175,20 @@ class AdversarialMCGenerator:
                 failures = 0
                 while produced < n_per_family and failures < max_failures_per_seed:
                     try:
-                        cand = self._run_one_round(family, seed_rule)
+                        result = self._run_one_round(family, seed_rule)
                     except Exception as e:
                         if self.verbose:
                             print(f"  [error] {e}")
-                        cand = None
+                        result = None
 
-                    if cand is None or cand.task_id in seen_ids:
+                    if result is None:
+                        failures += 1
+                        continue
+                    cand = self._build_candidate(
+                        result,
+                        library_name=family.get("library_name", "the library"),
+                    )
+                    if cand.task_id in seen_ids:
                         failures += 1
                         continue
 
@@ -1191,3 +1201,215 @@ class AdversarialMCGenerator:
         if self.verbose:
             print(f"\nGenerated {len(candidates)} adversarial questions.")
         return candidates
+
+
+# ── Guide scorer (SGS-inspired) ───────────────────────────────────────────────
+
+_GUIDE_SYSTEM = """\
+You are a Guide in an adversarial benchmark generation game.
+A Proposer wrote a rule about a Python library. An Adversary wrote a confounder
+snippet supposed to reveal a non-obvious edge case where that rule breaks.
+
+Score this confounder on three axes (each 1–5):
+  relevance:   Does it exploit the SPECIFIC mechanism described in the rule,
+               not just any different output?
+  elegance:    Is the variation minimal and surface-similar to the confirming
+               case (not a completely different API)?
+  non_trivial: Is it NOT a trivially broken snippet — no import errors, no
+               syntax errors, no completely unrelated API call?
+
+Respond ONLY with these tags:
+<relevance>N</relevance>
+<elegance>N</elegance>
+<non_trivial>N</non_trivial>
+<reject_reason>One sentence if any score < 3, else leave empty</reject_reason>"""
+
+_GUIDE_USER = """\
+Rule: {rule}
+
+Confirming snippet (rule holds here):
+{confirming}
+
+Confounder snippet (rule allegedly breaks here):
+{confounder}
+
+Why wrong: {why_wrong}"""
+
+
+class GuideScorer:
+    """SGS-inspired Guide that scores confounder quality.
+
+    Rejects degenerate confounders (import errors, unrelated APIs, trivially
+    different outputs) that technically pass the execution verifier but don't
+    reveal practitioner misconceptions.
+
+    Cost: 1 LLM call per confounder (uses haiku for speed/cost).
+    """
+
+    MIN_SCORE = 3  # reject if any axis is strictly below this
+
+    def __init__(self, client: anthropic.Anthropic, verbose: bool = False):
+        self._client = client
+        self.verbose = verbose
+
+    def score(
+        self,
+        rule: str,
+        confirming: str,
+        confounder: str,
+        why_wrong: str,
+    ) -> tuple[bool, str]:
+        """Evaluate confounder quality.
+
+        Returns:
+            (accept, reject_reason)
+            accept=True  → confounder passes quality gate
+            accept=False → reject_reason describes which axis failed
+        """
+        raw = self._client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=256,
+            system=_GUIDE_SYSTEM,
+            messages=[{
+                "role": "user",
+                "content": _GUIDE_USER.format(
+                    rule=rule,
+                    confirming=confirming,
+                    confounder=confounder,
+                    why_wrong=why_wrong,
+                ),
+            }],
+        ).content[0].text
+
+        def _int_tag(t: str) -> int:
+            v = _tag(raw, t)
+            try:
+                return int((v or "0").strip())
+            except ValueError:
+                return 0
+
+        scores = {
+            "relevance":   _int_tag("relevance"),
+            "elegance":    _int_tag("elegance"),
+            "non_trivial": _int_tag("non_trivial"),
+        }
+        reason = _tag(raw, "reject_reason") or ""
+        accept = all(v >= self.MIN_SCORE for v in scores.values())
+        if self.verbose:
+            status = "✓ guide" if accept else f"✗ guide ({reason.strip()[:60]})"
+            print(f"    [{status}] scores={scores}")
+        return accept, reason.strip()
+
+
+# ── Strategy wrappers + registration ─────────────────────────────────────────
+
+from scripts.generators.strategy_registry import (  # noqa: E402
+    GenerationStrategy,
+    register_strategy,
+)
+
+
+@register_strategy("adversarial")
+class AdversarialStrategy(GenerationStrategy):
+    """Classic two-player adversarial game (no Guide filter)."""
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        verbose: bool = False,
+        seed: int | None = None,
+    ):
+        self._gen = AdversarialMCGenerator(
+            api_key=api_key, verbose=verbose, seed=seed
+        )
+
+    def generate(
+        self, families: list[dict], n_per_family: int = 3
+    ) -> list[MCTaskCandidate]:
+        return self._gen.generate(families=families, n_per_family=n_per_family)
+
+
+@register_strategy("knowledge")
+class KnowledgeStrategy(GenerationStrategy):
+    """Direct behavioral-prediction questions (calibration baseline)."""
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        verbose: bool = False,
+        seed: int | None = None,
+    ):
+        self._gen = KnowledgeMCGenerator(
+            api_key=api_key, verbose=verbose, seed=seed
+        )
+
+    def generate(
+        self, families: list[dict], n_per_family: int = 3
+    ) -> list[MCTaskCandidate]:
+        return self._gen.generate(families=families, n_per_family=n_per_family)
+
+
+@register_strategy("sgs")
+class AdversarialSGSStrategy(GenerationStrategy):
+    """SGS-guided adversarial game: Guide scorer filters degenerate confounders.
+
+    Wraps the classic adversarial game and adds a Guide LLM call (haiku) per
+    confounder candidate. Confounders that score below the quality threshold on
+    relevance, elegance, or non-triviality are rejected and P2 is asked to retry
+    (up to max_guide_retries times per P1 proposal).
+
+    Cost vs classic: ~1 additional haiku call per confounder attempt.
+    Typical overhead: 20–40% more LLM calls, significantly fewer degenerate
+    confounders (import errors, unrelated API calls).
+    """
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        verbose: bool = False,
+        seed: int | None = None,
+        max_guide_retries: int = 2,
+    ):
+        self._gen = AdversarialMCGenerator(
+            api_key=api_key, verbose=verbose, seed=seed
+        )
+        self._guide = GuideScorer(
+            client=anthropic.Anthropic(
+                api_key=api_key or os.environ["ANTHROPIC_API_KEY"]
+            ),
+            verbose=verbose,
+        )
+        self._max_retries = max_guide_retries
+
+    def generate(
+        self, families: list[dict], n_per_family: int = 3
+    ) -> list[MCTaskCandidate]:
+        """Generate candidates, gating each confounder through the Guide scorer."""
+        original_run = self._gen._run_one_round
+
+        def _guided_run(family: dict, seed_rule: str) -> "_RoundResult | None":
+            for attempt in range(self._max_retries + 1):
+                result = original_run(family, seed_rule)
+                if result is None:
+                    # P1 or executor failed — no point retrying with Guide
+                    return None
+                accept, reason = self._guide.score(
+                    rule=result.rule,
+                    confirming=result.confirming_snippet,
+                    confounder=result.confounder_snippet,
+                    why_wrong=result.why_wrong,
+                )
+                if accept:
+                    return result
+                if self._gen.verbose:
+                    print(
+                        f"  [sgs] attempt {attempt + 1}/{self._max_retries + 1} "
+                        f"rejected: {reason[:70]}"
+                    )
+            return None  # all retries exhausted
+
+        self._gen._run_one_round = _guided_run
+        try:
+            return self._gen.generate(families=families, n_per_family=n_per_family)
+        finally:
+            self._gen._run_one_round = original_run  # always restore
