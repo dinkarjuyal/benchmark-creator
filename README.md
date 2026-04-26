@@ -2,11 +2,11 @@
 
 # 🧪 benchmark-creator
 
-**Turn any Python library into a behavioral benchmark for LLMs — in one command**
+**Turn any library into a behavioral benchmark for LLMs — in one command**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-90%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-158%20passing-brightgreen.svg)](tests/)
 
 **Point → Generate → Evaluate**
 
@@ -22,7 +22,7 @@
 
 Give it a GitHub repo URL. It reads the README, extracts behavioral families, and runs an adversarial two-player game to find questions where a model *knows a rule* but *applies it where it breaks*.
 
-Every question is **execution-verified** — Python runs both the confirming case and the confounder before the question is accepted. No hallucinated outputs.
+Every question is **execution-verified** — the confirming case and confounder are both run before the question is accepted. No hallucinated outputs. Works for Python, JavaScript/TypeScript, and Go out of the box; language is auto-detected from the repo URL or `install` hints, or set explicitly with `--language`.
 
 <div align="center">
 
@@ -60,6 +60,19 @@ ANTHROPIC_API_KEY=sk-ant-... python3 -m benchmark_creator \
   --n 2 \
   --max-tasks 5 \
   --output benchmarks/my_benchmark_sgs
+
+# JavaScript library (language auto-detected from install hints; node must be in PATH)
+ANTHROPIC_API_KEY=sk-ant-... python3 -m benchmark_creator \
+  --repo https://github.com/lodash/lodash \
+  --language javascript \
+  --strategy adversarial \
+  --n 2 --max-tasks 5
+
+# Export questions as SFT training data (ChatML JSONL with chain-of-thought)
+ANTHROPIC_API_KEY=sk-ant-... python3 -m benchmark_creator \
+  --repo https://github.com/scikit-learn/scikit-learn \
+  --strategy sgs --n 3 \
+  --export-sft benchmarks/scikit_learn/sft_train.jsonl
 ```
 
 **Each run generates a fresh question set by default** (seed = Unix timestamp). To reproduce an exact set, pass `--seed <N>` with the printed value. Keep your evaluation seeds private — don't commit `generation_stats.json` to a public repo if you're running a blind evaluation.
@@ -190,8 +203,11 @@ benchmark-creator/
       strategy_registry.py ← GenerationStrategy ABC + StrategyRegistry plugin layer
       adversarial_mc.py    ← two-player game + GuideScorer + RepoAnalyzer +
                               strategy registrations (adversarial, knowledge, sgs)
+      runtime.py           ← ExecutionRuntime ABC + PythonRuntime, NodeRuntime,
+                              GoRuntime; detect_language(); make_runtime() factory
       pandas_mc.py         ← MCTaskCandidate data model + prompt builder
       pandas_injections.py ← hand-curated pandas gold set
+    export_sft.py          ← export benchmark questions as SFT JSONL (ChatML format)
     verifier_builder_mc.py ← generates validator.py for each task
     task_writer_mc.py      ← writes harness-compatible task directories
   harness/
@@ -204,7 +220,7 @@ benchmark-creator/
     pandas_understanding/  ← 35 tasks
     scikit_learn/          ← 10 tasks
     pandas_v2/             ← 4 tasks generated with issues+commits+5Whys pipeline
-  tests/                   ← 90 tests, no API key required
+  tests/                   ← 158 tests, no API key required
 ```
 
 ### Adding a New Strategy
@@ -234,16 +250,22 @@ The generator is fully repo-agnostic. `RepoAnalyzer` fetches README + closed iss
 
 ```python
 from scripts.generators.adversarial_mc import RepoAnalyzer
+from scripts.generators.runtime import detect_language, make_runtime
 from scripts.generators.strategy_registry import get_strategy
 
+repo_url = "https://github.com/psf/requests"
 sources = {
-    "readme":  RepoAnalyzer.from_github("https://github.com/psf/requests"),
-    "issues":  RepoAnalyzer.from_github_issues("https://github.com/psf/requests"),
-    "commits": RepoAnalyzer.from_github_commits("https://github.com/psf/requests"),
+    "readme":  RepoAnalyzer.from_github(repo_url),
+    "issues":  RepoAnalyzer.from_github_issues(repo_url),
+    "commits": RepoAnalyzer.from_github_commits(repo_url),
 }
 families = RepoAnalyzer(api_key="sk-ant-...").extract_families(sources, library_name="requests")
 
-strategy = get_strategy("sgs")(api_key="sk-ant-...")
+# Language auto-detected; override with make_runtime("javascript") for JS repos
+language = detect_language(repo_url, families=families)
+runtime = make_runtime(language, install=families[0].get("install", ""))
+
+strategy = get_strategy("sgs")(api_key="sk-ant-...", runtime=runtime)
 candidates = strategy.generate(families=families, n_per_family=3)
 ```
 
@@ -256,7 +278,7 @@ pip install pytest
 python3 -m pytest tests/ -v
 ```
 
-52 tests, no API key required. Covers:
+158 tests, no API key required. Covers:
 
 | File | What it tests |
 |------|---------------|
@@ -264,7 +286,8 @@ python3 -m pytest tests/ -v
 | `test_snippet_execution.py` | Python execution verifier + timeout handling |
 | `test_mc_candidate.py` | Prompt format, choice shuffling, task ID stability |
 | `test_validator.py` | Scoring: correct / wrong / dirty workspace / missing file |
-| `test_generator_logic.py` | Confounder accept/reject filter; `RepoAnalyzer` parsing (mocked LLM) |
+| `test_generator_logic.py` | Confounder accept/reject filter; `RepoAnalyzer` parsing; strategy registry; `GuideScorer`; SGS retries (all mocked) |
+| `test_runtime.py` | `PythonRuntime`, `NodeRuntime`, `GoRuntime`; `detect_language`; `make_runtime`; SFT export roundtrip |
 
 ---
 
@@ -273,7 +296,7 @@ python3 -m pytest tests/ -v
 ```
 python3 -m benchmark_creator [OPTIONS]
 
-  --repo URL         GitHub URL of the target Python library
+  --repo URL         GitHub URL of the target library (Python, JS, Go, ...)
   --strategy LIST    Generation strategy: adversarial, knowledge, sgs,
                      or comma-separated (default: inferred from --types)
   --types LIST       adversarial,knowledge  (legacy alias for --strategy)
@@ -284,6 +307,10 @@ python3 -m benchmark_creator [OPTIONS]
   --output DIR       Output directory (default: benchmarks/<repo_name>)
   --api-key KEY      Anthropic API key (or set ANTHROPIC_API_KEY)
   --github-token T   GitHub token for higher API rate limits (optional)
+  --language LANG    Snippet language: python, javascript, go
+                     (default: auto-detected from repo URL + install hints)
+  --export-sft PATH  Export questions as SFT JSONL to PATH
+                     (ChatML format with chain-of-thought reasoning)
   --probe            Verify seed_rules via REPL probes; drops version-mismatched rules
   --dry-run          Generate without writing task directories
 ```
