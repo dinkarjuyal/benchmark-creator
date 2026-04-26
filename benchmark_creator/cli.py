@@ -54,6 +54,7 @@ from scripts.generators.adversarial_mc import (
     KnowledgeMCGenerator,
     RepoAnalyzer,
 )
+from scripts.generators.runtime import detect_language, make_runtime
 from scripts.generators.strategy_registry import get_strategy, list_strategies
 from scripts.task_writer_mc import write_mc_task
 
@@ -151,6 +152,14 @@ def main() -> None:
             "Default: inferred from --types for backward compatibility."
         ),
     )
+    parser.add_argument(
+        "--language", default=None,
+        help="Code language for snippets: python, javascript, go (default: auto-detect from repo URL)",
+    )
+    parser.add_argument(
+        "--export-sft", default=None, metavar="PATH",
+        help="Export generated questions as SFT training JSONL to PATH (ChatML chain-of-thought format)",
+    )
     args = parser.parse_args()
 
     api_key = args.api_key or os.environ.get("ANTHROPIC_API_KEY")
@@ -167,6 +176,16 @@ def main() -> None:
     meta_dir = output_dir / "meta"
 
     families = _load_families(args, api_key)
+
+    # Resolve language: explicit flag > auto-detect from repo URL > families install hint
+    language = args.language or detect_language(
+        repo_url=args.repo or "",
+        families=families,
+    )
+    install = families[0].get("install", "") if families else ""
+    runtime = make_runtime(language, install=install)
+    if language != "python":
+        print(f"[runtime] Using {language} runtime ({runtime.__class__.__name__})")
 
     # Save repo profile for reproducibility
     if not args.dry_run:
@@ -189,7 +208,7 @@ def main() -> None:
         except ValueError as e:
             sys.exit(f"[error] {e}")
         print(f"\n[{strategy_name}] Generating ({args.n} per family per seed) ...")
-        strategy = StrategyCls(api_key=api_key, verbose=True, seed=seed)
+        strategy = StrategyCls(api_key=api_key, verbose=True, seed=seed, runtime=runtime)
         candidates = strategy.generate(families=families, n_per_family=args.n)
         if args.max_tasks:
             candidates = candidates[:args.max_tasks]
@@ -201,6 +220,10 @@ def main() -> None:
         print(f"\n--- DRY RUN: {len(all_candidates)} questions, not written ---")
         for c in all_candidates:
             print(f"  {c.task_id}  type={c.question_type}  family={c.family}  correct={c.correct_id}")
+        if args.export_sft and all_candidates:
+            from scripts.export_sft import export_sft
+            n = export_sft(all_candidates, args.export_sft)
+            print(f"\n[sft] Exported {n} examples → {args.export_sft}")
         return
 
     tasks_dir.mkdir(parents=True, exist_ok=True)
@@ -226,6 +249,11 @@ def main() -> None:
     stats["repo"] = args.repo or "pandas_defaults"
     stats_path = meta_dir / "generation_stats.json"
     stats_path.write_text(json.dumps(stats, indent=2) + "\n")
+
+    if args.export_sft and all_candidates:
+        from scripts.export_sft import export_sft
+        n = export_sft(all_candidates, args.export_sft)
+        print(f"\n[sft] Exported {n} examples → {args.export_sft}")
 
     print(f"\nWrote {len(written)} tasks to {output_dir.relative_to(ROOT)}/")
     print(f"  benchmark.json  — task registry")

@@ -42,12 +42,14 @@ class TestAdversarialConfounderFilter:
     """The core invariant: only keep questions where actual ≠ rule_predicts."""
 
     def _gen(self, responses):
+        from scripts.generators.runtime import PythonRuntime
         gen = AdversarialMCGenerator.__new__(AdversarialMCGenerator)
         gen.client = _mock_client(responses)
         gen.model = "test"
         gen.max_retries = 1
         gen.verbose = False
         gen.seed = None
+        gen._runtime = PythonRuntime()
         return gen
 
     def test_rejects_when_actual_equals_rule_predicts(self):

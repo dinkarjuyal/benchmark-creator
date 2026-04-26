@@ -34,6 +34,7 @@ from typing import Any
 import anthropic
 
 from scripts.generators.pandas_mc import MCTaskCandidate
+from scripts.generators.runtime import ExecutionRuntime, PythonRuntime
 
 # ── Families to probe ──────────────────────────────────────────────────────────
 FAMILIES: list[dict] = [
@@ -88,42 +89,46 @@ FAMILIES: list[dict] = [
 # ── Prompts ───────────────────────────────────────────────────────────────────
 
 _PLAYER1_SYSTEM = """\
-You are designing a Python/pandas quiz. Propose a TRUE rule about pandas behavior \
-that most ML practitioners have likely learned.
+You are designing a behavioral quiz about a software library. \
+Propose a TRUE rule about the library's behavior that most practitioners have learned.
 
 Respond using ONLY these tags — no other text:
 
-<rule>One-sentence true pandas rule</rule>
+<rule>One-sentence true rule about the library</rule>
 <snippet>
-Short Python snippet demonstrating the rule (include necessary imports, print exactly one line)
+Short runnable code snippet demonstrating the rule \
+(include necessary imports, print exactly one line)
 </snippet>"""
 
 _PLAYER1_USER = """\
 Family: {family_name} — {family_description}
 Seed rule to build on: "{seed_rule}"
 Library install: {install_line}
+Language: {language}
 
 Requirements:
 - Rule must be specific enough to make a clear prediction
-- Snippet must be runnable after: {install_line}
+- Snippet must be runnable {language} code, after: {install_line}
 - Snippet must print exactly one line
 - Keep snippet under 6 lines of code"""
 
 _PLAYER2_SYSTEM = """\
-You are an adversary designing Python/pandas trick questions. \
+You are an adversary designing trick questions about a software library. \
 Given a rule that a model believes, find a case where the rule BREAKS non-obviously \
 — where the model would confidently apply the rule and get the wrong answer.
 
 Respond using ONLY these tags — no other text:
 
 <snippet>
-Short Python snippet that VIOLATES the rule non-obviously (include necessary imports, print one line)
+Short runnable code snippet that VIOLATES the rule non-obviously \
+(include necessary imports, print one line)
 </snippet>
 <why_wrong>One sentence: which part of the rule the model incorrectly applies here</why_wrong>
-<rule_predicts>The EXACT output string the model would expect (e.g. "[1, 2, 3]" or "float64") — no explanation</rule_predicts>"""
+<rule_predicts>The EXACT output string the model would expect — no explanation</rule_predicts>"""
 
 _PLAYER2_USER = """\
 Rule: "{rule}"
+Language: {language}
 
 Confirming case (rule HOLDS here):
 {confirming_snippet}
@@ -132,10 +137,10 @@ Actual output: {confirming_output}
 Find a variation where a model would expect the rule to apply, but the output differs.
 
 Requirements:
-- Use the same pandas API as the confirming case
+- Use the same library API as the confirming case
 - Must look superficially similar to the confirming case
 - Must NOT be a trivially obvious edge case
-- Snippet must run with only pandas + numpy and print exactly one line"""
+- Snippet must be runnable {language} code and print exactly one line"""
 
 _DISTRACTORS_SYSTEM = """\
 You are building a multiple-choice question. Given the correct answer, generate \
@@ -738,12 +743,14 @@ class KnowledgeMCGenerator:
         max_retries: int = 3,
         verbose: bool = True,
         seed: int | None = None,
+        runtime: ExecutionRuntime | None = None,
     ):
         self.client = anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
         self.model = model
         self.max_retries = max_retries
         self.verbose = verbose
         self.seed = seed
+        self._runtime = runtime or PythonRuntime()
 
     def _chat(self, system: str, user: str) -> str:
         for attempt in range(self.max_retries):
@@ -779,7 +786,7 @@ class KnowledgeMCGenerator:
             if self.verbose:
                 print(f"  [know P1] missing tags: {raw[:80]}")
             return None
-        ok, actual = _run_snippet(snippet)
+        ok, actual = self._runtime.run(snippet)
         if not ok:
             if self.verbose:
                 print(f"  [know P1] snippet error: {actual}")
@@ -913,12 +920,14 @@ class AdversarialMCGenerator:
         max_retries: int = 3,
         verbose: bool = True,
         seed: int | None = None,
+        runtime: ExecutionRuntime | None = None,
     ):
         self.client = anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
         self.model = model
         self.max_retries = max_retries
         self.verbose = verbose
         self.seed = seed
+        self._runtime = runtime or PythonRuntime()
 
     def _chat(self, system: str, user: str) -> str:
         for attempt in range(self.max_retries):
@@ -942,7 +951,8 @@ class AdversarialMCGenerator:
 
     def _player1_propose(self, family: dict, seed_rule: str) -> dict | None:
         """Player 1: propose a belief + confirming snippet."""
-        install_line = family.get("install") or "pip install pandas numpy"
+        install_line = family.get("install") or self._runtime.setup_hint()
+        language = family.get("language") or self._runtime.language
         raw = self._chat(
             _PLAYER1_SYSTEM,
             _PLAYER1_USER.format(
@@ -950,6 +960,7 @@ class AdversarialMCGenerator:
                 family_description=family["description"],
                 seed_rule=seed_rule,
                 install_line=install_line,
+                language=language,
             ),
         )
         rule = self._tag(raw, "rule")
@@ -959,7 +970,7 @@ class AdversarialMCGenerator:
                 print(f"  [P1] missing tags in response: {raw[:120]}")
             return None
 
-        ok, actual = _run_snippet(snippet)
+        ok, actual = self._runtime.run(snippet)
         if not ok:
             if self.verbose:
                 print(f"  [P1] snippet error: {actual}")
@@ -968,12 +979,14 @@ class AdversarialMCGenerator:
 
     def _player2_confound(self, proposal: dict, family: dict) -> dict | None:
         """Player 2: find where the rule breaks."""
+        language = family.get("language") or self._runtime.language
         raw = self._chat(
             _PLAYER2_SYSTEM,
             _PLAYER2_USER.format(
                 rule=proposal["rule"],
                 confirming_snippet=proposal["confirming_snippet"],
                 confirming_output=proposal["confirming_output"],
+                language=language,
             ),
         )
         snippet = self._tag(raw, "snippet")
@@ -985,7 +998,7 @@ class AdversarialMCGenerator:
                 print(f"  [P2] missing tags in response: {raw[:120]}")
             return None
 
-        ok, actual = _run_snippet(snippet)
+        ok, actual = self._runtime.run(snippet)
         if not ok:
             if self.verbose:
                 print(f"  [P2] confounder error: {actual}")
@@ -1104,6 +1117,8 @@ class AdversarialMCGenerator:
                 "why_model_gets_it_wrong": r.why_wrong,
                 "generation_recipe": "adversarial_two_player",
                 "library_name": library_name,
+                "language": self._runtime.language,
+                "generation_date": __import__("datetime").datetime.utcnow().isoformat(),
             },
         )
 
@@ -1318,9 +1333,10 @@ class AdversarialStrategy(GenerationStrategy):
         api_key: str | None = None,
         verbose: bool = False,
         seed: int | None = None,
+        runtime: ExecutionRuntime | None = None,
     ):
         self._gen = AdversarialMCGenerator(
-            api_key=api_key, verbose=verbose, seed=seed
+            api_key=api_key, verbose=verbose, seed=seed, runtime=runtime
         )
 
     def generate(
@@ -1338,9 +1354,10 @@ class KnowledgeStrategy(GenerationStrategy):
         api_key: str | None = None,
         verbose: bool = False,
         seed: int | None = None,
+        runtime: ExecutionRuntime | None = None,
     ):
         self._gen = KnowledgeMCGenerator(
-            api_key=api_key, verbose=verbose, seed=seed
+            api_key=api_key, verbose=verbose, seed=seed, runtime=runtime
         )
 
     def generate(
@@ -1369,9 +1386,10 @@ class AdversarialSGSStrategy(GenerationStrategy):
         verbose: bool = False,
         seed: int | None = None,
         max_guide_retries: int = 2,
+        runtime: ExecutionRuntime | None = None,
     ):
         self._gen = AdversarialMCGenerator(
-            api_key=api_key, verbose=verbose, seed=seed
+            api_key=api_key, verbose=verbose, seed=seed, runtime=runtime
         )
         self._guide = GuideScorer(
             client=anthropic.Anthropic(
