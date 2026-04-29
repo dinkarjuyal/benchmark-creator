@@ -39,6 +39,8 @@ through its execution before answering. Pay close attention to:
 - Library-specific edge cases that differ from general Python behavior
 - Cases where a rule that usually holds actually breaks
 - Subtle differences between similar-looking API calls
+- PyTorch dtype promotion rules and mixed-precision edge cases
+- Distributed training semantics (FSDP, expert parallelism, tensor sharding)
 
 Think through the code carefully, then give your final answer as a single letter \
 on the last line: A, B, C, or D."""
@@ -52,6 +54,7 @@ _DATA_DIR = Path(__file__).parent / "data"
 _LIBRARY_FILES = {
     "pandas": "pandas_understanding.jsonl",
     "scikit_learn": "scikit_learn.jsonl",
+    "nutrain": "nutrain.jsonl",
     "all": "all.jsonl",
 }
 
@@ -130,7 +133,7 @@ def load_environment(
     """Load behavioral benchmark MCQ environment.
 
     Args:
-        library: Which benchmark to load. One of "pandas", "scikit_learn", "all".
+        library: Which benchmark to load. One of "pandas", "scikit_learn", "nutrain", "all".
         max_examples: Cap number of examples (None = use all).
         chain_of_thought: If True, append a CoT instruction to each prompt.
             Recommended for RL training — rewards structured reasoning.
