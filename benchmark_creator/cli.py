@@ -134,7 +134,16 @@ def main() -> None:
     parser.add_argument("--n", type=int, default=3, help="Questions per family per seed (default: 3)")
     parser.add_argument("--families", help="Path to pre-extracted families JSON (skips RepoAnalyzer)")
     parser.add_argument("--output", help="Output directory (default: benchmarks/<repo_name>)")
-    parser.add_argument("--api-key", help="Anthropic API key")
+    parser.add_argument("--api-key", help="API key (Anthropic or Prime Intellect)")
+    parser.add_argument(
+        "--provider", default="anthropic", choices=["anthropic", "prime"],
+        help="LLM provider for generation: anthropic (default) or prime (PI inference)",
+    )
+    parser.add_argument(
+        "--model", default=None,
+        help="Model for generation (default: claude-sonnet-4-6 for anthropic, "
+             "qwen/qwen3-8b for prime)",
+    )
     parser.add_argument("--max-tasks", type=int, default=None,
                         help="Cap total tasks per type (default: unlimited)")
     parser.add_argument("--seed", type=int, default=None,
@@ -157,14 +166,28 @@ def main() -> None:
         help="Code language for snippets: python, javascript, go (default: auto-detect from repo URL)",
     )
     parser.add_argument(
+        "--python-bin", default=None,
+        help='Python executable for snippet verification, e.g. "uv run --with torch python3"',
+    )
+    parser.add_argument(
         "--export-sft", default=None, metavar="PATH",
         help="Export generated questions as SFT training JSONL to PATH (ChatML chain-of-thought format)",
     )
     args = parser.parse_args()
 
-    api_key = args.api_key or os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        sys.exit("Set ANTHROPIC_API_KEY or pass --api-key")
+    provider = getattr(args, "provider", "anthropic")
+    if provider == "prime":
+        from verifiers.utils.client_utils import load_prime_config
+        api_key = args.api_key or load_prime_config().get("api_key", "")
+        if not api_key:
+            sys.exit("Prime Intellect API key not found. Run `prime login` or pass --api-key")
+    else:
+        api_key = args.api_key or os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            sys.exit("Set ANTHROPIC_API_KEY or pass --api-key")
+
+    default_model = "qwen/qwen3-8b" if provider == "prime" else "claude-sonnet-4-6"
+    model = getattr(args, "model", None) or default_model
 
     # Resolve seed: explicit flag or fresh timestamp (unique per run)
     seed = args.seed if args.seed is not None else int(time.time())
@@ -183,7 +206,8 @@ def main() -> None:
         families=families,
     )
     install = families[0].get("install", "") if families else ""
-    runtime = make_runtime(language, install=install)
+    python_bin = getattr(args, "python_bin", None)
+    runtime = make_runtime(language, install=install, python_bin=python_bin)
     if language != "python":
         print(f"[runtime] Using {language} runtime ({runtime.__class__.__name__})")
 
@@ -208,7 +232,8 @@ def main() -> None:
         except ValueError as e:
             sys.exit(f"[error] {e}")
         print(f"\n[{strategy_name}] Generating ({args.n} per family per seed) ...")
-        strategy = StrategyCls(api_key=api_key, verbose=True, seed=seed, runtime=runtime)
+        strategy = StrategyCls(api_key=api_key, verbose=True, seed=seed, runtime=runtime,
+                               provider=provider, model=model)
         candidates = strategy.generate(families=families, n_per_family=args.n)
         if args.max_tasks:
             candidates = candidates[:args.max_tasks]

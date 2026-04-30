@@ -58,15 +58,24 @@ class ExecutionRuntime(ABC):
 # ── Python ────────────────────────────────────────────────────────────────────
 
 class PythonRuntime(ExecutionRuntime):
-    """Runs snippets via `python3 -c`. Drop-in replacement for _run_snippet()."""
+    """Runs snippets via a configurable Python executable (default: sys.executable).
 
-    def __init__(self, install: str = ""):
+    Pass ``python_bin`` to override, e.g. ``"uv run --with torch python3"`` for
+    snippets that require torch without a local installation.
+    """
+
+    def __init__(self, install: str = "", python_bin: str | None = None):
         self._install = install
+        # Support shell-style strings like "uv run --with torch python3"
+        if python_bin:
+            self._cmd = python_bin.split() if isinstance(python_bin, str) else python_bin
+        else:
+            self._cmd = [sys.executable]
 
     def run(self, snippet: str, timeout: int = 10) -> tuple[bool, str]:
         try:
             result = subprocess.run(
-                [sys.executable, "-c", snippet],
+                self._cmd + ["-c", snippet],
                 capture_output=True,
                 text=True,
                 timeout=timeout,
@@ -222,7 +231,8 @@ def detect_language(
 
 # ── Factory ───────────────────────────────────────────────────────────────────
 
-def make_runtime(language: str, install: str = "") -> ExecutionRuntime:
+def make_runtime(language: str, install: str = "",
+                 python_bin: str | None = None) -> ExecutionRuntime:
     """Return the appropriate ExecutionRuntime for a language name.
 
     Falls back to PythonRuntime for unrecognised languages (safe default,
@@ -236,5 +246,5 @@ def make_runtime(language: str, install: str = "") -> ExecutionRuntime:
     }
     cls = _RUNTIMES.get(language.lower(), PythonRuntime)
     if cls is PythonRuntime:
-        return PythonRuntime(install=install)
+        return PythonRuntime(install=install, python_bin=python_bin)
     return cls()

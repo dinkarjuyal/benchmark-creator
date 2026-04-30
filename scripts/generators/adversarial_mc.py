@@ -36,6 +36,56 @@ import anthropic
 from scripts.generators.pandas_mc import MCTaskCandidate
 from scripts.generators.runtime import ExecutionRuntime, PythonRuntime
 
+
+# ── Provider adapter (Anthropic ↔ OpenAI-compatible PI endpoint) ──────────────
+
+class _PIMessage:
+    """Minimal shim so `msg.content[0].text` works for PI responses."""
+    def __init__(self, text: str):
+        self.content = [type("_C", (), {"text": text})()]
+
+
+class PIClientAdapter:
+    """Thin adapter that makes a PI OpenAI-compatible endpoint look like anthropic.Anthropic.
+
+    Translates `client.messages.create(model, max_tokens, system, messages)`
+    to `openai.OpenAI.chat.completions.create(...)` and wraps the response so
+    that `msg.content[0].text` works identically to the Anthropic path.
+
+    Usage:
+        client = PIClientAdapter(api_key="pit_...", model="qwen/qwen3-8b")
+        # Then pass as `client` argument wherever anthropic.Anthropic is used.
+    """
+
+    _BASE_URL = "https://api.pinference.ai/api/v1"
+
+    def __init__(self, api_key: str, base_url: str | None = None):
+        try:
+            from openai import OpenAI
+        except ImportError:
+            raise ImportError("pip install openai  # required for --provider prime")
+        self._oai = OpenAI(
+            api_key=api_key,
+            base_url=base_url or self._BASE_URL,
+        )
+        self.messages = self  # so client.messages.create(...) routes here
+
+    def create(
+        self,
+        model: str,
+        max_tokens: int,
+        system: str,
+        messages: list[dict],
+        **_kwargs,
+    ) -> _PIMessage:
+        oai_messages = [{"role": "system", "content": system}] + messages
+        resp = self._oai.chat.completions.create(
+            model=model,
+            max_tokens=max_tokens,
+            messages=oai_messages,
+        )
+        return _PIMessage(resp.choices[0].message.content or "")
+
 # ── Families to probe ──────────────────────────────────────────────────────────
 FAMILIES: list[dict] = [
     {
@@ -105,12 +155,12 @@ Family: {family_name} — {family_description}
 Seed rule to build on: "{seed_rule}"
 Library install: {install_line}
 Language: {language}
-
+{preamble_section}
 Requirements:
 - Rule must be specific enough to make a clear prediction
 - Snippet must be runnable {language} code, after: {install_line}
 - Snippet must print exactly one line
-- Keep snippet under 6 lines of code"""
+- Keep snippet under 6 lines of code (excluding any preamble code provided above)"""
 
 _PLAYER2_SYSTEM = """\
 You are an adversary designing trick questions about a software library. \
@@ -129,7 +179,7 @@ Short runnable code snippet that VIOLATES the rule non-obviously \
 _PLAYER2_USER = """\
 Rule: "{rule}"
 Language: {language}
-
+{preamble_section}
 Confirming case (rule HOLDS here):
 {confirming_snippet}
 Actual output: {confirming_output}
@@ -137,7 +187,7 @@ Actual output: {confirming_output}
 Find a variation where a model would expect the rule to apply, but the output differs.
 
 Requirements:
-- Use the same library API as the confirming case
+- Use ONLY the classes/functions defined in the preamble above (do NOT import external libraries beyond torch/math)
 - Must look superficially similar to the confirming case
 - Must NOT be a trivially obvious edge case
 - Snippet must be runnable {language} code and print exactly one line"""
@@ -409,8 +459,9 @@ class RepoAnalyzer:
         # → list[dict] compatible with AdversarialMCGenerator.generate(families=...)
     """
 
-    def __init__(self, api_key: str | None = None, model: str = "claude-sonnet-4-6"):
-        self.client = anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
+    def __init__(self, api_key: str | None = None, model: str = "claude-sonnet-4-6",
+                 client=None):
+        self.client = client or anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
         self.model = model
 
     # ── Data source fetchers ──────────────────────────────────────────────────
@@ -744,8 +795,9 @@ class KnowledgeMCGenerator:
         verbose: bool = True,
         seed: int | None = None,
         runtime: ExecutionRuntime | None = None,
+        client=None,
     ):
-        self.client = anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
+        self.client = client or anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
         self.model = model
         self.max_retries = max_retries
         self.verbose = verbose
@@ -908,6 +960,7 @@ class _RoundResult:
     misconception_d: str
     family: str
     seed_rule: str
+    preamble: str = ""
 
 
 class AdversarialMCGenerator:
@@ -921,8 +974,9 @@ class AdversarialMCGenerator:
         verbose: bool = True,
         seed: int | None = None,
         runtime: ExecutionRuntime | None = None,
+        client=None,
     ):
-        self.client = anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
+        self.client = client or anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
         self.model = model
         self.max_retries = max_retries
         self.verbose = verbose
@@ -953,6 +1007,11 @@ class AdversarialMCGenerator:
         """Player 1: propose a belief + confirming snippet."""
         install_line = family.get("install") or self._runtime.setup_hint()
         language = family.get("language") or self._runtime.language
+        preamble = family.get("preamble", "")
+        preamble_section = (
+            f"\nPreamble (paste at top of snippet, do NOT redefine):\n```\n{preamble}\n```"
+            if preamble else ""
+        )
         raw = self._chat(
             _PLAYER1_SYSTEM,
             _PLAYER1_USER.format(
@@ -961,6 +1020,7 @@ class AdversarialMCGenerator:
                 seed_rule=seed_rule,
                 install_line=install_line,
                 language=language,
+                preamble_section=preamble_section,
             ),
         )
         rule = self._tag(raw, "rule")
@@ -970,16 +1030,23 @@ class AdversarialMCGenerator:
                 print(f"  [P1] missing tags in response: {raw[:120]}")
             return None
 
-        ok, actual = self._runtime.run(snippet)
+        run_snippet = (preamble + "\n" + snippet) if preamble else snippet
+        ok, actual = self._runtime.run(run_snippet)
         if not ok:
             if self.verbose:
                 print(f"  [P1] snippet error: {actual}")
             return None
-        return {"rule": rule, "confirming_snippet": snippet, "confirming_output": actual}
+        return {"rule": rule, "confirming_snippet": snippet, "confirming_output": actual,
+                "preamble": preamble}
 
     def _player2_confound(self, proposal: dict, family: dict) -> dict | None:
         """Player 2: find where the rule breaks."""
         language = family.get("language") or self._runtime.language
+        preamble = proposal.get("preamble", "")
+        preamble_section = (
+            f"\nPreamble (available in snippet, do NOT redefine or import externally):\n```\n{preamble}\n```"
+            if preamble else ""
+        )
         raw = self._chat(
             _PLAYER2_SYSTEM,
             _PLAYER2_USER.format(
@@ -987,6 +1054,7 @@ class AdversarialMCGenerator:
                 confirming_snippet=proposal["confirming_snippet"],
                 confirming_output=proposal["confirming_output"],
                 language=language,
+                preamble_section=preamble_section,
             ),
         )
         snippet = self._tag(raw, "snippet")
@@ -998,7 +1066,8 @@ class AdversarialMCGenerator:
                 print(f"  [P2] missing tags in response: {raw[:120]}")
             return None
 
-        ok, actual = self._runtime.run(snippet)
+        run_snippet = (preamble + "\n" + snippet) if preamble else snippet
+        ok, actual = self._runtime.run(run_snippet)
         if not ok:
             if self.verbose:
                 print(f"  [P2] confounder error: {actual}")
@@ -1083,6 +1152,13 @@ class AdversarialMCGenerator:
             f"(full snippet shown in question below)"
         )
 
+        # Prepend preamble if snippet doesn't already contain the class/function definitions
+        full_snippet = (
+            (r.preamble + "\n" + r.confounder_snippet)
+            if r.preamble and r.preamble.strip() not in r.confounder_snippet
+            else r.confounder_snippet
+        )
+
         return MCTaskCandidate(
             task_id=task_id,
             question_type="adversarial_confounder",
@@ -1096,7 +1172,7 @@ class AdversarialMCGenerator:
             ),
             source_excerpt=source_excerpt,
             proposed_change=proposed_change,
-            snippet=r.confounder_snippet,
+            snippet=full_snippet,
             question_stem=(
                 "The rule above holds for the confirming case. "
                 "What does the following snippet actually print? "
@@ -1169,6 +1245,7 @@ class AdversarialMCGenerator:
             misconception_d=d_mis,
             family=family["name"],
             seed_rule=seed_rule,
+            preamble=proposal.get("preamble", ""),
         )
 
     def generate(
@@ -1263,8 +1340,10 @@ class GuideScorer:
 
     MIN_SCORE = 3  # reject if any axis is strictly below this
 
-    def __init__(self, client: anthropic.Anthropic, verbose: bool = False):
+    def __init__(self, client, guide_model: str = "claude-haiku-4-5-20251001",
+                 verbose: bool = False):
         self._client = client
+        self._guide_model = guide_model
         self.verbose = verbose
 
     def score(
@@ -1282,7 +1361,7 @@ class GuideScorer:
             accept=False → reject_reason describes which axis failed
         """
         raw = self._client.messages.create(
-            model="claude-haiku-4-5-20251001",
+            model=self._guide_model,
             max_tokens=256,
             system=_GUIDE_SYSTEM,
             messages=[{
@@ -1324,6 +1403,16 @@ from scripts.generators.strategy_registry import (  # noqa: E402
 )
 
 
+def _make_client(api_key: str | None, provider: str = "anthropic",
+                 model: str | None = None):
+    """Return an Anthropic or PI client depending on provider."""
+    if provider == "prime":
+        from verifiers.utils.client_utils import load_prime_config
+        key = api_key or load_prime_config().get("api_key", "")
+        return PIClientAdapter(api_key=key)
+    return anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
+
+
 @register_strategy("adversarial")
 class AdversarialStrategy(GenerationStrategy):
     """Classic two-player adversarial game (no Guide filter)."""
@@ -1334,9 +1423,12 @@ class AdversarialStrategy(GenerationStrategy):
         verbose: bool = False,
         seed: int | None = None,
         runtime: ExecutionRuntime | None = None,
+        provider: str = "anthropic",
+        model: str = "claude-sonnet-4-6",
     ):
+        client = _make_client(api_key, provider)
         self._gen = AdversarialMCGenerator(
-            api_key=api_key, verbose=verbose, seed=seed, runtime=runtime
+            model=model, verbose=verbose, seed=seed, runtime=runtime, client=client
         )
 
     def generate(
@@ -1355,9 +1447,12 @@ class KnowledgeStrategy(GenerationStrategy):
         verbose: bool = False,
         seed: int | None = None,
         runtime: ExecutionRuntime | None = None,
+        provider: str = "anthropic",
+        model: str = "claude-sonnet-4-6",
     ):
+        client = _make_client(api_key, provider)
         self._gen = KnowledgeMCGenerator(
-            api_key=api_key, verbose=verbose, seed=seed, runtime=runtime
+            model=model, verbose=verbose, seed=seed, runtime=runtime, client=client
         )
 
     def generate(
@@ -1370,12 +1465,12 @@ class KnowledgeStrategy(GenerationStrategy):
 class AdversarialSGSStrategy(GenerationStrategy):
     """SGS-guided adversarial game: Guide scorer filters degenerate confounders.
 
-    Wraps the classic adversarial game and adds a Guide LLM call (haiku) per
+    Wraps the classic adversarial game and adds a Guide LLM call per
     confounder candidate. Confounders that score below the quality threshold on
     relevance, elegance, or non-triviality are rejected and P2 is asked to retry
     (up to max_guide_retries times per P1 proposal).
 
-    Cost vs classic: ~1 additional haiku call per confounder attempt.
+    Cost vs classic: ~1 additional call per confounder attempt.
     Typical overhead: 20–40% more LLM calls, significantly fewer degenerate
     confounders (import errors, unrelated API calls).
     """
@@ -1387,16 +1482,17 @@ class AdversarialSGSStrategy(GenerationStrategy):
         seed: int | None = None,
         max_guide_retries: int = 2,
         runtime: ExecutionRuntime | None = None,
+        provider: str = "anthropic",
+        model: str = "claude-sonnet-4-6",
+        guide_model: str | None = None,
     ):
+        client = _make_client(api_key, provider)
+        # Guide uses a smaller/faster model by default; falls back to main model
+        _guide_model = guide_model or ("claude-haiku-4-5-20251001" if provider == "anthropic" else model)
         self._gen = AdversarialMCGenerator(
-            api_key=api_key, verbose=verbose, seed=seed, runtime=runtime
+            model=model, verbose=verbose, seed=seed, runtime=runtime, client=client
         )
-        self._guide = GuideScorer(
-            client=anthropic.Anthropic(
-                api_key=api_key or os.environ["ANTHROPIC_API_KEY"]
-            ),
-            verbose=verbose,
-        )
+        self._guide = GuideScorer(client=client, guide_model=_guide_model, verbose=verbose)
         self._max_retries = max_guide_retries
 
     def generate(

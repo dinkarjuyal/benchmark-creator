@@ -1,0 +1,98 @@
+[
+  {
+    "name": "rmsnorm_dtype_chain",
+    "description": "RMSNorm dtype propagation through affine, bias, and no-affine paths under mixed-precision inputs",
+    "seed_rules": [
+      "RMSNorm with elementwise_affine=False always returns the input dtype: the else-branch explicitly casts back with `hidden_states.to(input_dtype)`. With elementwise_affine=True and a float32 weight, there is NO cast back to input dtype \u2014 the weight path contains no `to(input_dtype)` call \u2014 so the output stays float32 regardless of whether the input was bfloat16.",
+      "When RMSNorm has a float16 or bfloat16 weight, the forward explicitly casts hidden_states to the weight's dtype BEFORE multiplication: `if self.weight.dtype in (torch.float16, torch.bfloat16): hidden_states = hidden_states.to(self.weight.dtype)`. This means the output dtype follows the weight dtype, not the input dtype, for half-precision weights \u2014 but NOT for float32 weights.",
+      "Adding a bfloat16 bias to a RMSNorm that already has a float32 weight does NOT make the output bfloat16. By the time bias is added, hidden_states is already float32 (from the normalization * float32-weight step), and float32 + bfloat16 promotes to float32 under PyTorch's type promotion rules."
+    ],
+    "install": "pip install torch",
+    "library_name": "nutrain",
+    "preamble": "import torch, torch.nn as nn\nclass RMSNorm(nn.Module):\n    def __init__(self, d, elementwise_affine=True, bias=False, eps=1e-6):\n        super().__init__()\n        self.eps = eps\n        self.weight = nn.Parameter(torch.ones(d)) if elementwise_affine else None\n        self.bias = nn.Parameter(torch.zeros(d)) if (elementwise_affine and bias) else None\n    def forward(self, x):\n        input_dtype = x.dtype\n        var = x.to(torch.float32).pow(2).mean(-1, keepdim=True)\n        x = x * torch.rsqrt(var + self.eps)\n        if self.weight is None: return x.to(input_dtype)\n        if self.weight.dtype in (torch.float16, torch.bfloat16): x = x.to(self.weight.dtype)\n        x = x * self.weight\n        if self.bias is not None: x = x + self.bias\n        return x"
+  },
+  {
+    "name": "rectified_flow_loss_weighting",
+    "description": "min_snr_5 velocity-prediction weighting in RectifiedFlowLoss: weight = min(SNR, 5) / (SNR + 1)",
+    "seed_rules": [
+      "In RectifiedFlowLoss with weighting='min_snr_5', the SNR for rectified flow is ((1-t)/t)^2. The weight is min(SNR, 5) / (SNR + 1). At t=0.5 where SNR=1, the weight is 1/2 = 0.5. At high noise (t\u21921) where SNR\u21920, the weight \u2192 0/(0+1) = 0. At low noise (t\u21920) where SNR\u2192\u221e, the weight \u2192 5/(SNR+1) \u2192 0 as well. The maximum weight occurs at SNR=5.",
+      "The min-SNR-5 weight formula for v-prediction has a +1 in the denominator: `min(SNR, \u03b3) / (SNR + 1)`. This differs from the \u03b5-prediction formula which uses `min(SNR, \u03b3) / SNR`. The +1 is the v-prediction correction (arXiv:2303.09556 \u00a73.2). At SNR=1, \u03b5-prediction gives 1/1=1.0 while v-prediction gives 1/2=0.5.",
+      "The RectifiedFlowSchedule cosine sampling `t = 1 - cos(u * pi/2)` for u~U(0,1) is biased toward t=0 (data), not symmetric. The median of t is 1 - cos(pi/4) \u2248 0.293, not 0.5. The mean is 1 - 2/pi \u2248 0.363. This asymmetry means the model sees proportionally more near-clean examples during training."
+    ],
+    "install": "pip install torch",
+    "library_name": "nutrain",
+    "preamble": "import torch, math\ndef min_snr_5_weight(t):\n    snr = ((1 - t) / t) ** 2\n    return min(snr, 5.0) / (snr + 1)\ndef cosine_sample_median():\n    return 1 - math.cos(math.pi / 4)"
+  },
+  {
+    "name": "fsdp2_wrapping",
+    "description": "apply_fsdp2 uses type-exact matching (type(m) in set), not isinstance \u2014 subclasses of wrapped types are NOT automatically wrapped",
+    "seed_rules": [
+      "apply_fsdp2 checks `type(module) in modules_to_wrap` (not `isinstance(module, ...)`). If you pass `modules_to_wrap={TransformerBlock}`, a custom subclass `class MyTransformerBlock(TransformerBlock)` will NOT be wrapped as its own FSDP unit \u2014 because `type(MyTransformerBlock()) is MyTransformerBlock`, not `TransformerBlock`. Passing the concrete subclass is required.",
+      "Wrapping order in apply_fsdp2 is bottom-up: `model.modules()` traverses depth-first, so nested modules in `modules_to_wrap` are wrapped first, then the root is wrapped last. This means the root FSDP unit 'owns' only the parameters not already owned by inner FSDP units.",
+      "If `modules_to_wrap` is None or empty, apply_fsdp2 wraps only the root module \u2014 no inner FSDP units are created. All parameters end up in the single root unit. This differs from passing a non-empty set, which creates a unit per matching module plus the root."
+    ],
+    "install": "pip install torch",
+    "library_name": "nutrain",
+    "preamble": "import torch.nn as nn\nclass TransformerBlock(nn.Module): pass\nclass MyTransformerBlock(TransformerBlock): pass\ndef would_wrap(module, modules_to_wrap):\n    return [type(m).__name__ for m in module.modules() if type(m) in (modules_to_wrap or set())]"
+  },
+  {
+    "name": "swiglu_experts_init",
+    "description": "SwiGLUExperts.reset_parameters uses explicit fan_in for 3-D weight tensors because kaiming_uniform_ mis-computes fan_in for rank-3 tensors",
+    "seed_rules": [
+      "SwiGLUExperts.reset_parameters sets std = 1/sqrt(hidden_size) for gate_proj and up_proj, and std = 1/sqrt(moe_intermediate_dim) for down_proj \u2014 NOT the PyTorch default kaiming_uniform_ fan_in. This is because kaiming_uniform_ on a 3-D tensor of shape (num_experts, fan_in, fan_out) treats dim-0 as fan_out (not num_experts), computing the wrong fan_in.",
+      "SwiGLUExperts.forward uses cumsum of num_tokens_per_expert as the offs argument to torch._grouped_mm, NOT the raw per-expert counts. offs[i] is the exclusive upper bound for expert i's token slice: offs = [sum(counts[0:1]), sum(counts[0:2]), ...]. Expert i processes tokens in [offs[i-1], offs[i]) where offs[-1] = total tokens.",
+      "The _to_local helper in SwiGLUExperts.forward unwraps DTensor parameters to their local shard before passing to torch._grouped_mm. Under ExpertParallelism, gate_proj/up_proj/down_proj are Shard(0) DTensors; _grouped_mm requires plain tensors. For non-distributed weights, _to_local is a no-op passthrough."
+    ],
+    "install": "pip install torch",
+    "library_name": "nutrain",
+    "preamble": "import torch, math\ndef swiglu_fan_in(num_experts, hidden_size, intermediate_dim):\n    # gate_proj/up_proj: std = 1/sqrt(hidden_size), NOT kaiming fan_in\n    # kaiming on (E, fan_in, fan_out) would use dim0=fan_out wrongly\n    gate_std = 1.0 / math.sqrt(hidden_size)\n    down_std = 1.0 / math.sqrt(intermediate_dim)\n    return gate_std, down_std\ndef compute_offs(counts):\n    return torch.tensor(counts).cumsum(0)"
+  },
+  {
+    "name": "expert_router_gating",
+    "description": "ExpertChoiceRouter per-token gate renormalization and route_scale interaction",
+    "seed_rules": [
+      "ExpertChoiceRouter renormalizes per-token gating weights to sum to 1 before applying route_scale: `gating_flat / (token_score_sums[global_token_indices] + 1e-12)`. For a token selected by k experts, its k gate values sum to ~1 after normalization, then each is multiplied by route_scale=2.5. A token selected by exactly 1 expert gets a final gate of 2.5, not 1.0.",
+      "The num_tokens_per_expert returned by ExpertChoiceRouter is ALWAYS uniform: `torch.full((self.num_experts,), bs * capacity)`. It represents allocated capacity per expert, not the actual number of unique tokens routed. Even if a token appears in multiple experts' top-k (which it will), each expert still has exactly bs*capacity slots.",
+      "ExpertChoiceRouter capacity is computed as `max(1, ceil(capacity_factor * slen / num_experts))`. With capacity_factor=1.0, slen=16, num_experts=4: capacity = ceil(16/4) = 4. Each expert selects 4 tokens from the 16-token sequence. Total routing slots = 4*4 = 16 = slen, so each token is selected by exactly 1 expert on average (though individual tokens may be selected 0 or 2+ times)."
+    ],
+    "install": "pip install torch",
+    "library_name": "nutrain",
+    "preamble": "import torch, math\ndef compute_capacity(capacity_factor, slen, num_experts):\n    return max(1, math.ceil(capacity_factor * slen / num_experts))\ndef renormalize_and_scale(gate_values, token_score_sums, indices, route_scale=2.5):\n    normed = gate_values / (token_score_sums[indices] + 1e-12)\n    return normed * route_scale"
+  },
+  {
+    "name": "adaln_zero_modulation",
+    "description": "AdaLayerNormZero 6-chunk linear projection: 2 chunks consumed inline, 5-tuple returned; gate semantics and application",
+    "seed_rules": [
+      "AdaLayerNormZero.forward produces 6 chunks from one linear layer (shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp) but only returns 5 values: (x_modulated, gate_msa, shift_mlp, scale_mlp, gate_mlp). shift_msa and scale_msa are consumed inline to produce x_modulated. The return tuple index does NOT match the chunk index: result[1]=gate_msa is chunk 2, result[2]=shift_mlp is chunk 3.",
+      "The gate_msa returned by AdaLayerNormZero is applied AFTER self-attention in the transformer block: `attn_output = gate_msa[:, None] * attn_output`. It is a learned scalar gating that scales the entire attention output before adding back to the residual. A gate initialized to near-zero suppresses the attention path at the start of training (AdaLN-Zero initialization property).",
+      "AdaLayerNormZero uses nn.LayerNorm with elementwise_affine=False as its norm \u2014 no learnable scale/shift in the norm itself. All modulation comes exclusively from the linear projection of the timestep/conditioning embedding. This is opposite to standard LayerNorm usage where the norm itself has learnable parameters."
+    ],
+    "install": "pip install torch",
+    "library_name": "nutrain",
+    "preamble": "import torch, torch.nn as nn\nclass AdaLayerNormZero(nn.Module):\n    def __init__(self, d, cond_d):\n        super().__init__()\n        self.norm = nn.LayerNorm(d, elementwise_affine=False)\n        self.linear = nn.Linear(cond_d, 6 * d)\n    def forward(self, x, emb):\n        c = self.linear(emb).chunk(6, dim=1)\n        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = c\n        x = self.norm(x) * (1 + scale_msa[:, None]) + shift_msa[:, None]\n        return x, gate_msa, shift_mlp, scale_mlp, gate_mlp"
+  },
+  {
+    "name": "muon_optimizer_mesh",
+    "description": "Muon distributed_mesh constraints: ep>1 with dp_shard>1 raises NotImplementedError; mesh selection logic",
+    "seed_rules": [
+      "_build_muon raises NotImplementedError when both ep_mesh is not None AND dp_shard_mesh.size() > 1: the two parameter groups require different distributed_mesh values (expert params sharded on ep_mesh, dense params sharded on dp_shard_mesh), but Muon takes a single distributed_mesh. The fix is to run with dp_shard=1 when ep>1, or split into two Muon instances.",
+      "_is_muon_excluded uses substring matching against a specific tuple of patterns: ('img_in', 'encoder_proj', 'time_text_embed', 'img_mod', 'norm_out', 'proj_out', 'router.gate'). A parameter named 'output_proj.weight' does NOT match 'proj_out' because the words appear in opposite order \u2014 'proj_out' searches for that exact 7-char substring. 'time_embedding' does NOT match 'time_text_embed'.",
+      "Muon only applies the Newton-Schulz orthogonalization update to parameters with dim >= 2 that are NOT in _MUON_EXCLUDED_PATTERNS. 1-D parameters (biases, norms) fall through to AdamW within the same Muon optimizer instance. This means a single Muon optimizer handles both Muon-updated and AdamW-updated parameters, split by dimensionality and exclusion patterns."
+    ],
+    "install": "pip install torch",
+    "library_name": "nutrain",
+    "preamble": "_MUON_EXCLUDED = ('img_in', 'encoder_proj', 'time_text_embed', 'img_mod', 'norm_out', 'proj_out', 'router.gate')\ndef is_muon_excluded(name): return any(p in name for p in _MUON_EXCLUDED)\ndef is_muon_updated(name, param_dim): return param_dim >= 2 and not is_muon_excluded(name)"
+  },
+  {
+    "name": "adaln_continuous_lipschitz",
+    "description": "AdaLayerNormContinuous lipschitz mode: rms_norm_no_affine applied to scale before (1+scale) multiply; linear has no bias",
+    "seed_rules": [
+      "AdaLayerNormContinuous with lipschitz=True computes `norm(x) * (1 + scale) + shift` where scale and shift are rms_norm_no_affine-normalized \u2014 NOT the docstring notation `RMSNorm(x) \u2299 RMSNorm(scale) + RMSNorm(shift)` which omits the +1. The +1 makes the identity transform (scale=0, shift=0) the default at initialization, since rms_norm_no_affine(zeros) \u2248 0.",
+      "When lipschitz=True, AdaLayerNormContinuous forces the linear layer to have no bias (bias=False), and the norm to be elementwise_affine=False. The conditioning linear is `nn.Linear(cond_dim, embedding_dim * 2, bias=False)`. This means with a zero conditioning input, the modulation parameters scale and shift are both exactly zero (not a learned bias offset).",
+      "rms_norm_no_affine computes the normalization in float32 but casts back to x.dtype: `(x * torch.rsqrt(variance + eps)).to(x.dtype)`. For a bfloat16 scale tensor with non-zero values, the RMS normalization forces the output to unit RMS in bfloat16 precision. For an all-zero tensor, variance=0 and rsqrt(eps) is large, but zero times large = zero, so rms_norm_no_affine(zeros) = zeros regardless."
+    ],
+    "install": "pip install torch",
+    "library_name": "nutrain",
+    "preamble": "import torch, torch.nn as nn\ndef rms_norm_no_affine(x, eps=1e-6):\n    var = x.to(torch.float32).pow(2).mean(-1, keepdim=True)\n    return (x * torch.rsqrt(var + eps)).to(x.dtype)\nclass AdaLayerNormContinuous(nn.Module):\n    def __init__(self, d, cond_d, lipschitz=False):\n        super().__init__()\n        self.lipschitz = lipschitz\n        self.norm = nn.LayerNorm(d, elementwise_affine=False)\n        self.linear = nn.Linear(cond_d, d * 2, bias=not lipschitz)\n    def forward(self, x, emb):\n        scale, shift = self.linear(emb).chunk(2, dim=1)\n        if self.lipschitz:\n            scale = rms_norm_no_affine(scale); shift = rms_norm_no_affine(shift)\n        return self.norm(x) * (1 + scale[:, None]) + shift[:, None]"
+  }
+]
