@@ -41,8 +41,10 @@ Each JSONL record:
 | Model | pass@1 | pass@2 | Notes |
 |-------|--------|--------|-------|
 | `qwen/qwen3-8b` | **81%** | 83% | Baseline target model |
-| `deepseek/deepseek-r1-0528` | 67% | 83% | Strong pass@2 but inconsistent |
-| `arcee-ai/trinity-mini` | (pending) | — | — |
+| `arcee-ai/trinity-mini` | 71% | 79% | Smaller model; more consistent than deepseek-r1 |
+| `deepseek/deepseek-r1-0528` | 67% | 83% | Strong pass@2 but high per-question variance |
+
+qwen3-8b outperforms both larger/reasoning models on this domain-specific benchmark — consistent with the SFT specialization hypothesis (domain knowledge > scale for narrow behavioral tasks).
 
 Run an eval yourself:
 ```bash
