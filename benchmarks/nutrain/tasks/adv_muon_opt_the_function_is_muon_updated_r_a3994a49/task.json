@@ -1,0 +1,21 @@
+{
+  "id": "adv_muon_opt_the_function_is_muon_updated_r_a3994a49",
+  "description": "Confounder: The model incorrectly assumes the substring 'proj_out' must appear exactly as a ",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "muon_optimizer_mesh",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "The rule 'The function is_muon_updated returns False for a 2D parameter named 'output_proj.weight' because 'proj_out' is not a substring of 'output_proj.weight'.' does NOT hold here. The model incorrectly assumes the substring 'proj_out' must appear exactly as a standalone word, but the rule uses substring matching, so 'proj_out' in 'proj_out.weight' matches",
+    "curriculum_note": "Rule 'The function is_muon_updated returns False for a 2D parameter named 'output_proj.weight' because 'proj_out' is not a substring of 'output_proj.weight'.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

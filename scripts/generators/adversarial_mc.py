@@ -163,9 +163,16 @@ Requirements:
 - Keep snippet under 6 lines of code (excluding any preamble code provided above)"""
 
 _PLAYER2_SYSTEM = """\
-You are an adversary designing trick questions about a software library. \
-Given a rule that a model believes, find a case where the rule BREAKS non-obviously \
-— where the model would confidently apply the rule and get the wrong answer.
+You are an adversary designing HARD trick questions about a software library.
+Given a rule that a model believes, find a case where the rule BREAKS in a way that
+requires TWO reasoning steps to catch — where the model must know BOTH the rule AND
+a second non-obvious fact to answer correctly.
+
+A good confounder:
+  - Looks exactly like the confirming case on the surface
+  - Requires chaining two independent facts: "the rule says X, BUT also Y applies,
+    and X + Y together give a surprising Z"
+  - Cannot be answered by knowing only one of the two facts
 
 Respond using ONLY these tags — no other text:
 
@@ -173,7 +180,7 @@ Respond using ONLY these tags — no other text:
 Short runnable code snippet that VIOLATES the rule non-obviously \
 (include necessary imports, print one line)
 </snippet>
-<why_wrong>One sentence: which part of the rule the model incorrectly applies here</why_wrong>
+<why_wrong>Two sentences: (1) what the model incorrectly assumes, (2) the second hidden fact that changes the outcome</why_wrong>
 <rule_predicts>The EXACT output string the model would expect — no explanation</rule_predicts>"""
 
 _PLAYER2_USER = """\
@@ -1302,19 +1309,24 @@ You are a Guide in an adversarial benchmark generation game.
 A Proposer wrote a rule about a Python library. An Adversary wrote a confounder
 snippet supposed to reveal a non-obvious edge case where that rule breaks.
 
-Score this confounder on three axes (each 1–5):
+Score this confounder on FOUR axes (each 1–5):
   relevance:   Does it exploit the SPECIFIC mechanism described in the rule,
                not just any different output?
   elegance:    Is the variation minimal and surface-similar to the confirming
                case (not a completely different API)?
-  non_trivial: Is it NOT a trivially broken snippet — no import errors, no
-               syntax errors, no completely unrelated API call?
+  non_trivial: Is the confounding mechanism HARD to spot? Score 5 if even an
+               expert would need to think carefully. Score 1 if obvious.
+  two_step:    Does correctly answering require chaining TWO independent facts
+               or conditions (e.g., knowing BOTH that rule X holds AND that
+               condition Y changes the outcome)? Score 5 if two distinct
+               reasoning hops are needed; score 1 if a single lookup suffices.
 
 Respond ONLY with these tags:
 <relevance>N</relevance>
 <elegance>N</elegance>
 <non_trivial>N</non_trivial>
-<reject_reason>One sentence if any score < 3, else leave empty</reject_reason>"""
+<two_step>N</two_step>
+<reject_reason>One sentence if any score below threshold, else leave empty</reject_reason>"""
 
 _GUIDE_USER = """\
 Rule: {rule}
@@ -1338,7 +1350,9 @@ class GuideScorer:
     Cost: 1 LLM call per confounder (uses haiku for speed/cost).
     """
 
-    MIN_SCORE = 3  # reject if any axis is strictly below this
+    MIN_SCORE = 3          # base threshold for relevance + elegance
+    MIN_NON_TRIVIAL = 4   # tougher bar: confounding mechanism must be hard to spot
+    MIN_TWO_STEP = 3      # must require at least some chained reasoning
 
     def __init__(self, client, guide_model: str = "claude-haiku-4-5-20251001",
                  verbose: bool = False):
@@ -1386,9 +1400,15 @@ class GuideScorer:
             "relevance":   _int_tag("relevance"),
             "elegance":    _int_tag("elegance"),
             "non_trivial": _int_tag("non_trivial"),
+            "two_step":    _int_tag("two_step"),
         }
         reason = _tag(raw, "reject_reason") or ""
-        accept = all(v >= self.MIN_SCORE for v in scores.values())
+        accept = (
+            scores["relevance"]   >= self.MIN_SCORE and
+            scores["elegance"]    >= self.MIN_SCORE and
+            scores["non_trivial"] >= self.MIN_NON_TRIVIAL and
+            scores["two_step"]    >= self.MIN_TWO_STEP
+        )
         if self.verbose:
             status = "✓ guide" if accept else f"✗ guide ({reason.strip()[:60]})"
             print(f"    [{status}] scores={scores}")
@@ -1480,7 +1500,7 @@ class AdversarialSGSStrategy(GenerationStrategy):
         api_key: str | None = None,
         verbose: bool = False,
         seed: int | None = None,
-        max_guide_retries: int = 2,
+        max_guide_retries: int = 5,
         runtime: ExecutionRuntime | None = None,
         provider: str = "anthropic",
         model: str = "claude-sonnet-4-6",

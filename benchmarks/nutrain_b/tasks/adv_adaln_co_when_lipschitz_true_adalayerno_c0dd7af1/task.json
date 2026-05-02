@@ -1,0 +1,21 @@
+{
+  "id": "adv_adaln_co_when_lipschitz_true_adalayerno_c0dd7af1",
+  "description": "Confounder: The model assumes that when lipschitz=True, scale and shift are always near-zero",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "adaln_continuous_lipschitz",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C",
+    "explanation": "The rule 'When lipschitz=True, AdaLayerNormContinuous initializes to the identity transform because scale and shift become near-zero after rms_norm_no_affine, yielding norm(x) * (1 + 0) + 0 \u2248 norm(x), and since norm is LayerNorm with elementwise_affine=False, the full output equals LayerNorm(x).' does NOT hold here. The model assumes that when lipschitz=True, scale and shift are always near-zero regardless of emb, making the transform near-identity. However, rms_norm_no_affine normalizes scale and shift to unit RMS but does not zero them out\u2014so nonzero emb produces nonzero (unit-norm) scale/shift that actively modify the output.",
+    "curriculum_note": "Rule 'When lipschitz=True, AdaLayerNormContinuous initializes to the identity transform because scale and shift become near-zero after rms_norm_no_affine, yielding norm(x) * (1 + 0) + 0 \u2248 norm(x), and since norm is LayerNorm with elementwise_affine=False, the full output equals LayerNorm(x).' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

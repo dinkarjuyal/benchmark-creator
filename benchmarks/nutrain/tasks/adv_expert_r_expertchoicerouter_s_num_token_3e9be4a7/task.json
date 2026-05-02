@@ -1,0 +1,21 @@
+{
+  "id": "adv_expert_r_expertchoicerouter_s_num_token_3e9be4a7",
+  "description": "Confounder: The model assumes ExpertChoiceRouter always assigns exactly batch_size * capacit",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "expert_router_gating",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C",
+    "explanation": "The rule 'ExpertChoiceRouter's num_tokens_per_expert is always uniformly set to batch_size * capacity, regardless of actual token routing distribution or overlaps.' does NOT hold here. The model assumes ExpertChoiceRouter always assigns exactly batch_size * capacity tokens per expert by preallocating slots uniformly. However, in sparse routing scenarios (e.g., top-1 gating with deterministic logits), actual token assignments depend on gate decisions, and unused expert slots remain empty\u2014so num_tokens_per_expert reflects real routed counts, not preallocated capacity.",
+    "curriculum_note": "Rule 'ExpertChoiceRouter's num_tokens_per_expert is always uniformly set to batch_size * capacity, regardless of actual token routing distribution or overlaps.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

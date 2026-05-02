@@ -1,0 +1,21 @@
+{
+  "id": "adv_swiglu_e_swigluexperts_reset_parameters_a2d5e27e",
+  "description": "Confounder: The model assumes weight_3d has shape (num_experts, hidden_size, intermediate_di",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "swiglu_experts_init",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'SwiGLUExperts.reset_parameters initializes gate_proj and up_proj weights with std=1/sqrt(hidden_size), not using kaiming_uniform_'s default fan_in computation, to avoid incorrect scaling when weights are 3-D tensors.' does NOT hold here. The model assumes weight_3d has shape (num_experts, hidden_size, intermediate_dim) as in the rule, but here the last two dims are swapped, so using gate_std = 1/sqrt(hidden_size) no longer matches the actual fan-in dimension.",
+    "curriculum_note": "Rule 'SwiGLUExperts.reset_parameters initializes gate_proj and up_proj weights with std=1/sqrt(hidden_size), not using kaiming_uniform_'s default fan_in computation, to avoid incorrect scaling when weights are 3-D tensors.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

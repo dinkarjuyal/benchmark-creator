@@ -1,0 +1,21 @@
+{
+  "id": "adv_muon_opt_the_function_is_muon_updated_r_4d1374cd",
+  "description": "Confounder: The model might overlook that 'router.gate' is an exact excluded substring, not ",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "muon_optimizer_mesh",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'The function is_muon_updated returns True only for parameters with dimension >=2 and names that do not contain any substring from _MUON_EXCLUDED.' does NOT hold here. The model might overlook that 'router.gate' is an exact excluded substring, not just a prefix or suffix.",
+    "curriculum_note": "Rule 'The function is_muon_updated returns True only for parameters with dimension >=2 and names that do not contain any substring from _MUON_EXCLUDED.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

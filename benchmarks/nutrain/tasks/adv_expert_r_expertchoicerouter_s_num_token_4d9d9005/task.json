@@ -1,0 +1,21 @@
+{
+  "id": "adv_expert_r_expertchoicerouter_s_num_token_4d9d9005",
+  "description": "Confounder: The model assumes capacity is always capacity_factor * slen / num_experts, so bs",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "expert_router_gating",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "The rule 'ExpertChoiceRouter's num_tokens_per_expert is always uniformly set to batch_size * capacity, regardless of actual token routing overlap or distribution.' does NOT hold here. The model assumes capacity is always capacity_factor * slen / num_experts, so bs * capacity = 2 * (1/4) \u2192 rounded up to 1 per expert. However, compute_capacity applies max(1, ceil(...)), so even though slen=1 and num_experts=4 would suggest capacity=0.25, it's clamped to 1, making bs * capacity = 2, not 1.",
+    "curriculum_note": "Rule 'ExpertChoiceRouter's num_tokens_per_expert is always uniformly set to batch_size * capacity, regardless of actual token routing overlap or distribution.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

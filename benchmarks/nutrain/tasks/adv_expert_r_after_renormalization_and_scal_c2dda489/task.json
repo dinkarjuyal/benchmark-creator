@@ -1,0 +1,21 @@
+{
+  "id": "adv_expert_r_after_renormalization_and_scal_c2dda489",
+  "description": "Confounder: The model assumes each token is routed to exactly one expert, but here two token",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "expert_router_gating",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "The rule 'After renormalization and scaling in ExpertChoiceRouter, a token routed to exactly one expert receives a final gate value equal to route_scale (e.g., 2.5), not 1.0.' does NOT hold here. The model assumes each token is routed to exactly one expert, but here two tokens (or one token with two gate entries) share the same expert index, so token_score_sums[0] = 1.0 is the sum over both, making the renormalized value 0.8 / 1.0 * 2.5 = 2.0, not 2.5.",
+    "curriculum_note": "Rule 'After renormalization and scaling in ExpertChoiceRouter, a token routed to exactly one expert receives a final gate value equal to route_scale (e.g., 2.5), not 1.0.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

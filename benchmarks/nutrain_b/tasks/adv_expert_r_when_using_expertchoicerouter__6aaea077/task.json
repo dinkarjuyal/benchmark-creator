@@ -1,0 +1,21 @@
+{
+  "id": "adv_expert_r_when_using_expertchoicerouter__6aaea077",
+  "description": "Confounder: The model assumes all tokens have the same total gate score (like in the confirm",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "expert_router_gating",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'When using ExpertChoiceRouter with per-token gate renormalization, the renormalized gate values for each token are scaled by route_scale after being divided by the sum of gate scores assigned to that token across all experts.' does NOT hold here. The model assumes all tokens have the same total gate score (like in the confirming case), so it expects uniform scaling across tokens. However, token_score_sums differs per token here, so each gate value is divided by a different sum before scaling, breaking the expected proportional output.",
+    "curriculum_note": "Rule 'When using ExpertChoiceRouter with per-token gate renormalization, the renormalized gate values for each token are scaled by route_scale after being divided by the sum of gate scores assigned to that token across all experts.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

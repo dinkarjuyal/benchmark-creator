@@ -1,0 +1,53 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# The min_snr_5 weighting function assigns higher loss weights to smaller timesteps (near data), with maximum weight occurring at t = 1 - 1/√6 ≈ 0.592.
+#
+# Confirming case (rule holds):
+# t_opt = 1 - 1 / math.sqrt(6)
+# w_max = min_snr_5_weight(t_opt)
+# print(f"Max weight {w_max:.4f} at t={t_opt:.3f}")
+# → prints: Max weight 0.3225 at t=0.592
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  w_test = min_snr_5_weight(t_test)
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+def min_snr_5_weight(t):
+    snr = ((1 - t) / t) ** 2
+    return min(snr, 5.0) / (snr + 1)
+def cosine_sample_median():
+    return 1 - math.cos(math.pi / 4)
+t_test = cosine_sample_median()
+w_test = min_snr_5_weight(t_test)
+print(f"Weight {w_test:.4f} at t={t_test:.3f}")
+
+Answer choices:
+  A. Weight 0.0000 at t=1.000
+  B. Weight 1.0000 at t=0.000
+  C. Weight 0.7322 at t=0.293
+  D. Weight 0.3225 at t=0.592
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

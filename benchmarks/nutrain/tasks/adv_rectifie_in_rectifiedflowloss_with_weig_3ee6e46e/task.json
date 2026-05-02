@@ -1,0 +1,21 @@
+{
+  "id": "adv_rectifie_in_rectifiedflowloss_with_weig_3ee6e46e",
+  "description": "Confounder: The model assumes SNR equals 5 at the cosine-sampled median timestep, but this t",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A",
+    "explanation": "The rule 'In RectifiedFlowLoss with weighting='min_snr_5', the loss weight reaches its maximum value of 5/6 when the signal-to-noise ratio (SNR) equals 5.' does NOT hold here. The model assumes SNR equals 5 at the cosine-sampled median timestep, but this timestep does not correspond to SNR = 5",
+    "curriculum_note": "Rule 'In RectifiedFlowLoss with weighting='min_snr_5', the loss weight reaches its maximum value of 5/6 when the signal-to-noise ratio (SNR) equals 5.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

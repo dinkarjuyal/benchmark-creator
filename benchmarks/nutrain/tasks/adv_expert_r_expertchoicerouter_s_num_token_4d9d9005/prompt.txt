@@ -1,0 +1,55 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# ExpertChoiceRouter's num_tokens_per_expert is always uniformly set to batch_size * capacity, regardless of actual token routing overlap or distribution.
+#
+# Confirming case (rule holds):
+# bs, slen, num_experts, capacity_factor = 2, 8, 4, 1.0
+# capacity = compute_capacity(capacity_factor, slen, num_experts)
+# num_tokens_per_expert = torch.full((num_experts,), bs * capacity)
+# print(num_tokens_per_expert.tolist() == [4, 4, 4, 4])
+# → prints: True
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  capacity = compute_capacity(capacity_factor, slen, num_experts)
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+def compute_capacity(capacity_factor, slen, num_experts):
+    return max(1, math.ceil(capacity_factor * slen / num_experts))
+def renormalize_and_scale(gate_values, token_score_sums, indices, route_scale=2.5):
+    normed = gate_values / (token_score_sums[indices] + 1e-12)
+    return normed * route_scale
+bs, slen, num_experts, capacity_factor = 2, 1, 4, 1.0
+capacity = compute_capacity(capacity_factor, slen, num_experts)
+num_tokens_per_expert = torch.full((num_experts,), bs * capacity)
+print(num_tokens_per_expert.tolist() == [1, 1, 1, 1])
+
+Answer choices:
+  A. [2, 2, 2, 2]
+  B. True
+  C. [0, 0, 0, 0]
+  D. False
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

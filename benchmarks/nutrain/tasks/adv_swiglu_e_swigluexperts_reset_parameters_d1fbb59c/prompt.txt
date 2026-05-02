@@ -1,0 +1,62 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# SwiGLUExperts.reset_parameters uses std = 1/sqrt(hidden_size) for gate_proj/up_proj weights instead of PyTorch's kaiming_uniform_ because kaiming_uniform_ misinterprets the first dimension of 3-D tensors as fan_out.
+#
+# Confirming case (rule holds):
+# import torch, math
+# hidden_size, intermediate_dim = 64, 128
+# gate_weight = torch.empty(4, hidden_size, intermediate_dim)
+# torch.nn.init.kaiming_uniform_(gate_weight)  # wrong fan_in
+# correct_std = 1.0 / math.sqrt(hidden_size)
+# print(f"{gate_weight.std().item():.4f} vs {correct_std:.4f}")
+# → prints: 0.0156 vs 0.1250
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  hidden_size, intermediate_dim = 64, 128
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+def swiglu_fan_in(num_experts, hidden_size, intermediate_dim):
+    # gate_proj/up_proj: std = 1/sqrt(hidden_size), NOT kaiming fan_in
+    # kaiming on (E, fan_in, fan_out) would use dim0=fan_out wrongly
+    gate_std = 1.0 / math.sqrt(hidden_size)
+    down_std = 1.0 / math.sqrt(intermediate_dim)
+    return gate_std, down_std
+def compute_offs(counts):
+    return torch.tensor(counts).cumsum(0)
+import torch, math
+hidden_size, intermediate_dim = 64, 128
+gate_weight = torch.empty(4, intermediate_dim, hidden_size)  # swapped dims
+torch.nn.init.kaiming_uniform_(gate_weight)  # now fan_in is inferred correctly
+correct_std = 1.0 / math.sqrt(hidden_size)
+print(f"{gate_weight.std().item():.4f} vs {correct_std:.4f}")
+
+Answer choices:
+  A. 0.0156 vs 0.1250
+  B. 0.0157 vs 0.1250
+  C. 0.0884 vs 0.1250
+  D. 0.1768 vs 0.1250
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

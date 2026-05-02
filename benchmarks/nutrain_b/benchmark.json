@@ -1,0 +1,128 @@
+[
+  {
+    "id": "adv_rmsnorm__rmsnorm_with_elementwise_affin_523e61e9",
+    "path": "benchmarks/nutrain_b/tasks/adv_rmsnorm__rmsnorm_with_elementwise_affin_523e61e9",
+    "type": "adversarial_confounder",
+    "family": "rmsnorm_dtype_chain",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C"
+  },
+  {
+    "id": "adv_rmsnorm__rmsnorm_with_elementwise_affin_6f2bfc70",
+    "path": "benchmarks/nutrain_b/tasks/adv_rmsnorm__rmsnorm_with_elementwise_affin_6f2bfc70",
+    "type": "adversarial_confounder",
+    "family": "rmsnorm_dtype_chain",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D"
+  },
+  {
+    "id": "adv_rmsnorm__rmsnorm_with_elementwise_affin_4bf636de",
+    "path": "benchmarks/nutrain_b/tasks/adv_rmsnorm__rmsnorm_with_elementwise_affin_4bf636de",
+    "type": "adversarial_confounder",
+    "family": "rmsnorm_dtype_chain",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A"
+  },
+  {
+    "id": "adv_rectifie_in_rectifiedflowloss_with_weig_86604316",
+    "path": "benchmarks/nutrain_b/tasks/adv_rectifie_in_rectifiedflowloss_with_weig_86604316",
+    "type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A"
+  },
+  {
+    "id": "adv_rectifie_in_rectifiedflowloss_with_weig_349be0f9",
+    "path": "benchmarks/nutrain_b/tasks/adv_rectifie_in_rectifiedflowloss_with_weig_349be0f9",
+    "type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A"
+  },
+  {
+    "id": "adv_rectifie_the_min_snr_5_weighting_functi_7f439897",
+    "path": "benchmarks/nutrain_b/tasks/adv_rectifie_the_min_snr_5_weighting_functi_7f439897",
+    "type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C"
+  },
+  {
+    "id": "adv_swiglu_e_swigluexperts_reset_parameters_c4c9b417",
+    "path": "benchmarks/nutrain_b/tasks/adv_swiglu_e_swigluexperts_reset_parameters_c4c9b417",
+    "type": "adversarial_confounder",
+    "family": "swiglu_experts_init",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D"
+  },
+  {
+    "id": "adv_expert_r_when_using_expertchoicerouter__96222273",
+    "path": "benchmarks/nutrain_b/tasks/adv_expert_r_when_using_expertchoicerouter__96222273",
+    "type": "adversarial_confounder",
+    "family": "expert_router_gating",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B"
+  },
+  {
+    "id": "adv_expert_r_when_using_expertchoicerouter__6aaea077",
+    "path": "benchmarks/nutrain_b/tasks/adv_expert_r_when_using_expertchoicerouter__6aaea077",
+    "type": "adversarial_confounder",
+    "family": "expert_router_gating",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B"
+  },
+  {
+    "id": "adv_adaln_ze_adalayernormzero_s_norm_layer__21072766",
+    "path": "benchmarks/nutrain_b/tasks/adv_adaln_ze_adalayernormzero_s_norm_layer__21072766",
+    "type": "adversarial_confounder",
+    "family": "adaln_zero_modulation",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A"
+  },
+  {
+    "id": "adv_adaln_ze_adalayernormzero_s_norm_layer__ec9743e9",
+    "path": "benchmarks/nutrain_b/tasks/adv_adaln_ze_adalayernormzero_s_norm_layer__ec9743e9",
+    "type": "adversarial_confounder",
+    "family": "adaln_zero_modulation",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C"
+  },
+  {
+    "id": "adv_adaln_co_when_lipschitz_true_adalayerno_e4cfbb2e",
+    "path": "benchmarks/nutrain_b/tasks/adv_adaln_co_when_lipschitz_true_adalayerno_e4cfbb2e",
+    "type": "adversarial_confounder",
+    "family": "adaln_continuous_lipschitz",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A"
+  },
+  {
+    "id": "adv_adaln_co_when_lipschitz_true_adalayerno_c0dd7af1",
+    "path": "benchmarks/nutrain_b/tasks/adv_adaln_co_when_lipschitz_true_adalayerno_c0dd7af1",
+    "type": "adversarial_confounder",
+    "family": "adaln_continuous_lipschitz",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C"
+  },
+  {
+    "id": "adv_adaln_co_when_lipschitz_true_adalayerno_14990397",
+    "path": "benchmarks/nutrain_b/tasks/adv_adaln_co_when_lipschitz_true_adalayerno_14990397",
+    "type": "adversarial_confounder",
+    "family": "adaln_continuous_lipschitz",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A"
+  }
+]

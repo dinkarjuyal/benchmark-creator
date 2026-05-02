@@ -1,0 +1,54 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# The min_snr_5 weighting function assigns higher loss weights to earlier timesteps (near t=0) due to higher SNR, but caps the weight at 5/6 ≈ 0.833 when SNR ≥ 5.
+#
+# Confirming case (rule holds):
+# t_test = torch.tensor([0.1, 0.2, 0.3])
+# weights = [min_snr_5_weight(t.item()) for t in t_test]
+# print(f"{max(weights):.3f}")
+# → prints: 0.776
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  def min_snr_5_weight(t):
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+def min_snr_5_weight(t):
+    snr = ((1 - t) / t) ** 2
+    return min(snr, 5.0) / (snr + 1)
+def cosine_sample_median():
+    return 1 - math.cos(math.pi / 4)
+
+t_test = torch.tensor([0.01, 0.02, 0.03])
+weights = [min_snr_5_weight(t.item()) for t in t_test]
+print(f"{max(weights):.3f}")
+
+Answer choices:
+  A. 4.950
+  B. 0.990
+  C. 0.833
+  D. 0.005
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

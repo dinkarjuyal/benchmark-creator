@@ -1,0 +1,59 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# SwiGLUExperts.reset_parameters initializes gate_proj and up_proj weights with std=1/sqrt(hidden_size), not using kaiming_uniform_'s default fan_in computation which fails on 3D tensors.
+#
+# Confirming case (rule holds):
+# gate_std, _ = swiglu_fan_in(num_experts=4, hidden_size=8, intermediate_dim=16)
+# weight = torch.empty(4, 8, 16)
+# torch.nn.init.normal_(weight, std=gate_std)
+# print(f"Weight std ≈ {weight.std():.3f}, expected ≈ {gate_std:.3f}")
+# → prints: Weight std ≈ 0.341, expected ≈ 0.354
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  gate_std, _ = swiglu_fan_in(num_experts=4, hidden_size=8, intermediate_dim=16)
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+def swiglu_fan_in(num_experts, hidden_size, intermediate_dim):
+    # gate_proj/up_proj: std = 1/sqrt(hidden_size), NOT kaiming fan_in
+    # kaiming on (E, fan_in, fan_out) would use dim0=fan_out wrongly
+    gate_std = 1.0 / math.sqrt(hidden_size)
+    down_std = 1.0 / math.sqrt(intermediate_dim)
+    return gate_std, down_std
+def compute_offs(counts):
+    return torch.tensor(counts).cumsum(0)
+import torch, math
+gate_std, _ = swiglu_fan_in(num_experts=4, hidden_size=8, intermediate_dim=16)
+weight = torch.empty(4, 8, 16)
+torch.nn.init.kaiming_uniform_(weight, a=math.sqrt(5))
+print(f"Weight std ≈ {weight.std():.3f}, expected ≈ {gate_std:.3f}")
+
+Answer choices:
+  A. Weight std ≈ 0.052, expected ≈ 0.354
+  B. Weight std ≈ 0.250, expected ≈ 0.354
+  C. Weight std ≈ 0.125, expected ≈ 0.354
+  D. Weight std ≈ 0.354, expected ≈ 0.354
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

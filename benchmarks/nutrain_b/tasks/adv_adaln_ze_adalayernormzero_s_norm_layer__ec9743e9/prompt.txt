@@ -1,0 +1,61 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# AdaLayerNormZero's norm layer has no learnable parameters, so its state_dict contains only the linear projection weights and biases.
+#
+# Confirming case (rule holds):
+# import torch, torch.nn as nn
+# model = AdaLayerNormZero(d=16, cond_d=32)
+# print(len(model.state_dict()) == 2)
+# → prints: True
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  model = AdaLayerNormZero(d=16, cond_d=32)
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, torch.nn as nn
+class AdaLayerNormZero(nn.Module):
+    def __init__(self, d, cond_d):
+        super().__init__()
+        self.norm = nn.LayerNorm(d, elementwise_affine=False)
+        self.linear = nn.Linear(cond_d, 6 * d)
+    def forward(self, x, emb):
+        c = self.linear(emb).chunk(6, dim=1)
+        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = c
+        x = self.norm(x) * (1 + scale_msa[:, None]) + shift_msa[:, None]
+        return x, gate_msa, shift_mlp, scale_mlp, gate_mlp
+import torch, torch.nn as nn
+model = AdaLayerNormZero(d=16, cond_d=32)
+model.norm.elementwise_affine = True
+model.norm.weight = nn.Parameter(torch.randn(16))
+model.norm.bias = nn.Parameter(torch.randn(16))
+print(len(model.state_dict()) == 2)
+
+Answer choices:
+  A. True
+  B. True
+  C. False
+  D. 4
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

@@ -1,0 +1,21 @@
+{
+  "id": "adv_adaln_co_when_lipschitz_true_adalayerno_30c465aa",
+  "description": "Confounder: The model assumes that with lipschitz=True, the output always equals standard la",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "adaln_continuous_lipschitz",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "The rule 'When lipschitz=True, AdaLayerNormContinuous applies rms_norm_no_affine to the scale and shift vectors before computing norm(x) * (1 + scale) + shift, ensuring the identity mapping at initialization.' does NOT hold here. The model assumes that with lipschitz=True, the output always equals standard layer norm when emb is constant (like zeros), and might naively extend this to any constant emb. However, when emb is non-zero constant (e.g., ones), the linear layer without bias (due to lipschitz=True) produces non-zero scale/shift, and rms_norm_no_affine does not zero-center these\u2014it only normalizes magnitude, so scale and shift remain non-zero, breaking identity mapping.",
+    "curriculum_note": "Rule 'When lipschitz=True, AdaLayerNormContinuous applies rms_norm_no_affine to the scale and shift vectors before computing norm(x) * (1 + scale) + shift, ensuring the identity mapping at initialization.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

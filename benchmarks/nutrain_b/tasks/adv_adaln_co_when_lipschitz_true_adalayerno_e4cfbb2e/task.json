@@ -1,0 +1,21 @@
+{
+  "id": "adv_adaln_co_when_lipschitz_true_adalayerno_e4cfbb2e",
+  "description": "Confounder: The model assumes that with lipschitz=True, the zero-initialized linear layer (d",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "adaln_continuous_lipschitz",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A",
+    "explanation": "The rule 'When lipschitz=True, AdaLayerNormContinuous initializes to near-identity mapping because rms_norm_no_affine of zero-initialized scale/shift yields near-zero values, making (1 + scale) \u2248 1 and shift \u2248 0.' does NOT hold here. The model assumes that with lipschitz=True, the zero-initialized linear layer (due to emb=0) yields near-identity behavior, but here emb is all ones, so the linear layer output isn't zero. However, the model might still expect normalization to suppress the scale/shift\u2014yet rms_norm_no_affine preserves direction and unit norm, so scale \u2248 1/\u221ad per element, making (1 + scale) significantly deviate from 1.",
+    "curriculum_note": "Rule 'When lipschitz=True, AdaLayerNormContinuous initializes to near-identity mapping because rms_norm_no_affine of zero-initialized scale/shift yields near-zero values, making (1 + scale) \u2248 1 and shift \u2248 0.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

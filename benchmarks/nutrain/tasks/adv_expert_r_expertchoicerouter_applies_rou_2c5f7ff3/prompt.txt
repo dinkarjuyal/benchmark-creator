@@ -1,0 +1,58 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# ExpertChoiceRouter applies route_scale after renormalizing per-token gate weights to sum to 1, so a token routed to a single expert receives a final gate value equal to route_scale (e.g., 2.5), not 1.0.
+#
+# Confirming case (rule holds):
+# gate = torch.tensor([0.8])
+# token_sums = torch.tensor([0.8])
+# indices = torch.tensor([0])
+# final_gate = renormalize_and_scale(gate, token_sums, indices, route_scale=2.5)
+# print(f"{final_gate.item():.1f}")
+# → prints: 2.5
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  def compute_capacity(capacity_factor, slen, num_experts):
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+def compute_capacity(capacity_factor, slen, num_experts):
+    return max(1, math.ceil(capacity_factor * slen / num_experts))
+def renormalize_and_scale(gate_values, token_score_sums, indices, route_scale=2.5):
+    normed = gate_values / (token_score_sums[indices] + 1e-12)
+    return normed * route_scale
+
+gate = torch.tensor([0.8])
+token_sums = torch.tensor([0.4])  # different from gate value
+indices = torch.tensor([0])
+final_gate = renormalize_and_scale(gate, token_sums, indices, route_scale=2.5)
+print(f"{final_gate.item():.1f}")
+
+Answer choices:
+  A. 2.5
+  B. 2.0
+  C. 1.0
+  D. 5.0
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

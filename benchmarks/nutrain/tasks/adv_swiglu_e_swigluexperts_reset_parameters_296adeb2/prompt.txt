@@ -1,0 +1,50 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# SwiGLUExperts.reset_parameters initializes gate_proj and up_proj weights with std = 1/sqrt(hidden_size), not using kaiming_uniform_'s default fan_in computation, because kaiming_uniform_ incorrectly treats the first dimension of (num_experts, hidden_size, intermediate_dim) as fan_out.
+#
+# Confirming case (rule holds):
+# gate_std, _ = swiglu_fan_in(8, 512, 1024)
+# w = torch.empty(8, 512, 1024)
+# torch.nn.init.normal_(w, std=gate_std)
+# print(f"{w.std():.4f} ≈ {gate_std:.4f}")
+# → prints: 0.0442 ≈ 0.0442
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  gate_std, _ = swiglu_fan_in(1, 256, 256)
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+gate_std, _ = swiglu_fan_in(1, 256, 256)
+w = torch.empty(1, 256, 256)
+torch.nn.init.kaiming_uniform_(w, a=math.sqrt(5))
+print(f"{w.std():.4f} vs {gate_std:.4f}")
+
+Answer choices:
+  A. 0.0625 vs 0.0023
+  B. 0.0023 vs 0.0023
+  C. 0.0625 vs 0.0625
+  D. 0.0023 vs 0.0625
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

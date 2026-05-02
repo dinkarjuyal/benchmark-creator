@@ -1,0 +1,21 @@
+{
+  "id": "adv_rectifie_in_rectifiedflowloss_with_weig_86604316",
+  "description": "Confounder: The model assumes any time t plugged into min_snr_5_weight will follow the same ",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C",
+    "explanation": "The rule 'In RectifiedFlowLoss with weighting='min_snr_5', the loss weight reaches its maximum value of 5/6 when the SNR equals 5, which occurs at time t = 1/(1+\u221a5).' does NOT hold here. The model assumes any time t plugged into min_snr_5_weight will follow the same SNR-to-weight mapping described in the rule. However, cosine_sample_median() returns t = 1 - cos(\u03c0/4) \u2248 0.2929, which yields SNR \u2248 8.24 > 5, so the min(snr, 5.0) clamps it to 5.0, but this t is NOT equal to 1/(1+\u221a5) \u2248 0.3090, so the denominator (snr + 1) uses the unclamped SNR \u2248 8.24, not 5.",
+    "curriculum_note": "Rule 'In RectifiedFlowLoss with weighting='min_snr_5', the loss weight reaches its maximum value of 5/6 when the SNR equals 5, which occurs at time t = 1/(1+\u221a5).' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

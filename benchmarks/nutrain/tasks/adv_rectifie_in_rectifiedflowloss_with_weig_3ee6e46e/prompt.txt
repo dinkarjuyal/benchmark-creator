@@ -1,0 +1,54 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# In RectifiedFlowLoss with weighting='min_snr_5', the loss weight reaches its maximum value of 5/6 when the signal-to-noise ratio (SNR) equals 5.
+#
+# Confirming case (rule holds):
+# t_star = 1 / (1 + math.sqrt(5))
+# weight_at_snr5 = min_snr_5_weight(t_star)
+# print(f"{weight_at_snr5:.6f}")
+# → prints: 0.833333
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  def min_snr_5_weight(t):
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+def min_snr_5_weight(t):
+    snr = ((1 - t) / t) ** 2
+    return min(snr, 5.0) / (snr + 1)
+def cosine_sample_median():
+    return 1 - math.cos(math.pi / 4)
+
+t = cosine_sample_median()
+weight = min_snr_5_weight(t)
+print(f"{weight:.6f}")
+
+Answer choices:
+  A. 0.732233
+  B. 0.833333
+  C. 0.714286
+  D. 0.833333
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

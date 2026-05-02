@@ -1,0 +1,55 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# The min_snr_5 weighting function assigns higher loss weights to smaller t values (near data), with maximum weight occurring at t = 1/sqrt(6) ≈ 0.408.
+#
+# Confirming case (rule holds):
+# import torch, math
+# def min_snr_5_weight(t):
+#     snr = ((1 - t) / t) ** 2
+#     return min(snr, 5.0) / (snr + 1)
+# t_opt = 1 / math.sqrt(6)
+# print(f"Max weight at t={t_opt:.3f} with weight={min_snr_5_weight(t_opt):.3f}")
+# → prints: Max weight at t=0.408 with weight=0.678
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  def min_snr_5_weight(t):
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+def min_snr_5_weight(t):
+    snr = ((1 - t) / t) ** 2
+    return min(snr, 5.0) / (snr + 1)
+def cosine_sample_median():
+    return 1 - math.cos(math.pi / 4)
+t_test = cosine_sample_median()
+print(f"Weight at t={t_test:.3f} is {min_snr_5_weight(t_test):.3f}")
+
+Answer choices:
+  A. Weight at t=0.293 is 0.800
+  B. Weight at t=0.292 is 0.654
+  C. Weight at t=0.293 is 0.732
+  D. Weight at t=0.293 is 0.500
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

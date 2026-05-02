@@ -1,0 +1,51 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# SwiGLUExperts.reset_parameters initializes gate_proj and up_proj weights with std=1/sqrt(hidden_size), not using kaiming_uniform_'s default fan_in computation, to avoid incorrect scaling when weights are 3-D tensors.
+#
+# Confirming case (rule holds):
+# import torch, math
+# gate_std = swiglu_fan_in(num_experts=4, hidden_size=256, intermediate_dim=512)[0]
+# weight_3d = torch.empty(4, 256, 512)
+# torch.nn.init.normal_(weight_3d, std=gate_std)
+# print(f"{weight_3d.std():.4f} ≈ {gate_std:.4f}")
+# → prints: 0.0625 ≈ 0.0625
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  gate_std = swiglu_fan_in(num_experts=4, hidden_size=256, intermediate_dim=512)[0]
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+gate_std = swiglu_fan_in(num_experts=4, hidden_size=256, intermediate_dim=512)[0]
+weight_3d = torch.empty(4, 512, 256)  # swapped dims: (E, intermediate_dim, hidden_size)
+torch.nn.init.normal_(weight_3d, std=gate_std)
+print(f"{weight_3d.std():.4f} ≈ {gate_std:.4f}")
+
+Answer choices:
+  A. 0.0442 ≈ 0.0625
+  B. 0.0626 ≈ 0.0625
+  C. 0.0625 ≈ 0.0625
+  D. 0.0884 ≈ 0.0625
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

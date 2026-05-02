@@ -1,0 +1,21 @@
+{
+  "id": "adv_expert_r_expertchoicerouter_applies_rou_fd19a888",
+  "description": "Confounder: The model assumes token_score_sums[indices] equals the gate_values (as in the co",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "expert_router_gating",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A",
+    "explanation": "The rule 'ExpertChoiceRouter applies route_scale after renormalizing per-token gating weights to sum to 1, so a token routed to a single expert receives a final gate value equal to route_scale, not 1.0.' does NOT hold here. The model assumes token_score_sums[indices] equals the gate_values (as in the confirming case), so renormalization yields 1.0 before scaling. However, token_score_sums actually represents the sum of all raw gate logits for that token across experts, which may differ from the selected expert's gate_value if other experts had non-zero logits.",
+    "curriculum_note": "Rule 'ExpertChoiceRouter applies route_scale after renormalizing per-token gating weights to sum to 1, so a token routed to a single expert receives a final gate value equal to route_scale, not 1.0.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

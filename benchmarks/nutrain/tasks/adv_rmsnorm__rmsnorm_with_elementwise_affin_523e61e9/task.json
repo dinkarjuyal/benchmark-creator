@@ -1,0 +1,21 @@
+{
+  "id": "adv_rmsnorm__rmsnorm_with_elementwise_affin_523e61e9",
+  "description": "Confounder: The model assumes the weight stays float32, but the weight was explicitly cast t",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "rmsnorm_dtype_chain",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'RMSNorm with elementwise_affine=True and a float32 weight preserves float32 output even when input is bfloat16, because the weight multiplication occurs in float32 and no cast back to input dtype is performed.' does NOT hold here. The model assumes the weight stays float32, but the weight was explicitly cast to bfloat16, triggering the dtype conversion before multiplication",
+    "curriculum_note": "Rule 'RMSNorm with elementwise_affine=True and a float32 weight preserves float32 output even when input is bfloat16, because the weight multiplication occurs in float32 and no cast back to input dtype is performed.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

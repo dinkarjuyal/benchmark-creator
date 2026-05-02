@@ -1,0 +1,67 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# RMSNorm with elementwise_affine=True and a float32 weight preserves float32 output even when input is bfloat16, because the weight multiplication occurs in float32 and no cast back to input dtype is performed.
+#
+# Confirming case (rule holds):
+# x = torch.randn(2, 4, dtype=torch.bfloat16)
+# norm = RMSNorm(4, elementwise_affine=True)
+# out = norm(x)
+# print(out.dtype == torch.float32)
+# → prints: True
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  class RMSNorm(nn.Module):
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, torch.nn as nn
+class RMSNorm(nn.Module):
+    def __init__(self, d, elementwise_affine=True, bias=False, eps=1e-6):
+        super().__init__()
+        self.eps = eps
+        self.weight = nn.Parameter(torch.ones(d)) if elementwise_affine else None
+        self.bias = nn.Parameter(torch.zeros(d)) if (elementwise_affine and bias) else None
+    def forward(self, x):
+        input_dtype = x.dtype
+        var = x.to(torch.float32).pow(2).mean(-1, keepdim=True)
+        x = x * torch.rsqrt(var + self.eps)
+        if self.weight is None: return x.to(input_dtype)
+        if self.weight.dtype in (torch.float16, torch.bfloat16): x = x.to(self.weight.dtype)
+        x = x * self.weight
+        if self.bias is not None: x = x + self.bias
+        return x
+
+x = torch.randn(2, 4, dtype=torch.bfloat16)
+norm = RMSNorm(4, elementwise_affine=True)
+norm.weight.data = norm.weight.data.to(torch.bfloat16)
+out = norm(x)
+print(out.dtype == torch.float32)
+
+Answer choices:
+  A. True
+  B. True
+  C. False
+  D. torch.bfloat16
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

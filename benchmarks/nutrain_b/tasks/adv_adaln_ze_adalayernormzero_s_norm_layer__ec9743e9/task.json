@@ -1,0 +1,21 @@
+{
+  "id": "adv_adaln_ze_adalayernormzero_s_norm_layer__ec9743e9",
+  "description": "Confounder: The model assumes that nn.LayerNorm with elementwise_affine=False always has no ",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "adaln_zero_modulation",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C",
+    "explanation": "The rule 'AdaLayerNormZero's norm layer has no learnable parameters, so its state_dict contains only the linear projection weights and biases.' does NOT hold here. The model assumes that nn.LayerNorm with elementwise_affine=False always has no learnable parameters, so only the linear layer contributes to the state_dict. However, directly assigning weight and bias as Parameters to the norm layer\u2014even if elementwise_affine was initially False\u2014adds new learnable parameters that appear in the state_dict.",
+    "curriculum_note": "Rule 'AdaLayerNormZero's norm layer has no learnable parameters, so its state_dict contains only the linear projection weights and biases.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

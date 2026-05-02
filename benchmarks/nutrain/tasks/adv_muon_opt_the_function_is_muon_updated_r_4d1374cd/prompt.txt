@@ -1,0 +1,50 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# The function is_muon_updated returns True only for parameters with dimension >=2 and names that do not contain any substring from _MUON_EXCLUDED.
+#
+# Confirming case (rule holds):
+# import torch
+# param = torch.nn.Linear(10, 5).weight  # 2D parameter
+# print(is_muon_updated('output_proj.weight', param.dim()))  # name lacks excluded substrings
+# → prints: True
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  param = torch.nn.Linear(10, 5).weight  # 2D parameter
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+_MUON_EXCLUDED = ('img_in', 'encoder_proj', 'time_text_embed', 'img_mod', 'norm_out', 'proj_out', 'router.gate')
+def is_muon_excluded(name): return any(p in name for p in _MUON_EXCLUDED)
+def is_muon_updated(name, param_dim): return param_dim >= 2 and not is_muon_excluded(name)
+import torch
+param = torch.nn.Linear(10, 5).weight  # 2D parameter
+print(is_muon_updated('router.gate.weight', param.dim()))  # name contains 'router.gate'
+
+Answer choices:
+  A. False
+  B. False
+  C. True
+  D. True
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

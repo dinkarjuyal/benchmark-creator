@@ -1,0 +1,21 @@
+{
+  "id": "adv_adaln_co_when_lipschitz_true_adalayerno_451bcf07",
+  "description": "Confounder: The model assumes that rms_norm_no_affine always forces scale and shift to have ",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "adaln_continuous_lipschitz",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A",
+    "explanation": "The rule 'When lipschitz=True, AdaLayerNormContinuous applies rms_norm_no_affine to both scale and shift, forcing their RMS to 1 in the input dtype (e.g., bfloat16), which affects the magnitude of the modulation even if the conditioning embedding is constant.' does NOT hold here. The model assumes that rms_norm_no_affine always forces scale and shift to have RMS 1, so even with zero conditioning, the modulation should behave consistently. However, when emb is all zeros and lipschitz=True, the linear layer has no bias (bias=False), so scale and shift are exactly zero before normalization; rms_norm_no_affine then divides by zero RMS (after eps), yielding NaNs which become zeros in bfloat16 due to underflow, breaking the expected modulation magnitude.",
+    "curriculum_note": "Rule 'When lipschitz=True, AdaLayerNormContinuous applies rms_norm_no_affine to both scale and shift, forcing their RMS to 1 in the input dtype (e.g., bfloat16), which affects the magnitude of the modulation even if the conditioning embedding is constant.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

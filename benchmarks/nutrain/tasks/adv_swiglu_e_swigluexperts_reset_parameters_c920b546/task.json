@@ -1,0 +1,21 @@
+{
+  "id": "adv_swiglu_e_swigluexperts_reset_parameters_c920b546",
+  "description": "Confounder: The model assumes the rule dictates that gate_proj weights always use std = 1/sq",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "swiglu_experts_init",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'SwiGLUExperts.reset_parameters initializes gate_proj and up_proj weights with std = 1/sqrt(hidden_size), ignoring kaiming_uniform_'s default fan_in logic for 3D tensors.' does NOT hold here. The model assumes the rule dictates that gate_proj weights always use std = 1/sqrt(hidden_size) regardless of initialization method. However, the code uses torch.nn.init.kaiming_uniform_, which ignores the provided gate_std and instead computes its own scale based on fan_in = 256 and gain derived from a=\u221a5, yielding a different std.",
+    "curriculum_note": "Rule 'SwiGLUExperts.reset_parameters initializes gate_proj and up_proj weights with std = 1/sqrt(hidden_size), ignoring kaiming_uniform_'s default fan_in logic for 3D tensors.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

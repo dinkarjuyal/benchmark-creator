@@ -1,0 +1,21 @@
+{
+  "id": "adv_adaln_co_when_lipschitz_true_adalayerno_14990397",
+  "description": "Confounder: The model assumes that rms_norm_no_affine is always applied to non-zero inputs, ",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "adaln_continuous_lipschitz",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A",
+    "explanation": "The rule 'When lipschitz=True, AdaLayerNormContinuous applies rms_norm_no_affine to both scale and shift, forcing their RMS to 1 in the input dtype (e.g., bfloat16), which affects the magnitude of modulation.' does NOT hold here. The model assumes that rms_norm_no_affine is always applied to non-zero inputs, so the RMS should be near 1. However, if the linear layer's weights are zero, the input to rms_norm_no_affine is zero, and RMS normalization of a zero tensor remains zero due to the denominator becoming sqrt(eps), but the numerator is zero.",
+    "curriculum_note": "Rule 'When lipschitz=True, AdaLayerNormContinuous applies rms_norm_no_affine to both scale and shift, forcing their RMS to 1 in the input dtype (e.g., bfloat16), which affects the magnitude of modulation.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

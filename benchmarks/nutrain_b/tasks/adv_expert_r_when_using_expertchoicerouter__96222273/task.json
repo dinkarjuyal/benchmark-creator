@@ -1,0 +1,21 @@
+{
+  "id": "adv_expert_r_when_using_expertchoicerouter__96222273",
+  "description": "Confounder: The model assumes that renormalization always yields values summing to route_sca",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "expert_router_gating",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'When using ExpertChoiceRouter with per-token gate renormalization, the renormalized gate values for each token sum to route_scale, not 1, due to explicit scaling by route_scale after normalization.' does NOT hold here. The model assumes that renormalization always yields values summing to route_scale per token, as in the confirming case. However, when all gate values for a token are zero, token_score_sums becomes zero, and division by near-zero (with epsilon) yields finite but unnormalized values that do not reflect true proportions, breaking the sum-to-route_scale behavior.",
+    "curriculum_note": "Rule 'When using ExpertChoiceRouter with per-token gate renormalization, the renormalized gate values for each token sum to route_scale, not 1, due to explicit scaling by route_scale after normalization.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

@@ -1,0 +1,50 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# The function is_muon_updated returns False for a 2D parameter named 'output_proj.weight' because 'proj_out' is not a substring of 'output_proj.weight'.
+#
+# Confirming case (rule holds):
+# import torch
+# param = torch.nn.Parameter(torch.randn(10, 10))
+# print(is_muon_updated('output_proj.weight', param.dim()))
+# → prints: True
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  param = torch.nn.Parameter(torch.randn(10, 10))
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+_MUON_EXCLUDED = ('img_in', 'encoder_proj', 'time_text_embed', 'img_mod', 'norm_out', 'proj_out', 'router.gate')
+def is_muon_excluded(name): return any(p in name for p in _MUON_EXCLUDED)
+def is_muon_updated(name, param_dim): return param_dim >= 2 and not is_muon_excluded(name)
+import torch
+param = torch.nn.Parameter(torch.randn(10, 10))
+print(is_muon_updated('proj_out.weight', param.dim()))
+
+Answer choices:
+  A. True
+  B. None
+  C. True
+  D. False
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

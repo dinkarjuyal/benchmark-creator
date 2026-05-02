@@ -1,0 +1,21 @@
+{
+  "id": "adv_rectifie_the_min_snr_5_weighting_functi_583abc2a",
+  "description": "Confounder: The model assumes the maximum weight always occurs near t \u2248 0.408 and that any o",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C",
+    "explanation": "The rule 'The min_snr_5 weighting function assigns higher loss weights to smaller t values (near data), with maximum weight occurring at t = 1/sqrt(6) \u2248 0.408.' does NOT hold here. The model assumes the maximum weight always occurs near t \u2248 0.408 and that any other t will yield a strictly lower weight. However, cosine_sample_median() returns t \u2248 0.292, which lies in the SNR-limited region where snr > 5, making the weight = 5/(snr+1), and due to the specific curvature of the function, this t actually yields a weight (\u22480.693) higher than at t=1/sqrt(6) (\u22480.678).",
+    "curriculum_note": "Rule 'The min_snr_5 weighting function assigns higher loss weights to smaller t values (near data), with maximum weight occurring at t = 1/sqrt(6) \u2248 0.408.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

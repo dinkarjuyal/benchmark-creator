@@ -1,0 +1,56 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When using ExpertChoiceRouter with per-token gate renormalization, the renormalized gate values for each token are scaled by route_scale after being divided by the sum of gate scores assigned to that token across all experts.
+#
+# Confirming case (rule holds):
+# gate = torch.tensor([0.2, 0.3, 0.1, 0.4])
+# token_sums = torch.tensor([0.5, 0.5, 0.5, 0.5])
+# indices = torch.tensor([0, 1, 2, 3])
+# print(renormalize_and_scale(gate, token_sums, indices, route_scale=2.0))
+# → prints: tensor([0.8000, 1.2000, 0.4000, 1.6000])
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  def compute_capacity(capacity_factor, slen, num_experts):
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+def compute_capacity(capacity_factor, slen, num_experts):
+    return max(1, math.ceil(capacity_factor * slen / num_experts))
+def renormalize_and_scale(gate_values, token_score_sums, indices, route_scale=2.5):
+    normed = gate_values / (token_score_sums[indices] + 1e-12)
+    return normed * route_scale
+
+gate = torch.tensor([0.2, 0.3, 0.1, 0.4])
+token_sums = torch.tensor([0.5, 0.6, 0.5, 0.4])
+indices = torch.tensor([0, 1, 2, 3])
+print(renormalize_and_scale(gate, token_sums, indices, route_scale=2.0))
+
+Answer choices:
+  A. tensor([0.8000, 1.2000, 0.4000, 1.6000])
+  B. tensor([0.8000, 1.0000, 0.4000, 2.0000])
+  C. tensor([0.4000, 0.6000, 0.2000, 0.8000])
+  D. tensor([0.2500, 0.5000, 0.1250, 1.0000])
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

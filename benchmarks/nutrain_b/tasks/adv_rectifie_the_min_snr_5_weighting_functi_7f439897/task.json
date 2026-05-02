@@ -1,0 +1,21 @@
+{
+  "id": "adv_rectifie_the_min_snr_5_weighting_functi_7f439897",
+  "description": "Confounder: The model assumes the maximum weight occurs only at t \u2248 0.592 and that other t v",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C",
+    "explanation": "The rule 'The min_snr_5 weighting function assigns higher loss weights to smaller timesteps (near data), with maximum weight occurring at t = 1 - 1/\u221a6 \u2248 0.592.' does NOT hold here. The model assumes the maximum weight occurs only at t \u2248 0.592 and that other t values yield strictly lower weights. However, cosine_sample_median() returns t = 1 - cos(\u03c0/4) \u2248 0.2929, which is in the region where SNR > 5, so the weight becomes 5/(SNR+1), and due to the clamping, the function is not monotonic near t=0 \u2014 creating a local maximum that the model doesn't anticipate.",
+    "curriculum_note": "Rule 'The min_snr_5 weighting function assigns higher loss weights to smaller timesteps (near data), with maximum weight occurring at t = 1 - 1/\u221a6 \u2248 0.592.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

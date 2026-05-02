@@ -1,0 +1,21 @@
+{
+  "id": "adv_rmsnorm__rmsnorm_with_elementwise_affin_adccecd8",
+  "description": "Confounder: The model assumes that with elementwise_affine=True, the output will always be f",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "rmsnorm_dtype_chain",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B",
+    "explanation": "The rule 'RMSNorm with elementwise_affine=True and a float32 weight preserves float32 output even when input is bfloat16, whereas without affine it casts back to input dtype.' does NOT hold here. The model assumes that with elementwise_affine=True, the output will always be float32 regardless of input dtype. However, the forward method explicitly casts the normalized tensor to the weight's dtype if the weight is float16 or bfloat16, and since the weight was manually converted to bfloat16, the multiplication occurs in bfloat16, resulting in a bfloat16 output.",
+    "curriculum_note": "Rule 'RMSNorm with elementwise_affine=True and a float32 weight preserves float32 output even when input is bfloat16, whereas without affine it casts back to input dtype.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

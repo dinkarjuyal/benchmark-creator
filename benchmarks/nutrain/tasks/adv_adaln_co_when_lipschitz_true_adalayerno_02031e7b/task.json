@@ -1,0 +1,21 @@
+{
+  "id": "adv_adaln_co_when_lipschitz_true_adalayerno_02031e7b",
+  "description": "Confounder: The model assumes rms_norm_no_affine always forces RMS to 1, but when the input ",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "adaln_continuous_lipschitz",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A",
+    "explanation": "The rule 'When lipschitz=True, AdaLayerNormContinuous applies rms_norm_no_affine to both scale and shift, forcing their RMS to 1 in the input dtype (e.g., bfloat16), regardless of the original magnitude.' does NOT hold here. The model assumes rms_norm_no_affine always forces RMS to 1, but when the input is all zeros (as with emb=zeros and bias=False), normalization produces NaNs or zeros, breaking the RMS=1 expectation due to division by zero (even with eps, the gradient or numerical behavior in bfloat16 can collapse the result)",
+    "curriculum_note": "Rule 'When lipschitz=True, AdaLayerNormContinuous applies rms_norm_no_affine to both scale and shift, forcing their RMS to 1 in the input dtype (e.g., bfloat16), regardless of the original magnitude.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "adv_swiglu_e_swigluexperts_reset_parameters_9af2466f",
+  "description": "Confounder: The model assumes that because SwiGLUExperts uses a custom std=1/sqrt(hidden_siz",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "swiglu_experts_init",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A",
+    "explanation": "The rule 'SwiGLUExperts.reset_parameters initializes gate_proj and up_proj weights with std=1/sqrt(hidden_size), not using kaiming_uniform_'s default fan_in computation which fails on 3D tensors.' does NOT hold here. The model assumes that because SwiGLUExperts uses a custom std=1/sqrt(hidden_size), any weight initialization for gate_proj/up_proj must follow that. However, kaiming_uniform_ ignores the provided a=math.sqrt(5) and recomputes fan_in based on tensor dimensions, which for 3D tensors uses the wrong axis (dim=0 as fan_out), leading to an unexpected std.",
+    "curriculum_note": "Rule 'SwiGLUExperts.reset_parameters initializes gate_proj and up_proj weights with std=1/sqrt(hidden_size), not using kaiming_uniform_'s default fan_in computation which fails on 3D tensors.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}

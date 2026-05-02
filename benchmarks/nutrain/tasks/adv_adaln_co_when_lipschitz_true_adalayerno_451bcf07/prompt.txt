@@ -1,0 +1,68 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# When lipschitz=True, AdaLayerNormContinuous applies rms_norm_no_affine to both scale and shift, forcing their RMS to 1 in the input dtype (e.g., bfloat16), which affects the magnitude of the modulation even if the conditioning embedding is constant.
+#
+# Confirming case (rule holds):
+# import torch
+# x = torch.randn(2, 3, 16, dtype=torch.bfloat16)
+# emb = torch.ones(2, 8, dtype=torch.bfloat16)
+# model = AdaLayerNormContinuous(16, 8, lipschitz=True).to(torch.bfloat16)
+# out = model(x, emb)
+# print(f"{out.mean().item():.2f}")
+# → prints: 0.11
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  x = torch.randn(2, 3, 16, dtype=torch.bfloat16)
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, torch.nn as nn
+def rms_norm_no_affine(x, eps=1e-6):
+    var = x.to(torch.float32).pow(2).mean(-1, keepdim=True)
+    return (x * torch.rsqrt(var + eps)).to(x.dtype)
+class AdaLayerNormContinuous(nn.Module):
+    def __init__(self, d, cond_d, lipschitz=False):
+        super().__init__()
+        self.lipschitz = lipschitz
+        self.norm = nn.LayerNorm(d, elementwise_affine=False)
+        self.linear = nn.Linear(cond_d, d * 2, bias=not lipschitz)
+    def forward(self, x, emb):
+        scale, shift = self.linear(emb).chunk(2, dim=1)
+        if self.lipschitz:
+            scale = rms_norm_no_affine(scale); shift = rms_norm_no_affine(shift)
+        return self.norm(x) * (1 + scale[:, None]) + shift[:, None]
+import torch
+x = torch.randn(2, 3, 16, dtype=torch.bfloat16)
+emb = torch.zeros(2, 8, dtype=torch.bfloat16)
+model = AdaLayerNormContinuous(16, 8, lipschitz=True).to(torch.bfloat16)
+out = model(x, emb)
+print(f"{out.mean().item():.2f}")
+
+Answer choices:
+  A. -0.00
+  B. 0.11
+  C. 1.00
+  D. 0.00
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

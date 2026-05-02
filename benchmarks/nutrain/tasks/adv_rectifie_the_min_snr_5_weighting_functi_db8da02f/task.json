@@ -1,0 +1,21 @@
+{
+  "id": "adv_rectifie_the_min_snr_5_weighting_functi_db8da02f",
+  "description": "Confounder: The model assumes the cap of 5/6 \u2248 0.833 applies for small t, but for very small",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D",
+    "explanation": "The rule 'The min_snr_5 weighting function assigns higher loss weights to earlier timesteps (near t=0) due to higher SNR, but caps the weight at 5/6 \u2248 0.833 when SNR \u2265 5.' does NOT hold here. The model assumes the cap of 5/6 \u2248 0.833 applies for small t, but for very small t, SNR exceeds 5 and the weight approaches 5/(5+1) = 0.833 from below\u2014yet due to floating-point precision and the specific values, the maximum may slightly exceed 0.833 if SNR is just below 5, but here SNR is well above 5 so the weight should be exactly 5/6; however, the actual issue is that for t=0.01, SNR = (0.99/0.01)^2 = 9801, so weight = 5/9802 \u2248 0.00051, which is tiny\u2014so the model incorrectly assumes small t always gives high weight, but the rule says higher weight near t=0 due to higher SNR, which is true only until SNR \u2265 5, after which weight decreases as 5/(SNR+1); thus for very small t, weight becomes small again.",
+    "curriculum_note": "Rule 'The min_snr_5 weighting function assigns higher loss weights to earlier timesteps (near t=0) due to higher SNR, but caps the weight at 5/6 \u2248 0.833 when SNR \u2265 5.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}
