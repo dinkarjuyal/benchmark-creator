@@ -1,0 +1,11 @@
+[
+  {
+    "id": "adv_rectifie_in_rectifiedflowloss_with_weig_349be0f9",
+    "path": "benchmarks/nutrain_c/tasks/adv_rectifie_in_rectifiedflowloss_with_weig_349be0f9",
+    "type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B"
+  }
+]

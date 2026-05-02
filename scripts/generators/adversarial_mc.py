@@ -163,16 +163,19 @@ Requirements:
 - Keep snippet under 6 lines of code (excluding any preamble code provided above)"""
 
 _PLAYER2_SYSTEM = """\
-You are an adversary designing HARD trick questions about a software library.
-Given a rule that a model believes, find a case where the rule BREAKS in a way that
-requires TWO reasoning steps to catch — where the model must know BOTH the rule AND
-a second non-obvious fact to answer correctly.
+You are an adversary designing MAXIMALLY DECEPTIVE trick questions about a software library.
+Given a rule that a model believes, find a case where the rule BREAKS — and make it as
+hard as possible to detect by keeping the snippet as similar as possible to the confirming case.
 
-A good confounder:
-  - Looks exactly like the confirming case on the surface
-  - Requires chaining two independent facts: "the rule says X, BUT also Y applies,
-    and X + Y together give a surprising Z"
-  - Cannot be answered by knowing only one of the two facts
+The ideal confounder:
+  - Differs from the confirming case by the MINIMUM possible change (one argument value,
+    one flag, one swapped variable) — but that tiny change activates a hidden code path
+  - Requires chaining TWO completely independent facts to catch:
+    "the rule says X, BUT also Y applies (a fact unrelated to X),
+     and X + Y together produce a surprising Z"
+  - Would fool someone who knows the rule deeply — because the breaking condition
+    is caused by an INTERACTION between the rule and an orthogonal library behaviour
+  - The model CANNOT answer by knowing only one of the two facts — both are required
 
 Respond using ONLY these tags — no other text:
 
@@ -180,7 +183,7 @@ Respond using ONLY these tags — no other text:
 Short runnable code snippet that VIOLATES the rule non-obviously \
 (include necessary imports, print one line)
 </snippet>
-<why_wrong>Two sentences: (1) what the model incorrectly assumes, (2) the second hidden fact that changes the outcome</why_wrong>
+<why_wrong>Two sentences: (1) what the model incorrectly assumes, (2) the second independent hidden fact that changes the outcome</why_wrong>
 <rule_predicts>The EXACT output string the model would expect — no explanation</rule_predicts>"""
 
 _PLAYER2_USER = """\
@@ -195,8 +198,9 @@ Find a variation where a model would expect the rule to apply, but the output di
 
 Requirements:
 - Use ONLY the classes/functions defined in the preamble above (do NOT import external libraries beyond torch/math)
-- Must look superficially similar to the confirming case
-- Must NOT be a trivially obvious edge case
+- MAXIMUM surface similarity to the confirming case — ideally change only ONE argument, flag, or value
+- The single change must activate a non-obvious secondary code path
+- Must NOT be a trivially obvious edge case (no simple None/empty/zero inputs)
 - Snippet must be runnable {language} code and print exactly one line"""
 
 _DISTRACTORS_SYSTEM = """\
@@ -1351,8 +1355,8 @@ class GuideScorer:
     """
 
     MIN_SCORE = 3          # base threshold for relevance + elegance
-    MIN_NON_TRIVIAL = 4   # tougher bar: confounding mechanism must be hard to spot
-    MIN_TWO_STEP = 3      # must require at least some chained reasoning
+    MIN_NON_TRIVIAL = 5   # hardest bar: confounding mechanism must be very hard to spot
+    MIN_TWO_STEP = 4      # must require two well-chained independent reasoning hops
 
     def __init__(self, client, guide_model: str = "claude-haiku-4-5-20251001",
                  verbose: bool = False):

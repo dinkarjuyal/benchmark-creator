@@ -1,0 +1,38 @@
+[
+  {
+    "id": "adv_rectifie_in_rectifiedflowloss_with_weig_86604316",
+    "path": "benchmarks/nutrain_d/tasks/adv_rectifie_in_rectifiedflowloss_with_weig_86604316",
+    "type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "C"
+  },
+  {
+    "id": "adv_rectifie_in_rectifiedflowloss_with_weig_349be0f9",
+    "path": "benchmarks/nutrain_d/tasks/adv_rectifie_in_rectifiedflowloss_with_weig_349be0f9",
+    "type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "B"
+  },
+  {
+    "id": "adv_rectifie_the_min_snr_5_weighting_functi_16f56004",
+    "path": "benchmarks/nutrain_d/tasks/adv_rectifie_the_min_snr_5_weighting_functi_16f56004",
+    "type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A"
+  },
+  {
+    "id": "adv_swiglu_e_swigluexperts_reset_parameters_ad94801a",
+    "path": "benchmarks/nutrain_d/tasks/adv_swiglu_e_swigluexperts_reset_parameters_ad94801a",
+    "type": "adversarial_confounder",
+    "family": "swiglu_experts_init",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "D"
+  }
+]

@@ -1,0 +1,53 @@
+You are given a short excerpt from the nutrain source code and a proposed change.
+Read carefully, then answer the multiple-choice question below.
+
+──────────────────────────────────────────────────
+PANDAS SOURCE EXCERPT
+──────────────────────────────────────────────────
+# Rule being tested:
+# The min_snr_5 weighting function assigns higher weights to small t (near data) than to large t (near noise), and its maximum weight occurs at t = 1/√6 ≈ 0.408.
+#
+# Confirming case (rule holds):
+# t_opt = 1 / math.sqrt(6)
+# w_opt = min_snr_5_weight(t_opt)
+# print(f"max weight ≈ {w_opt:.5f} at t ≈ {t_opt:.5f}")
+# → prints: max weight ≈ 0.67753 at t ≈ 0.40825
+
+──────────────────────────────────────────────────
+PROPOSED CHANGE
+──────────────────────────────────────────────────
+Replace the confirming snippet above with the following:
+  w_opt = min_snr_5_weight(t_opt)
+(full snippet shown in question below)
+
+──────────────────────────────────────────────────
+QUESTION
+──────────────────────────────────────────────────
+The rule above holds for the confirming case. What does the following snippet actually print? (It looks like the rule should apply — but does it?)
+
+Code:
+import torch, math
+def min_snr_5_weight(t):
+    snr = ((1 - t) / t) ** 2
+    return min(snr, 5.0) / (snr + 1)
+def cosine_sample_median():
+    return 1 - math.cos(math.pi / 4)
+t_opt = cosine_sample_median()
+w_opt = min_snr_5_weight(t_opt)
+print(f"max weight ≈ {w_opt:.5f} at t ≈ {t_opt:.5f}")
+
+Answer choices:
+  A. max weight ≈ 0.73223 at t ≈ 0.29289
+  B. max weight ≈ 0.67753 at t ≈ 0.29289
+  C. max weight ≈ 0.67753 at t ≈ 0.40825
+  D. max weight ≈ 0.73223 at t ≈ 0.40825
+
+──────────────────────────────────────────────────
+INSTRUCTIONS
+──────────────────────────────────────────────────
+Write your answer to the file /work/answer.json as a JSON object.
+Example: {"choice": "B"}
+
+Use ONLY one of the letters A, B, C, or D.
+Do NOT write any explanation, code, or other text.
+Do NOT modify any files other than /work/answer.json.

@@ -1,0 +1,21 @@
+{
+  "id": "adv_rectifie_the_min_snr_5_weighting_functi_16f56004",
+  "description": "Confounder: The model assumes the maximum weight still occurs at t = 1/\u221a6 and that cosine_sa",
+  "image": "takehome-pandas-mc:py312-v1",
+  "dockerfile": "../../docker/Dockerfile",
+  "timeout_sec": 120,
+  "prompt_file": "prompt.txt",
+  "public_dir": "public",
+  "setup_command": "python /task/public/setup.py",
+  "validator_command": "python /task/validator.py",
+  "_meta": {
+    "task_type": "adversarial_confounder",
+    "family": "rectified_flow_loss_weighting",
+    "difficulty": 3,
+    "is_hard_negative": false,
+    "correct_id": "A",
+    "explanation": "The rule 'The min_snr_5 weighting function assigns higher weights to small t (near data) than to large t (near noise), and its maximum weight occurs at t = 1/\u221a6 \u2248 0.408.' does NOT hold here. The model assumes the maximum weight still occurs at t = 1/\u221a6 and that cosine_sample_median() is just another way to compute a t near that value. However, cosine_sample_median() returns 1 - cos(\u03c0/4) \u2248 0.2929, which is small enough that snr = ((1 - t)/t)^2 \u2248 11.7 > 5, so min(snr, 5.0) clamps it to 5, activating the flat region of the weighting function where weight = 5/(snr+1) is no longer maximized at t = 1/\u221a6.",
+    "curriculum_note": "Rule 'The min_snr_5 weighting function assigns higher weights to small t (near data) than to large t (near noise), and its maximum weight occurs at t = 1/\u221a6 \u2248 0.408.' holds in the obvious case but breaks here. Distractor B is the hard negative \u2014 the rule naively applied.",
+    "generation_recipe": "adversarial_two_player"
+  }
+}
