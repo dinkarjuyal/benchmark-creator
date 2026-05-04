@@ -54,6 +54,7 @@ from scripts.generators.adversarial_mc import (
     KnowledgeMCGenerator,
     RepoAnalyzer,
 )
+from scripts.generators.coding_diffusion import CodingDiffusionStrategy  # Register strategy
 from scripts.generators.runtime import detect_language, make_runtime
 from scripts.generators.strategy_registry import get_strategy, list_strategies
 from scripts.task_writer_mc import write_mc_task
