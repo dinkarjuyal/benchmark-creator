@@ -21,7 +21,38 @@ Coding diffusion strategy for benchmark-creator: forward process corrupts clean 
 
 All changes on `feature/coding-diffusion-v2` (previously pushed to main as f7fca95).
 
-## Benchmark Results (PI Models)
+## Benchmark Results — nutrain (Real ML Repo)
+
+Tested on real nutrain code (router.py, normalization.py, optimizer.py) with 10 corruptions across 3 files, subtlety 1-5.
+
+| Corruption | File | Subtlety | Description |
+|---|---|---|---|
+| 1 | router.py | 1 | `* route_scale` → `/ route_scale` (gate magnitude flip) |
+| 2 | normalization.py | 1 | `+ eps` → `- eps` (NaN near zero) |
+| 3 | router.py | 2 | `ceil` → `floor` (fewer tokens routed) |
+| 4 | normalization.py | 2 | `(1 + scale)` → `scale` (AdaLN zero-init kills output) |
+| 5 | router.py | 3 | `softmax dim=-1` → `dim=-2` (destroys expert selection) |
+| 6 | optimizer.py | 3 | removed `embedding` from no-decay check |
+| 7 | optimizer.py | 4 | removed `down_proj` from expert param check |
+| 8 | normalization.py | 4 | `chunk(6)` → `chunk(5)` (AdaLN-Zero shape error) |
+| 9 | optimizer.py | 5 | `+ expert_sq_norm` → `-` (grad clip can go NaN) |
+| 10 | router.py | 5 | `/ renorm` → `* renorm` (gates explode) |
+
+### qwen3-coder on nutrain
+
+| Corruptions | 1 | 2 | 3 | 5 | 7 | 10 |
+|---|---|---|---|---|---|---|
+| Bug fix rate | 100% | 100% | 100% | **80%** | **71%** | **0%** |
+
+### deepseek-chat on nutrain (partial — slower)
+
+| Corruptions | 1 | 2 | 3 | 5 | 7+ |
+|---|---|---|---|---|---|
+| Bug fix rate | 100% | 100% | 100% | **80%** | running... |
+
+**Key finding**: On real ML training code, the difficulty cliff is sharp — models handle 1-3 bugs perfectly, drop to 80% at 5, and collapse at 10. The `(1 + scale)` → `scale` AdaLN bug (subtlety 2) is consistently missed by all models — they change surrounding code instead of reverting the exact operator.
+
+## Benchmark Results — math_utils (Toy Module)
 
 Tested on a hand-crafted `math_utils.py` with 8 functions and 5 simple single-line corruptions.
 
