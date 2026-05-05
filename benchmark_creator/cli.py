@@ -54,9 +54,15 @@ from scripts.generators.adversarial_mc import (
     KnowledgeMCGenerator,
     RepoAnalyzer,
 )
+from scripts.generators.base import TaskCandidate
+from scripts.generators.pandas_mc import MCTaskCandidate
 from scripts.generators.runtime import detect_language, make_runtime
 from scripts.generators.strategy_registry import get_strategy, list_strategies
 from scripts.task_writer_mc import write_mc_task
+from scripts.task_writer_diffusion import write_diffusion_task
+
+# Import coding_diffusion to register the strategy at module load time
+import scripts.generators.coding_diffusion  # noqa: F401
 
 
 def _load_families(args: argparse.Namespace, api_key: str) -> list[dict]:
@@ -173,6 +179,29 @@ def main() -> None:
         "--export-sft", default=None, metavar="PATH",
         help="Export generated questions as SFT training JSONL to PATH (ChatML chain-of-thought format)",
     )
+    # Coding diffusion specific flags
+    parser.add_argument(
+        "--corruption-count", type=int, default=3,
+        help="Number of corruptions per coding diffusion task (default: 3)",
+    )
+    parser.add_argument(
+        "--corruption-spread", default="scattered",
+        choices=["clustered", "scattered", "mixed"],
+        help="Spatial distribution of corruptions: clustered|scattered|mixed (default: scattered)",
+    )
+    parser.add_argument(
+        "--corruption-dependency", default="independent",
+        choices=["independent", "cascading", "masking"],
+        help="Inter-corruption relationship: independent|cascading|masking (default: independent)",
+    )
+    parser.add_argument(
+        "--subtlety-min", type=int, default=1,
+        help="Minimum corruption subtlety 1-5 (default: 1)",
+    )
+    parser.add_argument(
+        "--subtlety-max", type=int, default=5,
+        help="Maximum corruption subtlety 1-5 (default: 5)",
+    )
     args = parser.parse_args()
 
     provider = getattr(args, "provider", "anthropic")
@@ -232,8 +261,23 @@ def main() -> None:
         except ValueError as e:
             sys.exit(f"[error] {e}")
         print(f"\n[{strategy_name}] Generating ({args.n} per family per seed) ...")
-        strategy = StrategyCls(api_key=api_key, verbose=True, seed=seed, runtime=runtime,
-                               provider=provider, model=model)
+
+        # Build strategy kwargs — coding diffusion gets schedule parameters
+        strategy_kwargs = dict(
+            api_key=api_key, verbose=True, seed=seed, runtime=runtime,
+            provider=provider, model=model,
+        )
+        if strategy_name == "coding_diffusion":
+            from scripts.generators.coding_diffusion import DiffusionSchedule
+            strategy_kwargs["schedule"] = DiffusionSchedule(
+                corruption_count=args.corruption_count,
+                spread=args.corruption_spread,
+                dependency=args.corruption_dependency,
+                subtlety_min=max(1, min(5, args.subtlety_min)),
+                subtlety_max=max(args.subtlety_min, min(5, args.subtlety_max)),
+            )
+
+        strategy = StrategyCls(**strategy_kwargs)
         candidates = strategy.generate(families=families, n_per_family=args.n)
         if args.max_tasks:
             candidates = candidates[:args.max_tasks]
@@ -244,26 +288,50 @@ def main() -> None:
     if args.dry_run:
         print(f"\n--- DRY RUN: {len(all_candidates)} questions, not written ---")
         for c in all_candidates:
-            print(f"  {c.task_id}  type={c.question_type}  family={c.family}  correct={c.correct_id}")
+            if isinstance(c, MCTaskCandidate):
+                print(f"  {c.task_id}  type={c.question_type}  family={c.family}  correct={c.correct_id}")
+            elif isinstance(c, TaskCandidate):
+                print(f"  {c.task_id}  type={c.task_type}  family={c.family}  difficulty={c.difficulty}")
+            else:
+                print(f"  {c.task_id}  (unknown type)")
         if args.export_sft and all_candidates:
-            from scripts.export_sft import export_sft
-            n = export_sft(all_candidates, args.export_sft)
-            print(f"\n[sft] Exported {n} examples → {args.export_sft}")
+            mc_candidates = [c for c in all_candidates if isinstance(c, MCTaskCandidate)]
+            if mc_candidates:
+                from scripts.export_sft import export_sft
+                n = export_sft(mc_candidates, args.export_sft)
+                print(f"\n[sft] Exported {n} examples → {args.export_sft}")
         return
 
     tasks_dir.mkdir(parents=True, exist_ok=True)
     written: list[dict] = []
     for cand in all_candidates:
-        task_dir = write_mc_task(cand, tasks_dir)
-        written.append({
-            "id": cand.task_id,
-            "path": str(task_dir.relative_to(ROOT)),
-            "type": cand.question_type,
-            "family": cand.family,
-            "difficulty": cand.difficulty,
-            "is_hard_negative": cand.is_hard_negative,
-            "correct_id": cand.correct_id,
-        })
+        if isinstance(cand, MCTaskCandidate):
+            task_dir = write_mc_task(cand, tasks_dir)
+            written.append({
+                "id": cand.task_id,
+                "path": str(task_dir.relative_to(ROOT)),
+                "type": cand.question_type,
+                "family": cand.family,
+                "difficulty": cand.difficulty,
+                "is_hard_negative": cand.is_hard_negative,
+                "correct_id": cand.correct_id,
+                "task_format": "mc",
+            })
+        elif isinstance(cand, TaskCandidate):
+            task_dir = write_diffusion_task(cand, tasks_dir)
+            written.append({
+                "id": cand.task_id,
+                "path": str(task_dir.relative_to(ROOT)),
+                "type": cand.task_type,
+                "family": cand.family,
+                "difficulty": cand.difficulty,
+                "is_noop": cand.is_noop,
+                "is_impossible": cand.is_impossible,
+                "task_format": "code_fixing",
+            })
+        else:
+            print(f"[warning] Unknown candidate type for {cand.task_id}, skipping")
+            continue
 
     # Write benchmark.json (flat task list — backward-compatible with harness)
     benchmark_path = output_dir / "benchmark.json"
@@ -276,9 +344,13 @@ def main() -> None:
     stats_path.write_text(json.dumps(stats, indent=2) + "\n")
 
     if args.export_sft and all_candidates:
-        from scripts.export_sft import export_sft
-        n = export_sft(all_candidates, args.export_sft)
-        print(f"\n[sft] Exported {n} examples → {args.export_sft}")
+        mc_candidates = [c for c in all_candidates if isinstance(c, MCTaskCandidate)]
+        if mc_candidates:
+            from scripts.export_sft import export_sft
+            n = export_sft(mc_candidates, args.export_sft)
+            print(f"\n[sft] Exported {n} examples → {args.export_sft}")
+        else:
+            print("[sft] No MC candidates to export (SFT export only supports MC format)")
 
     print(f"\nWrote {len(written)} tasks to {output_dir.relative_to(ROOT)}/")
     print(f"  benchmark.json  — task registry")
