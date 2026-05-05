@@ -276,30 +276,64 @@ def _bug_variant_to_corruption(variant: BugVariant, source_file: str, family: st
 
 
 def _extract_test_calls(code: str) -> str:
-    """Extract function names from code and generate simple test calls.
+    """Extract function signatures from code and generate targeted test calls.
 
-    This enables execution-verification of bug patterns by running
-    the original and buggy code with sample inputs and comparing outputs.
+    Parses function definitions to determine argument names and generates
+    calls with boundary-condition-triggering inputs so that bug patterns
+    (off-by-one, logic inversion, etc.) are likely to produce different output.
     """
     import re
-    # Match top-level function definitions
-    fn_names = re.findall(r"^def\s+(\w+)\s*\(", code, re.MULTILINE)
-    if not fn_names:
+    # Match function definitions with their parameter lists
+    fn_defs = re.findall(r"^def\s+(\w+)\s*\(([^)]*)\)", code, re.MULTILINE)
+    if not fn_defs:
         return ""
 
-    lines = ["# Auto-generated test calls"]
-    for name in fn_names[:5]:  # limit to 5 functions
-        # Try a few common argument patterns
-        if name.startswith("is_") or name.startswith("has_") or name.startswith("check_"):
-            lines.append(f"try: print({name}(0))\nexcept: pass")
-        elif name.startswith("get_") or name.startswith("find_"):
-            lines.append(f"try: print({name}([1,2,3]))\nexcept: pass")
-        elif name.startswith("compute_") or name.startswith("calculate_"):
-            lines.append(f"try: print({name}([1,2,3]))\nexcept: pass")
-        elif name.startswith("safe_"):
-            lines.append(f"try: print({name}(4))\nexcept: pass")
-        else:
-            lines.append(f"try: print({name}([1,2,3]))\nexcept: pass")
+    # Per-argument test values based on common parameter name patterns
+    arg_values = {
+        "values": "[1,2,3]", "items": "[1,2,3]", "data": "[1,2,3]",
+        "numbers": "[1,2,3]", "nums": "[1,2,3]", "lst": "[1,2,3]",
+        "weights": "[1,1,1]", "target": "2.0", "threshold": "4",
+        "value": "5", "x": "4", "n": "3", "idx": "1", "i": "1",
+        "lo": "0", "lo_val": "0", "min_val": "0",
+        "hi": "10", "hi_val": "10", "max_val": "10",
+        "count": "5", "size": "3", "length": "3",
+        "p": "50", "percent": "50", "ratio": "0.5",
+        "cutoff": "4", "limit": "10",
+    }
+
+    lines = ["# Auto-generated boundary test calls"]
+    for name, params_str in fn_defs[:8]:
+        params = [p.strip().split(":")[0].split("=")[0].strip()
+                   for p in params_str.split(",") if p.strip() and p.strip() != "self"]
+        if not params:
+            lines.append(f"try: print(repr({name}()))\nexcept Exception as e: print(type(e).__name__)")
+            continue
+
+        # Build 2-3 argument sets using name-based hints and positional defaults
+        default_per_pos = {0: "5", 1: "0", 2: "10", 3: "1"}
+        arg_sets: list[list[str]] = []
+
+        # Set 1: name-based values
+        set1 = [arg_values.get(p, default_per_pos.get(i, "0"))
+                for i, p in enumerate(params)]
+        arg_sets.append(set1)
+
+        # Set 2: boundary values (0, negatives)
+        set2 = [arg_values.get(p, "0") for p in params]
+        arg_sets.append(set2)
+
+        # Set 3: edge values
+        set3 = [arg_values.get(p, "-1" if i == 0 else "1")
+                for i, p in enumerate(params)]
+        arg_sets.append(set3)
+
+        for args in arg_sets[:3]:
+            args_str = ", ".join(args)
+            lines.append(
+                f"try: print(repr({name}({args_str})))\n"
+                f"except Exception as e: print(type(e).__name__)"
+            )
+
     return "\n".join(lines)
 
 
