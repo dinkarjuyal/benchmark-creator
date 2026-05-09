@@ -1,0 +1,2537 @@
+{
+  "model": "deepseek/deepseek-chat",
+  "provider": "prime",
+  "repo": "scikit-learn",
+  "n_trials": 3,
+  "n_hand_corruptions": 20,
+  "n_sgs_corruptions": 13,
+  "corruption_counts": [
+    1,
+    2,
+    3,
+    5,
+    7,
+    10,
+    15,
+    20
+  ],
+  "diversity_levels": [
+    "clustered",
+    "scattered"
+  ],
+  "sources": [
+    "hand",
+    "sgs",
+    "mixed"
+  ],
+  "results": [
+    {
+      "n_bugs": 1,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 133.1,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_01: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 129.0,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_01: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 136.3,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_01: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 37.9,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 36.9,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 41.6,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 33.6,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "sgs__ranking_75804: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 24.1,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "sgs__ranking_75804: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 34.9,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "sgs__ranking_75804: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 139.4,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_01: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 140.6,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_01: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 125.6,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_01: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 146.3,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_01: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 170.4,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_01: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 147.4,
+      "score": 1.0,
+      "bugs_fixed": 1,
+      "bugs_total": 1,
+      "details": [
+        "hc_01: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 33.9,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 1,
+      "details": [
+        "sgs__classification_58539: MISS"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 31.4,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 1,
+      "details": [
+        "sgs__classification_58539: MISS"
+      ]
+    },
+    {
+      "n_bugs": 1,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 37.2,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 1,
+      "details": [
+        "sgs__classification_58539: MISS"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 87.8,
+      "score": 1.0,
+      "bugs_fixed": 2,
+      "bugs_total": 2,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 180.8,
+      "score": 1.0,
+      "bugs_fixed": 2,
+      "bugs_total": 2,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 178.1,
+      "score": 0.5,
+      "bugs_fixed": 1,
+      "bugs_total": 2,
+      "details": [
+        "hc_01: MISS",
+        "hc_02: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 74.8,
+      "score": 1.0,
+      "bugs_fixed": 2,
+      "bugs_total": 2,
+      "details": [
+        "hc_05: FIXED",
+        "hc_06: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 163.1,
+      "score": 1.0,
+      "bugs_fixed": 2,
+      "bugs_total": 2,
+      "details": [
+        "hc_05: FIXED",
+        "hc_06: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 77.8,
+      "score": 1.0,
+      "bugs_fixed": 2,
+      "bugs_total": 2,
+      "details": [
+        "hc_05: FIXED",
+        "hc_06: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 25.4,
+      "score": 0.5,
+      "bugs_fixed": 1,
+      "bugs_total": 2,
+      "details": [
+        "sgs__ranking_75804: FIXED",
+        "sgs__ranking_62395: PARTIAL"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 26.7,
+      "score": 0.5,
+      "bugs_fixed": 1,
+      "bugs_total": 2,
+      "details": [
+        "sgs__ranking_75804: FIXED",
+        "sgs__ranking_62395: PARTIAL"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 81.7,
+      "score": 0.5,
+      "bugs_fixed": 1,
+      "bugs_total": 2,
+      "details": [
+        "sgs__ranking_75804: FIXED",
+        "sgs__ranking_62395: PARTIAL"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 197.4,
+      "score": 1.0,
+      "bugs_fixed": 2,
+      "bugs_total": 2,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 109.5,
+      "score": 1.0,
+      "bugs_fixed": 2,
+      "bugs_total": 2,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 92.4,
+      "score": 1.0,
+      "bugs_fixed": 2,
+      "bugs_total": 2,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 109.5,
+      "score": 0.5,
+      "bugs_fixed": 1,
+      "bugs_total": 2,
+      "details": [
+        "hc_01: MISS",
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 21.3,
+      "score": 1.0,
+      "bugs_fixed": 2,
+      "bugs_total": 2,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 108.0,
+      "score": 1.0,
+      "bugs_fixed": 2,
+      "bugs_total": 2,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 56.5,
+      "score": 0.5,
+      "bugs_fixed": 1,
+      "bugs_total": 2,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 29.5,
+      "score": 0.5,
+      "bugs_fixed": 1,
+      "bugs_total": 2,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 2,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 26.3,
+      "score": 0.5,
+      "bugs_fixed": 1,
+      "bugs_total": 2,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 157.0,
+      "score": 1.0,
+      "bugs_fixed": 3,
+      "bugs_total": 3,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 153.9,
+      "score": 1.0,
+      "bugs_fixed": 3,
+      "bugs_total": 3,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 262.6,
+      "score": 1.0,
+      "bugs_fixed": 3,
+      "bugs_total": 3,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 71.1,
+      "score": 1.0,
+      "bugs_fixed": 3,
+      "bugs_total": 3,
+      "details": [
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 128.7,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 3,
+      "details": [
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 229.4,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 3,
+      "details": [
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 39.6,
+      "score": 0.3333,
+      "bugs_fixed": 1,
+      "bugs_total": 3,
+      "details": [
+        "sgs__ranking_75804: FIXED",
+        "sgs__ranking_62395: PARTIAL",
+        "sgs__ranking_52919: MISS"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 36.0,
+      "score": 0.3333,
+      "bugs_fixed": 1,
+      "bugs_total": 3,
+      "details": [
+        "sgs__ranking_75804: FIXED",
+        "sgs__ranking_62395: PARTIAL",
+        "sgs__ranking_52919: MISS"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 36.9,
+      "score": 0.3333,
+      "bugs_fixed": 1,
+      "bugs_total": 3,
+      "details": [
+        "sgs__ranking_75804: FIXED",
+        "sgs__ranking_62395: PARTIAL",
+        "sgs__ranking_52919: MISS"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 131.4,
+      "score": 1.0,
+      "bugs_fixed": 3,
+      "bugs_total": 3,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 203.4,
+      "score": 1.0,
+      "bugs_fixed": 3,
+      "bugs_total": 3,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 206.5,
+      "score": 1.0,
+      "bugs_fixed": 3,
+      "bugs_total": 3,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 29.4,
+      "score": 1.0,
+      "bugs_fixed": 3,
+      "bugs_total": 3,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 172.9,
+      "score": 1.0,
+      "bugs_fixed": 3,
+      "bugs_total": 3,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 125.9,
+      "score": 1.0,
+      "bugs_fixed": 3,
+      "bugs_total": 3,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 39.7,
+      "score": 0.6667,
+      "bugs_fixed": 2,
+      "bugs_total": 3,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 116.1,
+      "score": 0.6667,
+      "bugs_fixed": 2,
+      "bugs_total": 3,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 3,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 68.4,
+      "score": 0.6667,
+      "bugs_fixed": 2,
+      "bugs_total": 3,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 316.6,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 5,
+      "details": [
+        "hc_01: MISS",
+        "hc_02: MISS",
+        "hc_03: MISS",
+        "hc_04: MISS",
+        "hc_05: MISS"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 189.6,
+      "score": 1.0,
+      "bugs_fixed": 5,
+      "bugs_total": 5,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: FIXED",
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 392.0,
+      "score": 0.8,
+      "bugs_fixed": 4,
+      "bugs_total": 5,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: MISS",
+        "hc_05: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 37.7,
+      "score": 0.2,
+      "bugs_fixed": 1,
+      "bugs_total": 5,
+      "details": [
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: MISS",
+        "sgs__ranking_75804: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 103.8,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 5,
+      "details": [
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: MISS",
+        "sgs__ranking_75804: MISS"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 282.4,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 5,
+      "details": [
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: MISS",
+        "sgs__ranking_75804: MISS"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 40.2,
+      "score": 1.0,
+      "bugs_fixed": 5,
+      "bugs_total": 5,
+      "details": [
+        "sgs__data_55195: FIXED",
+        "sgs__data_04594: FIXED",
+        "sgs__data_12382: FIXED",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_73852: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 39.9,
+      "score": 0.4,
+      "bugs_fixed": 2,
+      "bugs_total": 5,
+      "details": [
+        "sgs__data_55195: MISS",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: MISS",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_73852: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 36.0,
+      "score": 1.0,
+      "bugs_fixed": 5,
+      "bugs_total": 5,
+      "details": [
+        "sgs__data_55195: FIXED",
+        "sgs__data_04594: FIXED",
+        "sgs__data_12382: FIXED",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_73852: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 11.2,
+      "score": 0.4,
+      "bugs_fixed": 2,
+      "bugs_total": 5,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: MISS",
+        "hc_09: MISS",
+        "hc_13: FIXED",
+        "hc_17: MISS"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 234.6,
+      "score": 1.0,
+      "bugs_fixed": 5,
+      "bugs_total": 5,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 17.6,
+      "score": 1.0,
+      "bugs_fixed": 5,
+      "bugs_total": 5,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 95.4,
+      "score": 1.0,
+      "bugs_fixed": 5,
+      "bugs_total": 5,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 13.3,
+      "score": 0.4,
+      "bugs_fixed": 2,
+      "bugs_total": 5,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: MISS",
+        "hc_09: MISS",
+        "hc_13: FIXED",
+        "hc_17: MISS"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 357.4,
+      "score": 1.0,
+      "bugs_fixed": 5,
+      "bugs_total": 5,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 42.9,
+      "score": 0.6,
+      "bugs_fixed": 3,
+      "bugs_total": 5,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: FIXED",
+        "sgs__ridge_33431: MISS",
+        "sgs__forest_96816: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 57.3,
+      "score": 0.6,
+      "bugs_fixed": 3,
+      "bugs_total": 5,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: FIXED",
+        "sgs__ridge_33431: MISS",
+        "sgs__forest_96816: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 5,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 96.1,
+      "score": 0.6,
+      "bugs_fixed": 3,
+      "bugs_total": 5,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: FIXED",
+        "sgs__ridge_33431: MISS",
+        "sgs__forest_96816: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 78.3,
+      "score": 0.7143,
+      "bugs_fixed": 5,
+      "bugs_total": 7,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: MISS",
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: MISS"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 73.8,
+      "score": 0.7143,
+      "bugs_fixed": 5,
+      "bugs_total": 7,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: MISS",
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: MISS"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 87.0,
+      "score": 0.8571,
+      "bugs_fixed": 6,
+      "bugs_total": 7,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: MISS",
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 197.3,
+      "score": 0.7143,
+      "bugs_fixed": 5,
+      "bugs_total": 7,
+      "details": [
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: FIXED",
+        "hc_08: FIXED",
+        "sgs__ranking_75804: FIXED",
+        "sgs__ranking_62395: PARTIAL",
+        "sgs__ranking_52919: MISS"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 138.0,
+      "score": 0.7143,
+      "bugs_fixed": 5,
+      "bugs_total": 7,
+      "details": [
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: FIXED",
+        "hc_08: FIXED",
+        "sgs__ranking_75804: FIXED",
+        "sgs__ranking_62395: PARTIAL",
+        "sgs__ranking_52919: MISS"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 187.8,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 7,
+      "details": [
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: MISS",
+        "sgs__ranking_75804: MISS",
+        "sgs__ranking_62395: MISS",
+        "sgs__ranking_52919: MISS"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 36.6,
+      "score": 0.8571,
+      "bugs_fixed": 6,
+      "bugs_total": 7,
+      "details": [
+        "sgs__data_55195: FIXED",
+        "sgs__data_04594: FIXED",
+        "sgs__data_12382: FIXED",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_60400: PARTIAL",
+        "sgs__split_28467: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 75.6,
+      "score": 0.2857,
+      "bugs_fixed": 2,
+      "bugs_total": 7,
+      "details": [
+        "sgs__data_55195: MISS",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: MISS",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_60400: MISS",
+        "sgs__split_28467: MISS"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 36.2,
+      "score": 0.2857,
+      "bugs_fixed": 2,
+      "bugs_total": 7,
+      "details": [
+        "sgs__data_55195: MISS",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: MISS",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_60400: PARTIAL",
+        "sgs__split_28467: MISS"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 223.8,
+      "score": 0.4286,
+      "bugs_fixed": 3,
+      "bugs_total": 7,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: MISS",
+        "hc_13: MISS",
+        "hc_17: MISS",
+        "hc_19: MISS",
+        "hc_02: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 94.2,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 7,
+      "details": [
+        "hc_01: MISS",
+        "hc_05: MISS",
+        "hc_09: MISS",
+        "hc_13: MISS",
+        "hc_17: MISS",
+        "hc_19: MISS",
+        "hc_02: MISS"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 17.7,
+      "score": 0.7143,
+      "bugs_fixed": 5,
+      "bugs_total": 7,
+      "details": [
+        "hc_01: MISS",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: MISS",
+        "hc_19: FIXED",
+        "hc_02: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 62.5,
+      "score": 0.8571,
+      "bugs_fixed": 6,
+      "bugs_total": 7,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: MISS",
+        "hc_19: FIXED",
+        "hc_02: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 265.5,
+      "score": 1.0,
+      "bugs_fixed": 7,
+      "bugs_total": 7,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED",
+        "hc_19: FIXED",
+        "hc_02: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 26.1,
+      "score": 0.5714,
+      "bugs_fixed": 4,
+      "bugs_total": 7,
+      "details": [
+        "hc_01: MISS",
+        "hc_05: FIXED",
+        "hc_09: PARTIAL",
+        "hc_13: FIXED",
+        "hc_17: MISS",
+        "hc_19: FIXED",
+        "hc_02: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 63.6,
+      "score": 0.5714,
+      "bugs_fixed": 4,
+      "bugs_total": 7,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: FIXED",
+        "sgs__ridge_33431: MISS",
+        "sgs__forest_96816: FIXED",
+        "sgs__split_12651: FIXED",
+        "sgs__ranking_62395: PARTIAL"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 212.6,
+      "score": 0.4286,
+      "bugs_fixed": 3,
+      "bugs_total": 7,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: FIXED",
+        "sgs__ridge_33431: MISS",
+        "sgs__forest_96816: FIXED",
+        "sgs__split_12651: MISS",
+        "sgs__ranking_62395: PARTIAL"
+      ]
+    },
+    {
+      "n_bugs": 7,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 78.5,
+      "score": 0.2857,
+      "bugs_fixed": 2,
+      "bugs_total": 7,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: MISS",
+        "sgs__ridge_33431: MISS",
+        "sgs__forest_96816: FIXED",
+        "sgs__split_12651: MISS",
+        "sgs__ranking_62395: PARTIAL"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 38.5,
+      "score": 0.2,
+      "bugs_fixed": 2,
+      "bugs_total": 10,
+      "details": [
+        "hc_01: MISS",
+        "hc_02: MISS",
+        "hc_03: MISS",
+        "hc_04: MISS",
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: FIXED",
+        "hc_09: MISS",
+        "hc_10: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 34.2,
+      "score": 0.9,
+      "bugs_fixed": 9,
+      "bugs_total": 10,
+      "details": [
+        "hc_01: MISS",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: FIXED",
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: FIXED",
+        "hc_08: FIXED",
+        "hc_09: FIXED",
+        "hc_10: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 126.8,
+      "score": 0.4,
+      "bugs_fixed": 4,
+      "bugs_total": 10,
+      "details": [
+        "hc_01: MISS",
+        "hc_02: FIXED",
+        "hc_03: MISS",
+        "hc_04: MISS",
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: FIXED",
+        "hc_08: MISS",
+        "hc_09: FIXED",
+        "hc_10: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 190.2,
+      "score": 0.6,
+      "bugs_fixed": 6,
+      "bugs_total": 10,
+      "details": [
+        "hc_09: FIXED",
+        "hc_10: FIXED",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "sgs__data_55195: FIXED",
+        "sgs__data_04594: FIXED",
+        "sgs__data_12382: FIXED",
+        "hc_01: MISS",
+        "hc_02: MISS",
+        "hc_03: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 489.4,
+      "score": 0.5,
+      "bugs_fixed": 5,
+      "bugs_total": 10,
+      "details": [
+        "hc_09: FIXED",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "sgs__data_55195: FIXED",
+        "sgs__data_04594: FIXED",
+        "sgs__data_12382: FIXED",
+        "hc_01: MISS",
+        "hc_02: FIXED",
+        "hc_03: MISS"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 1227.5,
+      "score": 0.4,
+      "bugs_fixed": 4,
+      "bugs_total": 10,
+      "details": [
+        "hc_09: FIXED",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "sgs__data_55195: FIXED",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: FIXED",
+        "hc_01: MISS",
+        "hc_02: MISS",
+        "hc_03: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 110.8,
+      "score": 0.9,
+      "bugs_fixed": 9,
+      "bugs_total": 10,
+      "details": [
+        "sgs__data_55195: FIXED",
+        "sgs__data_04594: FIXED",
+        "sgs__data_12382: FIXED",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_60400: MISS",
+        "sgs__split_28467: FIXED",
+        "sgs__split_86006: FIXED",
+        "sgs__split_86006: FIXED",
+        "sgs__classification_18928: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 69.9,
+      "score": 0.2,
+      "bugs_fixed": 2,
+      "bugs_total": 10,
+      "details": [
+        "sgs__data_55195: MISS",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: MISS",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_60400: PARTIAL",
+        "sgs__split_28467: MISS",
+        "sgs__split_86006: MISS",
+        "sgs__split_86006: MISS",
+        "sgs__classification_18928: MISS"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "clustered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 74.4,
+      "score": 0.2,
+      "bugs_fixed": 2,
+      "bugs_total": 10,
+      "details": [
+        "sgs__data_55195: MISS",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: MISS",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_73852: FIXED",
+        "sgs__forest_60400: MISS",
+        "sgs__split_28467: MISS",
+        "sgs__split_86006: MISS",
+        "sgs__split_86006: MISS",
+        "sgs__classification_18928: MISS"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 157.2,
+      "score": 0.7,
+      "bugs_fixed": 7,
+      "bugs_total": 10,
+      "details": [
+        "hc_01: MISS",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: MISS",
+        "hc_17: FIXED",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: MISS"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 220.5,
+      "score": 0.9,
+      "bugs_fixed": 9,
+      "bugs_total": 10,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: MISS"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 640.1,
+      "score": 0.7,
+      "bugs_fixed": 7,
+      "bugs_total": 10,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: MISS",
+        "hc_19: FIXED",
+        "hc_02: MISS",
+        "hc_06: MISS",
+        "hc_10: FIXED",
+        "hc_14: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 60.4,
+      "score": 0.9,
+      "bugs_fixed": 9,
+      "bugs_total": 10,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: MISS",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 56.6,
+      "score": 0.9,
+      "bugs_fixed": 9,
+      "bugs_total": 10,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: MISS",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 42.3,
+      "score": 0.9,
+      "bugs_fixed": 9,
+      "bugs_total": 10,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: MISS",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 1,
+      "elapsed_sec": 94.2,
+      "score": 0.3,
+      "bugs_fixed": 3,
+      "bugs_total": 10,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: MISS",
+        "sgs__ridge_33431: MISS",
+        "sgs__forest_96816: FIXED",
+        "sgs__split_12651: MISS",
+        "sgs__ranking_62395: PARTIAL",
+        "sgs__data_76003: MISS",
+        "sgs__ridge_93558: MISS",
+        "sgs__forest_96816: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 2,
+      "elapsed_sec": 88.8,
+      "score": 0.6,
+      "bugs_fixed": 6,
+      "bugs_total": 10,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: FIXED",
+        "sgs__ridge_33431: MISS",
+        "sgs__forest_96816: FIXED",
+        "sgs__split_12651: MISS",
+        "sgs__ranking_62395: PARTIAL",
+        "sgs__data_76003: FIXED",
+        "sgs__ridge_93558: FIXED",
+        "sgs__forest_96816: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 10,
+      "diversity": "scattered",
+      "source": "sgs",
+      "trial": 3,
+      "elapsed_sec": 131.6,
+      "score": 0.5,
+      "bugs_fixed": 5,
+      "bugs_total": 10,
+      "details": [
+        "sgs__classification_58539: MISS",
+        "sgs__ranking_75804: FIXED",
+        "sgs__data_80092: FIXED",
+        "sgs__ridge_33431: MISS",
+        "sgs__forest_96816: FIXED",
+        "sgs__split_12651: MISS",
+        "sgs__ranking_62395: PARTIAL",
+        "sgs__data_76003: MISS",
+        "sgs__ridge_93558: FIXED",
+        "sgs__forest_96816: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 123.6,
+      "score": 0.7333,
+      "bugs_fixed": 11,
+      "bugs_total": 15,
+      "details": [
+        "hc_01: MISS",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: FIXED",
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: MISS",
+        "hc_08: FIXED",
+        "hc_09: FIXED",
+        "hc_10: MISS",
+        "hc_11: FIXED",
+        "hc_12: FIXED",
+        "hc_13: FIXED",
+        "hc_14: MISS",
+        "hc_15: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 224.6,
+      "score": 0.2667,
+      "bugs_fixed": 4,
+      "bugs_total": 15,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: FIXED",
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: MISS",
+        "hc_09: MISS",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "hc_13: MISS",
+        "hc_14: MISS",
+        "hc_15: MISS"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 213.6,
+      "score": 0.2667,
+      "bugs_fixed": 4,
+      "bugs_total": 15,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: FIXED",
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: MISS",
+        "hc_09: MISS",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "hc_13: MISS",
+        "hc_14: MISS",
+        "hc_15: MISS"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 247.5,
+      "score": 0.3333,
+      "bugs_fixed": 5,
+      "bugs_total": 15,
+      "details": [
+        "hc_09: MISS",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "sgs__data_55195: MISS",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: MISS",
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: MISS",
+        "sgs__classification_18928: FIXED",
+        "sgs__classification_46130: FIXED",
+        "hc_05: MISS",
+        "hc_06: MISS"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 224.7,
+      "score": 0.4,
+      "bugs_fixed": 6,
+      "bugs_total": 15,
+      "details": [
+        "hc_09: MISS",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "sgs__data_55195: MISS",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: MISS",
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: FIXED",
+        "sgs__classification_18928: FIXED",
+        "sgs__classification_46130: FIXED",
+        "hc_05: MISS",
+        "hc_06: MISS"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 59.8,
+      "score": 0.7333,
+      "bugs_fixed": 11,
+      "bugs_total": 15,
+      "details": [
+        "hc_09: FIXED",
+        "hc_10: MISS",
+        "hc_11: FIXED",
+        "hc_12: FIXED",
+        "sgs__data_55195: FIXED",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: FIXED",
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: MISS",
+        "sgs__classification_18928: FIXED",
+        "sgs__classification_46130: MISS",
+        "hc_05: FIXED",
+        "hc_06: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 48.8,
+      "score": 0.6667,
+      "bugs_fixed": 10,
+      "bugs_total": 15,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: MISS",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: MISS",
+        "hc_14: FIXED",
+        "hc_18: MISS",
+        "hc_20: MISS",
+        "hc_03: FIXED",
+        "hc_07: FIXED",
+        "hc_11: MISS"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 51.5,
+      "score": 0.6,
+      "bugs_fixed": 9,
+      "bugs_total": 15,
+      "details": [
+        "hc_01: MISS",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: MISS",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: FIXED",
+        "hc_18: MISS",
+        "hc_20: MISS",
+        "hc_03: FIXED",
+        "hc_07: MISS",
+        "hc_11: MISS"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 86.1,
+      "score": 0.7333,
+      "bugs_fixed": 11,
+      "bugs_total": 15,
+      "details": [
+        "hc_01: MISS",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: MISS",
+        "hc_18: MISS",
+        "hc_20: FIXED",
+        "hc_03: FIXED",
+        "hc_07: FIXED",
+        "hc_11: MISS"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 93.6,
+      "score": 0.7333,
+      "bugs_fixed": 11,
+      "bugs_total": 15,
+      "details": [
+        "hc_01: MISS",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: FIXED",
+        "hc_18: MISS",
+        "hc_20: MISS",
+        "hc_03: FIXED",
+        "hc_07: FIXED",
+        "hc_11: MISS"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 89.4,
+      "score": 0.3333,
+      "bugs_fixed": 5,
+      "bugs_total": 15,
+      "details": [
+        "hc_01: MISS",
+        "hc_05: FIXED",
+        "hc_09: MISS",
+        "hc_13: FIXED",
+        "hc_17: MISS",
+        "hc_19: FIXED",
+        "hc_02: MISS",
+        "hc_06: MISS",
+        "hc_10: FIXED",
+        "hc_14: MISS",
+        "hc_18: MISS",
+        "hc_20: MISS",
+        "hc_03: FIXED",
+        "hc_07: MISS",
+        "hc_11: MISS"
+      ]
+    },
+    {
+      "n_bugs": 15,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 106.9,
+      "score": 0.7333,
+      "bugs_fixed": 11,
+      "bugs_total": 15,
+      "details": [
+        "hc_01: MISS",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: MISS",
+        "hc_18: MISS",
+        "hc_20: FIXED",
+        "hc_03: FIXED",
+        "hc_07: FIXED",
+        "hc_11: MISS"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 50.2,
+      "score": 0.5,
+      "bugs_fixed": 10,
+      "bugs_total": 20,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: MISS",
+        "hc_03: FIXED",
+        "hc_04: FIXED",
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: MISS",
+        "hc_08: FIXED",
+        "hc_09: FIXED",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "hc_13: MISS",
+        "hc_14: MISS",
+        "hc_15: FIXED",
+        "hc_16: MISS",
+        "hc_17: MISS",
+        "hc_18: MISS",
+        "hc_19: FIXED",
+        "hc_20: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 82.2,
+      "score": 0.2,
+      "bugs_fixed": 4,
+      "bugs_total": 20,
+      "details": [
+        "hc_01: MISS",
+        "hc_02: MISS",
+        "hc_03: MISS",
+        "hc_04: FIXED",
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: FIXED",
+        "hc_09: MISS",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: FIXED",
+        "hc_13: MISS",
+        "hc_14: MISS",
+        "hc_15: MISS",
+        "hc_16: FIXED",
+        "hc_17: MISS",
+        "hc_18: MISS",
+        "hc_19: MISS",
+        "hc_20: MISS"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "clustered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 40.7,
+      "score": 0.15,
+      "bugs_fixed": 3,
+      "bugs_total": 20,
+      "details": [
+        "hc_01: MISS",
+        "hc_02: MISS",
+        "hc_03: MISS",
+        "hc_04: MISS",
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: FIXED",
+        "hc_09: MISS",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "hc_13: MISS",
+        "hc_14: MISS",
+        "hc_15: MISS",
+        "hc_16: FIXED",
+        "hc_17: MISS",
+        "hc_18: MISS",
+        "hc_19: MISS",
+        "hc_20: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 43.4,
+      "score": 0.65,
+      "bugs_fixed": 13,
+      "bugs_total": 20,
+      "details": [
+        "hc_09: FIXED",
+        "hc_10: FIXED",
+        "hc_11: MISS",
+        "hc_12: FIXED",
+        "sgs__data_55195: FIXED",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: FIXED",
+        "hc_01: MISS",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: MISS",
+        "sgs__classification_18928: MISS",
+        "sgs__classification_46130: MISS",
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: FIXED",
+        "hc_08: FIXED",
+        "sgs__ranking_32512: MISS",
+        "hc_13: FIXED",
+        "hc_14: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 225.0,
+      "score": 0.25,
+      "bugs_fixed": 5,
+      "bugs_total": 20,
+      "details": [
+        "hc_09: MISS",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "sgs__data_55195: MISS",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: MISS",
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: MISS",
+        "sgs__classification_18928: FIXED",
+        "sgs__classification_46130: FIXED",
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: MISS",
+        "sgs__ranking_32512: MISS",
+        "hc_13: MISS",
+        "hc_14: MISS"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "clustered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 208.3,
+      "score": 0.0,
+      "bugs_fixed": 0,
+      "bugs_total": 20,
+      "details": [
+        "hc_09: MISS",
+        "hc_10: MISS",
+        "hc_11: MISS",
+        "hc_12: MISS",
+        "sgs__data_55195: MISS",
+        "sgs__data_04594: MISS",
+        "sgs__data_12382: MISS",
+        "hc_01: MISS",
+        "hc_02: MISS",
+        "hc_03: MISS",
+        "hc_04: MISS",
+        "sgs__classification_18928: MISS",
+        "sgs__classification_46130: MISS",
+        "hc_05: MISS",
+        "hc_06: MISS",
+        "hc_07: MISS",
+        "hc_08: MISS",
+        "sgs__ranking_32512: MISS",
+        "hc_13: MISS",
+        "hc_14: MISS"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 1,
+      "elapsed_sec": 57.4,
+      "score": 0.8,
+      "bugs_fixed": 16,
+      "bugs_total": 20,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: FIXED",
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: FIXED",
+        "hc_08: FIXED",
+        "hc_09: FIXED",
+        "hc_10: FIXED",
+        "hc_11: FIXED",
+        "hc_12: FIXED",
+        "hc_13: FIXED",
+        "hc_14: FIXED",
+        "hc_15: MISS",
+        "hc_16: MISS",
+        "hc_17: MISS",
+        "hc_18: MISS",
+        "hc_19: FIXED",
+        "hc_20: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 2,
+      "elapsed_sec": 52.0,
+      "score": 0.6,
+      "bugs_fixed": 12,
+      "bugs_total": 20,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: MISS",
+        "hc_03: FIXED",
+        "hc_04: FIXED",
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: MISS",
+        "hc_08: FIXED",
+        "hc_09: FIXED",
+        "hc_10: FIXED",
+        "hc_11: MISS",
+        "hc_12: FIXED",
+        "hc_13: MISS",
+        "hc_14: FIXED",
+        "hc_15: MISS",
+        "hc_16: MISS",
+        "hc_17: MISS",
+        "hc_18: MISS",
+        "hc_19: FIXED",
+        "hc_20: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "scattered",
+      "source": "hand",
+      "trial": 3,
+      "elapsed_sec": 51.7,
+      "score": 0.7,
+      "bugs_fixed": 14,
+      "bugs_total": 20,
+      "details": [
+        "hc_01: FIXED",
+        "hc_02: FIXED",
+        "hc_03: FIXED",
+        "hc_04: FIXED",
+        "hc_05: FIXED",
+        "hc_06: FIXED",
+        "hc_07: MISS",
+        "hc_08: FIXED",
+        "hc_09: FIXED",
+        "hc_10: FIXED",
+        "hc_11: MISS",
+        "hc_12: FIXED",
+        "hc_13: FIXED",
+        "hc_14: FIXED",
+        "hc_15: FIXED",
+        "hc_16: MISS",
+        "hc_17: MISS",
+        "hc_18: MISS",
+        "hc_19: FIXED",
+        "hc_20: MISS"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 1,
+      "elapsed_sec": 147.7,
+      "score": 0.75,
+      "bugs_fixed": 15,
+      "bugs_total": 20,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: MISS",
+        "hc_18: FIXED",
+        "hc_20: MISS",
+        "hc_03: FIXED",
+        "hc_07: FIXED",
+        "hc_11: MISS",
+        "hc_15: MISS",
+        "sgs__forest_96816: FIXED",
+        "sgs__split_12651: MISS",
+        "hc_04: FIXED",
+        "hc_08: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 2,
+      "elapsed_sec": 79.8,
+      "score": 0.65,
+      "bugs_fixed": 13,
+      "bugs_total": 20,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED",
+        "hc_19: MISS",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: MISS",
+        "hc_18: MISS",
+        "hc_20: MISS",
+        "hc_03: FIXED",
+        "hc_07: FIXED",
+        "hc_11: MISS",
+        "hc_15: FIXED",
+        "sgs__forest_96816: MISS",
+        "sgs__split_12651: MISS",
+        "hc_04: FIXED",
+        "hc_08: FIXED"
+      ]
+    },
+    {
+      "n_bugs": 20,
+      "diversity": "scattered",
+      "source": "mixed",
+      "trial": 3,
+      "elapsed_sec": 143.2,
+      "score": 0.65,
+      "bugs_fixed": 13,
+      "bugs_total": 20,
+      "details": [
+        "hc_01: FIXED",
+        "hc_05: FIXED",
+        "hc_09: FIXED",
+        "hc_13: FIXED",
+        "hc_17: FIXED",
+        "hc_19: FIXED",
+        "hc_02: FIXED",
+        "hc_06: FIXED",
+        "hc_10: FIXED",
+        "hc_14: MISS",
+        "hc_18: MISS",
+        "hc_20: MISS",
+        "hc_03: FIXED",
+        "hc_07: FIXED",
+        "hc_11: MISS",
+        "hc_15: MISS",
+        "sgs__forest_96816: MISS",
+        "sgs__split_12651: MISS",
+        "hc_04: FIXED",
+        "hc_08: FIXED"
+      ]
+    }
+  ]
+}
