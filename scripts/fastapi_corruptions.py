@@ -97,11 +97,11 @@ FASTAPI_CORRUPTIONS = [
         "if not is_coroutine:\n            value, errors_ = field.validate(response_content, {}, loc=(\"response\",))",
         "serialize_response: coroutine check inverted (sync responses validated, async skipped)", "", "", "routing", 4),
 
-    # 8. Request validation: errors list not cleared per field
+    # 8. Dependency error guard inverted: endpoints only run when there ARE errors
     CorruptionSpec("fa_08", "fastapi/routing.py",
-        "errors = []",
-        "errors = None",
-        "serialize_response: errors=[]→None (TypeError when appending validation errors, crashes on invalid input)", "", "", "routing", 2),
+        "if not errors:",
+        "if errors:",
+        "get_request_handler: error guard inverted (endpoints only execute when dependency validation fails, all valid requests return 422)", "", "", "routing", 2),
 
     # 9. JSON content-type detection broken
     CorruptionSpec("fa_09", "fastapi/routing.py",

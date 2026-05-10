@@ -28,8 +28,8 @@ from scripts.functional_judge import (
 
 
 # Source file -> pytest target mapping. Narrows discovery to the relevant
-# test module so we don't run the entire 30K-test sklearn suite per corruption.
-SOURCE_TO_TESTS = {
+# test module so we don't run the entire test suite per corruption.
+SKLEARN_SOURCE_TO_TESTS = {
     "sklearn/metrics/_classification.py": ["sklearn/metrics/tests/test_classification.py"],
     "sklearn/metrics/_ranking.py": ["sklearn/metrics/tests/test_ranking.py"],
     "sklearn/preprocessing/_data.py": ["sklearn/preprocessing/tests/test_data.py"],
@@ -38,60 +38,105 @@ SOURCE_TO_TESTS = {
     "sklearn/model_selection/_split.py": ["sklearn/model_selection/tests/test_split.py"],
 }
 
+FASTAPI_SOURCE_TO_TESTS = {
+    "fastapi/dependencies/utils.py": [
+        "tests/test_dependency_cache.py",
+        "tests/test_dependency_class.py",
+        "tests/test_dependency_contextmanager.py",
+        "tests/test_dependency_overrides.py",
+        "tests/test_dependency_security_overrides.py",
+    ],
+    "fastapi/routing.py": [
+        "tests/test_additional_responses_router.py",
+        "tests/test_custom_route_class.py",
+        "tests/test_router_prefix.py",
+    ],
+    "fastapi/applications.py": [
+        "tests/test_application.py",
+        "tests/test_additional_responses_default_validationerror.py",
+    ],
+    "fastapi/params.py": [
+        "tests/test_param_class.py",
+        "tests/test_ambiguous_params.py",
+    ],
+}
+
+DOMAIN_CONFIG = {
+    "sklearn": {
+        "sandbox": ("sklearn", "https://github.com/scikit-learn/scikit-learn.git",
+                     "1.6.0", ["pytest", "pytest-timeout", "pytest-xdist"]),
+        "source_to_tests": SKLEARN_SOURCE_TO_TESTS,
+        "full_suite_targets": None,  # None = run all tests
+        "corruption_module": ("scripts.benchmark_ablation", "HAND_CORRUPTIONS"),
+    },
+    "fastapi": {
+        "sandbox": ("fastapi", "https://github.com/fastapi/fastapi.git",
+                     None, ["pytest", "pytest-asyncio", "httpx"]),
+        "source_to_tests": FASTAPI_SOURCE_TO_TESTS,
+        "full_suite_targets": ["tests/"],  # FastAPI narrow mapping misses many corruptions
+        "corruption_module": ("scripts.fastapi_corruptions", "FASTAPI_CORRUPTIONS"),
+    },
+}
+
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--domain", default="sklearn")
+    ap.add_argument("--domain", default="sklearn", choices=list(DOMAIN_CONFIG))
     ap.add_argument("--catalog", choices=["hand", "sgs", "all"], default="hand")
     ap.add_argument("--refresh", action="store_true",
                     help="ignore cache, re-run discovery")
+    ap.add_argument("--refresh-zero", action="store_true",
+                    help="re-run discovery only for corruptions with 0 T_fail (uses full suite)")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--full-suite", action="store_true",
+                    help="use full test suite instead of narrow mapping")
     args = ap.parse_args()
 
-    # Ensure sandbox is set up
-    if args.domain == "sklearn":
-        sandbox = ensure_sandbox(
-            "sklearn",
-            "https://github.com/scikit-learn/scikit-learn.git",
-            commit="1.6.0",
-            pip_extra=["pytest", "pytest-timeout", "pytest-xdist"],
-        )
-    else:
-        raise SystemExit(f"unknown domain: {args.domain}")
+    cfg = DOMAIN_CONFIG[args.domain]
+    sandbox_name, repo_url, commit, pip_extra = cfg["sandbox"]
+    sandbox = ensure_sandbox(sandbox_name, repo_url, commit=commit, pip_extra=pip_extra)
+    source_to_tests = cfg["source_to_tests"]
 
     # Load corruption catalog
-    from scripts.benchmark_ablation import HAND_CORRUPTIONS
-    if args.catalog == "hand":
-        corruptions = list(HAND_CORRUPTIONS)
-    elif args.catalog == "sgs":
-        # SGS corruptions are model-generated; load from a saved JSON
-        sgs_path = ROOT / "results" / "sgs_corruptions.json"
-        if not sgs_path.exists():
-            raise SystemExit(f"no SGS catalog at {sgs_path}; generate one first")
-        from scripts.generators.coding_diffusion import CorruptionSpec
-        corruptions = [CorruptionSpec(**c) for c in json.loads(sgs_path.read_text())]
-    else:
-        from scripts.generators.coding_diffusion import CorruptionSpec
-        sgs_path = ROOT / "results" / "sgs_corruptions.json"
-        sgs = []
+    mod_name, attr_name = cfg["corruption_module"]
+    import importlib
+    mod = importlib.import_module(mod_name)
+    corruptions = list(getattr(mod, attr_name))
+
+    if args.catalog in ("sgs", "all"):
+        sgs_path = ROOT / "results" / f"sgs_corruptions_{args.domain}.json"
         if sgs_path.exists():
+            from scripts.generators.coding_diffusion import CorruptionSpec
             sgs = [CorruptionSpec(**c) for c in json.loads(sgs_path.read_text())]
-        corruptions = list(HAND_CORRUPTIONS) + sgs
+            if args.catalog == "all":
+                corruptions.extend(sgs)
+            else:
+                corruptions = sgs
 
     if args.limit:
         corruptions = corruptions[: args.limit]
 
-    print(f"Discovering T_fail for {len(corruptions)} corruptions in {sandbox}")
+    print(f"Discovering T_fail for {len(corruptions)} corruptions in {sandbox} "
+          f"(domain={args.domain})")
     TFAIL_CACHE.mkdir(parents=True, exist_ok=True)
+
+    # Set cache dir per domain
+    domain_cache = TFAIL_CACHE.parent / f"tfail_cache_{args.domain}" if args.domain != "sklearn" else TFAIL_CACHE
+    domain_cache.mkdir(parents=True, exist_ok=True)
+
+    # Override the cache path in functional_judge
+    import scripts.functional_judge as fj_mod
+    orig_cache = fj_mod.TFAIL_CACHE
+    fj_mod.TFAIL_CACHE = domain_cache
 
     summary = []
     start = time.time()
     for i, c in enumerate(corruptions, 1):
-        targets = SOURCE_TO_TESTS.get(c.source_file)
-        if not targets:
-            print(f"  [{i}/{len(corruptions)}] {c.corruption_id}: no test mapping; SKIP")
-            summary.append({"corruption_id": c.corruption_id, "tfail": [], "skipped": True})
-            continue
+        targets = source_to_tests.get(c.source_file) if not args.full_suite else None
+        if not targets and not args.full_suite:
+            print(f"  [{i}/{len(corruptions)}] {c.corruption_id}: no test mapping; will use full suite")
+            targets = cfg.get("full_suite_targets")
+
         t0 = time.time()
         try:
             tfail = discover_tfail(c, sandbox, test_targets=targets, refresh=args.refresh)
@@ -100,9 +145,29 @@ def main() -> None:
             summary.append({"corruption_id": c.corruption_id, "tfail": [], "error": str(e)})
             continue
         dt = time.time() - t0
+
+        # If 0 T_fail with narrow mapping, try full suite
+        if len(tfail) == 0 and targets and not args.full_suite and cfg.get("full_suite_targets"):
+            print(f"  [{i}/{len(corruptions)}] {c.corruption_id}: 0 T_fail with narrow mapping, "
+                  f"trying full suite...")
+            try:
+                tfail = discover_tfail(
+                    c, sandbox,
+                    test_targets=cfg["full_suite_targets"],
+                    refresh=True,
+                )
+            except Exception as e:
+                print(f"  [{i}/{len(corruptions)}] {c.corruption_id}: full suite ERROR {e}")
+                summary.append({"corruption_id": c.corruption_id, "tfail": [], "error": str(e)})
+                continue
+            dt = time.time() - t0
+
         print(f"  [{i}/{len(corruptions)}] {c.corruption_id}: {len(tfail)} tests fail "
               f"({dt:.1f}s)")
         summary.append({"corruption_id": c.corruption_id, "tfail": tfail, "elapsed_sec": dt})
+
+    # Restore original cache path
+    fj_mod.TFAIL_CACHE = orig_cache
 
     total = time.time() - start
     out = ROOT / "results" / f"tfail_summary_{args.domain}_{args.catalog}.json"
@@ -114,7 +179,7 @@ def main() -> None:
         "corruptions": summary,
     }, indent=2))
     print(f"\nDone in {total:.1f}s. Summary: {out}")
-    print(f"Cache: {TFAIL_CACHE}")
+    print(f"Cache: {domain_cache}")
 
 
 if __name__ == "__main__":
