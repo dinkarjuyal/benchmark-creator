@@ -61,17 +61,8 @@ single-fault accuracy (40\%$\to$30\%), an emergent scale effect.  The
 untuned 32B model with few-shot achieves 100\% / 93\% / 68\% on
 $n{=}1/3/5$---a genuinely hard ceiling, as detailed below.
 
-A secondary finding is that Qwen3-235B-A22B (22B active parameters,
-mixture-of-experts, no RL) \emph{underperforms} the 32B dense model on
-every fault count when evaluated on identical held-out groups:
-$n{=}1$: 60\% vs.\ 100\%; $n{=}3$: 67\% vs.\ 93\%; $n{=}5$: 16\%
-vs.\ 68\%.  Despite 33$\times$ the total parameters, the MoE model does
-not match the dense 32B on this structured multi-fault repair task.  The
-7B+few-shot+RL model matches the 235B at $n{=}1$ and $n{=}5$ and trails
-by only 20\,pp at $n{=}3$---suggesting RL training reaches frontier MoE
-performance at a fraction of the parameter count.  We release CDBench,
-all checkpoints, and training code to facilitate reproducible research in
-functional code repair.
+We release CDBench, all checkpoints, and training code to facilitate
+reproducible research in functional code repair.
 \end{abstract}
 
 %% ─────────────────────────────────────────────────────────────
@@ -114,12 +105,10 @@ We make four contributions:
   3\%$\to$30\%) while degrading 3B performance, an emergent scale effect
   with practical implications for prompt design (\S\ref{sec:results}).
 
-  \item \textbf{RL training results and MoE finding}: GRPO closes
-  $\approx$50\% of the gap from the 7B baseline to the 32B dense ceiling
-  at $n{=}3$ (3\%$\to$47\% vs.\ 93\%).  We also find that
-  Qwen3-235B-A22B (MoE, 22B active of 235B total) underperforms
-  Qwen2.5-Coder-32B (dense) on every fault count on identical evaluation
-  groups, despite greater total parameter count (\S\ref{sec:results}).
+  \item \textbf{RL training results}: GRPO closes $\approx$50\% of the
+  gap from the 7B baseline to the 32B dense ceiling at $n{=}3$
+  (3\%$\to$47\% vs.\ 93\%), demonstrating that RL is a parameter-efficient
+  path to multi-fault repair capability (\S\ref{sec:results}).
 \end{enumerate}
 
 %% ─────────────────────────────────────────────────────────────
@@ -165,8 +154,8 @@ where possible) and present all affected source files to the model
 simultaneously.  Each problem instance is scored by applying the model's
 edits to the sandbox, running the union of T-fail tests for all selected
 corruptions, and computing the fraction of bugs for which all corresponding
-T-fail tests pass.  We report the mean functional score over 10 trials per
-$(n, \text{model})$ pair.
+T-fail tests pass.  We report the mean functional score over multiple trials per
+$(n, \text{model})$ pair (10 or 27, as noted in each table).
 
 %% ─────────────────────────────────────────────────────────────
 \section{Output Format}
@@ -250,11 +239,9 @@ We hold out 20\% of healthy corruptions ($n{=}27$) for evaluation.
 \begin{table}[h]
 \centering
 \caption{Functional debugging accuracy (\%) on CDBench, find-replace format
-\emph{without} few-shot ($^\dagger$with few-shot), mean $\pm$ 95\% CI
-(10 trials for 3B/7B; 5 trials for 32B and Qwen3-235B, same held-out groups
-confirmed by deterministic trial selection).  \textbf{Bold} = best per column.
-Qwen2.5-Coder-32B is the dense ceiling; Qwen3-235B-A22B (MoE, 22B active
-params) is included as a scale reference and underperforms the 32B on all $n$.}
+\emph{without} few-shot ($^\dagger$with few-shot), mean $\pm$ 95\% CI.
+\textbf{Bold} = best per column.  Qwen2.5-Coder-32B$^\dagger$ is the dense
+ceiling (no RL).}
 \label{tab:main}
 \begin{tabular}{lcccccc}
 \toprule
@@ -266,7 +253,6 @@ Qwen2.5-Coder-3B  & 40$\pm$32 & \textbf{70$\pm$30} & 17$\pm$18 & 17$\pm$15 & 8$\
 Qwen2.5-Coder-7B  & 60$\pm$32 & 60$\pm$32 & 3$\pm$7 & \textbf{10$\pm$20} & 4$\pm$5 & \textbf{12$\pm$13} \\
 \midrule
 Qwen2.5-Coder-32B$^\dagger$ & \textbf{100$\pm$0} & --- & \textbf{93$\pm$13} & --- & \textbf{68$\pm$16} & --- \\
-Qwen3-235B-A22B$^\dagger$ (MoE) & 60$\pm$48  & --- & 67$\pm$36  & --- & 16$\pm$15  & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -290,28 +276,13 @@ The untuned 32B model (with few-shot) scores \textbf{100\%} / \textbf{93\%} /
 \textbf{68\%} on $n{=}1/3/5$, establishing an upper bound for
 instruction-tuned models without RL.  Near-perfect single-fault accuracy
 validates that the benchmark bugs are solvable; the 68\% on $n{=}5$ shows
-remaining headroom for smaller models trained with RL to approach.
-$^\dagger$Evaluated with few-shot prompt (32B benefits dramatically,
-similar to 7B); shown separately from the main no-few-shot table for
-comparability.  Numbers reported from a controlled re-run on the same
-held-out groups and evaluation parameters as all other models.
-
-\paragraph{Is the 32B ceiling easily surpassed by scale?}
-One might ask whether a much larger model would readily exceed the 32B
-ceiling.  To answer this, we evaluate Qwen3-235B-A22B (22B active
-parameters from 235B total, mixture-of-experts, no RL) on the same
-held-out groups (5 trials, greedy decoding, no extended thinking).  Group
-identity is confirmed by a controlled re-run of the 32B under identical
+remaining headroom for smaller models trained with RL to approach.  Group
+identity is ensured by a controlled re-run of the 32B under identical
 evaluation parameters, which exactly reproduces the original per-trial
-results ($n{=}1$: 100\%, $n{=}3$: 93\%, $n{=}5$: 68\%).  On these same
-groups, Qwen3-235B-A22B scores $n{=}1$: 60\%, $n{=}3$: 67\%,
-$n{=}5$: 16\%---substantially \emph{below} the 32B on every fault count,
-despite 7$\times$ greater total parameter count.  The 32B dense model is
-therefore a genuinely hard ceiling, not one that a larger off-the-shelf
-model trivially clears.  We attribute the 235B shortfall to sparse
-activation (only 22B parameters active per forward pass), which may
-disadvantage MoE models for the precise sequential multi-bug identification
-this task requires.
+results---confirming that the group-selection procedure is deterministic
+and all models are compared on the same held-out bugs.  The 32B results
+use the few-shot prompt (32B benefits similarly to 7B; shown separately
+from the main no-few-shot table for comparability).
 
 \subsection{Ablation: Few-Shot Prompt}
 
@@ -354,7 +325,7 @@ for 7B RL experiments to test whether RL and few-shot gains are additive.
 
 \begin{table}[h]
 \centering
-\caption{7B few-shot+RL trajectory vs.\ 32B ceiling and Qwen3-235B (MoE),
+\caption{7B few-shot+RL trajectory vs.\ 32B ceiling,
 find-replace format, mean $\pm$ 95\% CI (10 trials unless noted).}
 \label{tab:7brl}
 \begin{tabular}{lccc}
@@ -366,7 +337,6 @@ Model & $n=1$ & $n=3$ & $n=5$ \\
 7B, few-shot + RL        & 60$\pm$32 & \textbf{47$\pm$24} & 16$\pm$14 \\
 \midrule
 Qwen2.5-Coder-32B$^\dagger$ (ceiling, 5 trials) & \textbf{100$\pm$0} & \textbf{93$\pm$13} & \textbf{68$\pm$16} \\
-Qwen3-235B-A22B$^\dagger$ (MoE, 5 trials)       & 60$\pm$48 & 67$\pm$36 & 16$\pm$15 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -385,14 +355,10 @@ the balanced curriculum.
 
 Relative to the 32B dense ceiling (93\% at $n{=}3$), RL training closes
 approximately half the gap: from 3\% (7B baseline, 90\,pp behind) to 47\%
-(7B+few-shot+RL, 46\,pp behind), a 49\% gap reduction.  Compared to
-Qwen3-235B-A22B (67\% at $n{=}3$, 16\% at $n{=}5$), the 7B+few-shot+RL
-model \textbf{matches at $n{=}1$} (60\% $=$ 60\%) and \textbf{matches at
-$n{=}5$} (16\% $=$ 16\%), trailing by only 20\,pp at $n{=}3$---despite
-being 33$\times$ smaller by total parameter count.  Since the 235B MoE
-itself underperforms the 32B dense model (see above), reaching 235B-level
-accuracy via RL training of a 7B model represents a parameter-efficient
-path to competitive multi-fault repair performance.
+(7B+few-shot+RL, 46\,pp behind), a 49\% gap reduction.  This represents
+a parameter-efficient path to multi-fault repair capability: a 7B model
+trained with 100 GRPO steps and a two-bug few-shot prompt reaches nearly
+half the performance of an untuned model 4.6$\times$ its size.
 
 \subsection{RL Stability}
 
@@ -462,12 +428,11 @@ itself scale-dependent.
 RL training on the 7B+few-shot model closes $\approx$50\% of the gap to
 the 32B dense ceiling at $n{=}3$ (3\%$\to$47\% vs.\ 93\%), suggesting RL
 is a parameter-efficient path to multi-fault repair capability.  The 32B
-is a genuinely hard ceiling: Qwen3-235B-A22B (MoE, 22B active of 235B
-total), evaluated on the same held-out groups, scores below the 32B on
-every fault count ($n{=}3$: 67\% vs.\ 93\%; $n{=}5$: 16\% vs.\ 68\%),
-confirming that raw scale does not straightforwardly substitute for
-task-specific RL training.  We release all data, code, and checkpoints to
-facilitate reproducible research in functional code repair.
+dense model serves as a genuinely hard ceiling: even without RL, it
+achieves 100\% / 93\% / 68\% at $n{=}1/3/5$, showing that the task is
+solvable while leaving meaningful headroom for RL-trained smaller models
+to approach.  We release all data, code, and checkpoints to facilitate
+reproducible research in functional code repair.
 
 \bibliographystyle{plainnat}
 \bibliography{references}
