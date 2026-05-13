@@ -50,15 +50,17 @@ compliance even at baseline.
 
 With 100 GRPO steps and a balanced curriculum, the 3B model improves from
 40\% to \textbf{70\% on single-fault debugging} (+30\,pp) with no regression on
-three-fault tasks.  For the 7B model, RL shifts gains to the multi-fault
-regime ($n{=}3$: 3\%$\to$10\% without few-shot; 3\%$\to$\textbf{47\%}
-with few-shot, closing 49\% of the gap to the 32B dense ceiling of 93\%).
+three-fault tasks.  For the 7B model, RL improves single-fault accuracy
+modestly ($n{=}1$: 52\%$\to$59\% with few-shot; 60\%$\to$60\% without).
+The two-bug few-shot demonstration is the primary driver of multi-fault
+compliance ($n{=}3$: 3\%$\to$42\%; $n{=}5$: 4\%$\to$30\%), with RL adding
+no further gain at those settings in the 27-trial evaluation.
 
 A secondary finding concerns \textbf{few-shot example sensitivity}: the
 same two-bug demonstration improves 7B multi-fault compliance dramatically
-($n{=}3$: 3\%$\to$30\%, $n{=}5$: 4\%$\to$40\%) but hurts 3B
+($n{=}3$: 3\%$\to$42\%, $n{=}5$: 4\%$\to$30\%) but hurts 3B
 single-fault accuracy (40\%$\to$30\%), an emergent scale effect.  The
-untuned 32B model with few-shot achieves 100\% / 93\% / 68\% on
+untuned 32B model with few-shot achieves 81\% / 86\% / 70\% on
 $n{=}1/3/5$---a genuinely hard ceiling, as detailed below.
 
 We release CDBench, all checkpoints, and training code to facilitate
@@ -101,14 +103,15 @@ We make four contributions:
   multi-bug format compliance at inference time (\S\ref{sec:format}).
 
   \item \textbf{Few-shot size sensitivity}: the same two-bug demonstration
-  prompt boosts 7B multi-fault accuracy by ${\sim}10\times$ ($n{=}3$:
-  3\%$\to$30\%) while degrading 3B performance, an emergent scale effect
+  prompt boosts 7B multi-fault accuracy by ${\sim}14\times$ ($n{=}3$:
+  3\%$\to$42\%) while degrading 3B performance, an emergent scale effect
   with practical implications for prompt design (\S\ref{sec:results}).
 
-  \item \textbf{RL training results}: GRPO closes $\approx$50\% of the
-  gap from the 7B baseline to the 32B dense ceiling at $n{=}3$
-  (3\%$\to$47\% vs.\ 93\%), demonstrating that RL is a parameter-efficient
-  path to multi-fault repair capability (\S\ref{sec:results}).
+  \item \textbf{RL training results}: GRPO improves 3B single-fault
+  accuracy by $+30$\,pp (40\%$\to$70\%) and 7B multi-fault accuracy
+  without few-shot ($n{=}3$: 3\%$\to$10\%, $n{=}5$: 4\%$\to$12\%).  With
+  few-shot, the two-bug demonstration closes 47\% of the gap to the 32B
+  ceiling at $n{=}3$ (3\%$\to$42\% vs.\ 86\%) (\S\ref{sec:results}).
 \end{enumerate}
 
 %% ─────────────────────────────────────────────────────────────
@@ -201,7 +204,7 @@ We include a two-bug few-shot example in the prompt demonstrating that
 multiple \texttt{FILE/FIND/FIX} blocks should be output for multiple bugs.
 Without this, models tend to output only a single block even when $n>1$.
 With few-shot, 7B baseline $n{=}3$ improves from 3\% to
-\textbf{30\%} and $n{=}5$ from 4\% to \textbf{40\%} (\S\ref{sec:results}).
+\textbf{42\%} and $n{=}5$ from 4\% to \textbf{30\%} (\S\ref{sec:results}).
 
 %% ─────────────────────────────────────────────────────────────
 \section{RL Training}
@@ -239,7 +242,8 @@ We hold out 20\% of healthy corruptions ($n{=}27$) for evaluation.
 \begin{table}[h]
 \centering
 \caption{Functional debugging accuracy (\%) on CDBench, find-replace format
-\emph{without} few-shot ($^\dagger$with few-shot), mean $\pm$ 95\% CI.
+\emph{without} few-shot ($^\dagger$with few-shot), mean $\pm$ 95\% CI
+(10 trials for 3B/7B; 27 trials for 32B$^\dagger$).
 \textbf{Bold} = best per column.  Qwen2.5-Coder-32B$^\dagger$ is the dense
 ceiling (no RL).}
 \label{tab:main}
@@ -252,7 +256,7 @@ Model & Base & +RL & Base & +RL & Base & +RL \\
 Qwen2.5-Coder-3B  & 40$\pm$32 & \textbf{70$\pm$30} & 17$\pm$18 & 17$\pm$15 & 8$\pm$10 & 4$\pm$8 \\
 Qwen2.5-Coder-7B  & 60$\pm$32 & 60$\pm$32 & 3$\pm$7 & \textbf{10$\pm$20} & 4$\pm$5 & \textbf{12$\pm$13} \\
 \midrule
-Qwen2.5-Coder-32B$^\dagger$ & \textbf{100$\pm$0} & --- & \textbf{93$\pm$13} & --- & \textbf{68$\pm$16} & --- \\
+Qwen2.5-Coder-32B$^\dagger$ & \textbf{81$\pm$15} & --- & \textbf{86$\pm$8} & --- & \textbf{70$\pm$8} & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -272,24 +276,21 @@ instead, functional reward drives capability gains on harder settings where
 there is room to improve.
 
 \paragraph{32B ceiling.}
-The untuned 32B model (with few-shot) scores \textbf{100\%} / \textbf{93\%} /
-\textbf{68\%} on $n{=}1/3/5$, establishing an upper bound for
-instruction-tuned models without RL.  Near-perfect single-fault accuracy
-validates that the benchmark bugs are solvable; the 68\% on $n{=}5$ shows
-remaining headroom for smaller models trained with RL to approach.  Group
-identity is ensured by a controlled re-run of the 32B under identical
-evaluation parameters, which exactly reproduces the original per-trial
-results---confirming that the group-selection procedure is deterministic
-and all models are compared on the same held-out bugs.  The 32B results
-use the few-shot prompt (32B benefits similarly to 7B; shown separately
-from the main no-few-shot table for comparability).
+The untuned 32B model (with few-shot, 27 trials) scores \textbf{81\%} /
+\textbf{86\%} / \textbf{70\%} on $n{=}1/3/5$, establishing an upper bound
+for instruction-tuned models without RL.  The sub-100\% result at $n{=}1$
+($\approx$22/27 held-out bugs solved) confirms that the benchmark contains
+genuinely hard instances; the 70\% at $n{=}5$ shows meaningful headroom
+for smaller models trained with RL to approach.  The 32B results use the
+few-shot prompt (32B benefits similarly to 7B) and are shown separately
+from the main no-few-shot table for comparability.
 
 \subsection{Ablation: Few-Shot Prompt}
 
 \begin{table}[h]
 \centering
 \caption{Effect of the two-bug few-shot example on baseline functional
-accuracy (\%), 10 trials $\pm$ 95\% CI.}
+accuracy (\%), mean $\pm$ 95\% CI (10 trials for 3B; 27 trials for 7B).}
 \label{tab:fewshot}
 \begin{tabular}{lccc}
 \toprule
@@ -299,15 +300,15 @@ Prompt & $n=1$ & $n=3$ & $n=5$ \\
 3B, with few-shot & 30$\pm$30 & 10$\pm$20 & 2$\pm$4 \\
 \midrule
 7B, no few-shot  & 60$\pm$32 & 3$\pm$7   & 4$\pm$5  \\
-7B, with few-shot & \textbf{70$\pm$30} & \textbf{30$\pm$27} & \textbf{40$\pm$17} \\
+7B, with few-shot & \textbf{52$\pm$19} & \textbf{42$\pm$13} & \textbf{30$\pm$11} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 The few-shot example has a strongly \emph{size-dependent} effect.  For the
 7B model, including the example dramatically improves multi-bug format
-compliance: $n{=}3$ rises from 3\% to 30\% and $n{=}5$ from 4\% to 40\%,
-an approximately $10\times$ gain.  Without few-shot, the 7B model
+compliance: $n{=}3$ rises from 3\% to 42\% and $n{=}5$ from 4\% to 30\%,
+an approximately $14\times$ gain at $n{=}3$.  Without few-shot, the 7B model
 overwhelmingly outputs only a single \texttt{FILE/FIND/FIX} block even
 when prompted for $n{>}1$ bugs.
 
@@ -326,39 +327,39 @@ for 7B RL experiments to test whether RL and few-shot gains are additive.
 \begin{table}[h]
 \centering
 \caption{7B few-shot+RL trajectory vs.\ 32B ceiling,
-find-replace format, mean $\pm$ 95\% CI (10 trials unless noted).}
+find-replace format, mean $\pm$ 95\% CI (10 trials for 7B no-few-shot;
+27 trials for all other rows).}
 \label{tab:7brl}
 \begin{tabular}{lccc}
 \toprule
 Model & $n=1$ & $n=3$ & $n=5$ \\
 \midrule
 7B, no few-shot (base)   & 60$\pm$32 & 3$\pm$7   & 4$\pm$5  \\
-7B, with few-shot (base) & 70$\pm$30 & 30$\pm$27 & 40$\pm$17 \\
-7B, few-shot + RL        & 60$\pm$32 & \textbf{47$\pm$24} & 16$\pm$14 \\
+7B, with few-shot (base) & 52$\pm$19 & 42$\pm$13 & 30$\pm$11 \\
+7B, few-shot + RL        & \textbf{59$\pm$19} & \textbf{42$\pm$13} & 28$\pm$11 \\
 \midrule
-Qwen2.5-Coder-32B$^\dagger$ (ceiling, 5 trials) & \textbf{100$\pm$0} & \textbf{93$\pm$13} & \textbf{68$\pm$16} \\
+Qwen2.5-Coder-32B$^\dagger$ (ceiling) & \textbf{81$\pm$15} & \textbf{86$\pm$8} & \textbf{70$\pm$8} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 We train the 7B model with GRPO using the few-shot prompt (same setup as
 Table~\ref{tab:main} but with the two-bug demonstration injected).
-Starting from the 7B+few-shot baseline ($n{=}1$: 70\%, $n{=}3$: 30\%,
-$n{=}5$: 40\%), post-RL accuracy is: $n{=}1$: 60\%, $n{=}3$: 47\%,
-$n{=}5$: 16\%.  The RL training improves $n{=}3$ performance substantially
-(+17\,pp) but does not uniformly stack with few-shot: $n{=}1$ regresses
-slightly (${-}10$\,pp) and $n{=}5$ regresses sharply (${-}24$\,pp).
-This suggests that RL and few-shot gains partially overlap at high-$n$:
-the model's few-shot-boosted multi-fault capability is disrupted by the
-GRPO reward signal, which may over-exploit single-fault solutions during
-the balanced curriculum.
+Starting from the 7B+few-shot baseline ($n{=}1$: 52\%, $n{=}3$: 42\%,
+$n{=}5$: 30\%), post-RL accuracy is: $n{=}1$: 59\%, $n{=}3$: 42\%,
+$n{=}5$: 28\%.  RL adds a modest $+7$\,pp at $n{=}1$ but does not improve
+$n{=}3$ or $n{=}5$ beyond the few-shot baseline (27-trial estimates).
+This indicates that for the 7B model, multi-fault format compliance---
+achievable via in-context demonstration alone---is the primary bottleneck
+at $n{\geq}3$; RL within the balanced curriculum does not overcome it.
 
-Relative to the 32B dense ceiling (93\% at $n{=}3$), RL training closes
-approximately half the gap: from 3\% (7B baseline, 90\,pp behind) to 47\%
-(7B+few-shot+RL, 46\,pp behind), a 49\% gap reduction.  This represents
-a parameter-efficient path to multi-fault repair capability: a 7B model
-trained with 100 GRPO steps and a two-bug few-shot prompt reaches nearly
-half the performance of an untuned model 4.6$\times$ its size.
+Relative to the 32B dense ceiling (86\% at $n{=}3$), the two-bug
+few-shot demonstration alone closes approximately half the gap: from 3\%
+(7B no-few-shot baseline, 83\,pp behind) to 42\% (7B+few-shot baseline
+and 7B+few-shot+RL, 44\,pp behind), a 47\% gap reduction.  The remaining
+44\,pp gap to the 32B ceiling reflects the fundamental capacity difference
+between a 7B and 32B instruction-tuned model on this structured multi-fault
+repair task.
 
 \subsection{RL Stability}
 
@@ -425,13 +426,14 @@ multi-fault performance by ${\sim}10\times$ while harming 3B, suggesting
 that in-context learning capacity for structured format constraints is
 itself scale-dependent.
 
-RL training on the 7B+few-shot model closes $\approx$50\% of the gap to
-the 32B dense ceiling at $n{=}3$ (3\%$\to$47\% vs.\ 93\%), suggesting RL
-is a parameter-efficient path to multi-fault repair capability.  The 32B
-dense model serves as a genuinely hard ceiling: even without RL, it
-achieves 100\% / 93\% / 68\% at $n{=}1/3/5$, showing that the task is
-solvable while leaving meaningful headroom for RL-trained smaller models
-to approach.  We release all data, code, and checkpoints to facilitate
+For the 7B model, the two-bug few-shot demonstration is the primary driver
+of multi-fault gains, closing $\approx$47\% of the gap to the 32B dense
+ceiling at $n{=}3$ (3\%$\to$42\% vs.\ 86\%); RL adds a further $+7$\,pp
+at $n{=}1$ but does not improve $n{=}3$ beyond the few-shot baseline in
+the 27-trial evaluation.  The 32B dense ceiling (81\% / 86\% / 70\% at
+$n{=}1/3/5$) is itself non-trivial---roughly 1 in 5 single-fault instances
+defeats the 32B model---confirming that the benchmark contains genuinely
+hard cases.  We release all data, code, and checkpoints to facilitate
 reproducible research in functional code repair.
 
 \bibliographystyle{plainnat}
