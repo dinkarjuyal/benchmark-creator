@@ -1,0 +1,20 @@
+[CDBench Task] Debug the following code with TWO faults:
+
+The code attempts to merge dictionaries but has multiple issues:
+1. Wrong merge order (should be d2 | d1 for correct precedence)
+2. Missing value reassignment after merge
+
+d1 = {"a": 1, "b": 2}
+d2 = {"b": 3, "c": 4}
+result = d1 | d2  # FAULT 1: wrong order
+print(result)  # FAULT 2: should capture updated values
+
+Current output: {"a": 1, "b": 2, "c": 4}
+Expected output: {"a": 1, "b": 3, "c": 4}
+
+Which fixes correctly repair BOTH faults?
+
+A. Change to "d2 | d1" and result = d1.update(d2)
+B. Change to "d2 | d1" 
+C. Add result = {**d1, **d2}
+D. Change d2["b"] = 2 before merge

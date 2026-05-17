@@ -1,0 +1,17 @@
+[CDBench Task] Debug the following code with edge case handling:
+
+The code fails when value is None due to missing default handling.
+
+value = None
+result = f"The value is {value}"  # BUG: doesn't handle None properly
+print(result)
+
+Current output: "The value is None"
+Expected output: "The value is unknown" (or similar safe default)
+
+Which fix correctly repairs the code to handle None gracefully?
+
+A. Use f"The value is {value or 'unknown'}"
+B. Use f"The value is {value if value else 'unknown'}"
+C. Use f"The value is {value or 'unknown'}" (both A and B work)
+D. Change to str(value) instead of f-string
