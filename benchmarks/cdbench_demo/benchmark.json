@@ -1,0 +1,29 @@
+{
+  "name": "cdbench_demo",
+  "description": "CDBench Demo: Controlled Multi-Fault Debugging Benchmark - Sample code repair and debugging tasks",
+  "fullname": "CDBench: Controlled Multi-Fault Debugging with Reinforcement Learning and Iterative Repair",
+  "version": "1.0",
+  "tasks": [
+    {
+      "task_id": "debug_list_comprehension_01",
+      "description": "Debug: Fix list comprehension with incorrect filtering logic",
+      "family": "code_debugging",
+      "type": "multi_fault_repair",
+      "faults": 1
+    },
+    {
+      "task_id": "debug_dict_merge_02",
+      "description": "Debug: Fix dictionary merge operation with multiple faults",
+      "family": "code_debugging",
+      "type": "multi_fault_repair",
+      "faults": 2
+    },
+    {
+      "task_id": "debug_string_format_03",
+      "description": "Debug: Fix string formatting with None value handling and edge cases",
+      "family": "code_debugging",
+      "type": "multi_fault_repair",
+      "faults": 1
+    }
+  ]
+}

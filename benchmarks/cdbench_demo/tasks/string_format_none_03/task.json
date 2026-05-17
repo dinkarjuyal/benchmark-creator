@@ -1,0 +1,11 @@
+{
+  "task_id": "debug_string_format_03",
+  "description": "[CDBench] Debug: Fix string formatting with None handling",
+  "correct_answer": "C",
+  "timeout_sec": 30,
+  "family": "code_debugging",
+  "type": "multi_fault_repair",
+  "num_faults": 1,
+  "difficulty": "easy",
+  "benchmark": "cdbench"
+}

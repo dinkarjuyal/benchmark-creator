@@ -1,0 +1,11 @@
+{
+  "task_id": "debug_dict_merge_02",
+  "description": "[CDBench] Debug: Fix dictionary merge with multiple faults",
+  "correct_answer": "B",
+  "timeout_sec": 30,
+  "family": "code_debugging",
+  "type": "multi_fault_repair",
+  "num_faults": 2,
+  "difficulty": "medium",
+  "benchmark": "cdbench"
+}
