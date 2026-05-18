@@ -30,7 +30,7 @@ sys.path.insert(0, str(ROOT))
 
 from scripts.generators.coding_diffusion import _make_client, CorruptionSpec
 
-PROVIDER = os.environ.get("PROVIDER", "prime")
+PROVIDER = os.environ.get("PROVIDER", "anthropic")
 MODEL = os.environ.get("MODEL", "qwen/qwen3-coder")
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "8192"))
 N_TRIALS = int(os.environ.get("N_TRIALS", "1"))

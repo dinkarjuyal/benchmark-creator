@@ -66,10 +66,6 @@ class PIClientAdapter:
 
 
 def _make_client(api_key: str | None, provider: str = "anthropic"):
-    if provider == "prime":
-        from verifiers.utils.client_utils import load_prime_config
-        key = api_key or load_prime_config().get("api_key", "")
-        return PIClientAdapter(api_key=key)
     return anthropic.Anthropic(api_key=api_key or os.environ["ANTHROPIC_API_KEY"])
 
 

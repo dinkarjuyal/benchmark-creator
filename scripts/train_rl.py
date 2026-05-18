@@ -60,7 +60,8 @@ from scripts.functional_judge import SANDBOX_ROOT, judge_fix
 import scripts.functional_judge as _fj
 from scripts.run_eval_local import (
     DOMAIN_CONFIG, load_tfail_cache, filter_healthy,
-    load_sgs_catalog, build_domain_prompt,
+    load_sgs_catalog, build_domain_prompt, build_findreplace_prompt,
+    extract_findreplace_fixes, _apply_findreplace_to_sandbox,
 )
 
 
@@ -72,27 +73,33 @@ def score_completion(
     sandbox: Path,
     tfail_cache: dict,
     git_target: str,
+    fmt: str = "full_file",
 ) -> float:
     """Apply model fix to sandbox, run T_fail tests, return functional score."""
     import subprocess as sp
-    fixed = extract_fixed_files(completion)
-    if not fixed:
-        return 0.0
 
-    # Expand snippet fixes to full files
-    full_fixed = {}
-    for rel_path, snippet_fix in fixed.items():
-        target = sandbox / rel_path
-        if not target.exists():
-            continue
-        full_text = target.read_text()
-        for c in corruptions:
-            if c.source_file != rel_path:
+    if fmt == "find_replace":
+        fixes = extract_findreplace_fixes(completion)
+        if not fixes:
+            return 0.0
+        full_fixed = _apply_findreplace_to_sandbox(fixes, corruptions, sandbox)
+    else:
+        fixed = extract_fixed_files(completion)
+        if not fixed:
+            return 0.0
+        full_fixed = {}
+        for rel_path, snippet_fix in fixed.items():
+            target = sandbox / rel_path
+            if not target.exists():
                 continue
-            if c.find in snippet_fix and c.replace not in snippet_fix:
-                if c.replace in full_text:
-                    full_text = full_text.replace(c.replace, c.find, 1)
-        full_fixed[rel_path] = full_text
+            full_text = target.read_text()
+            for c in corruptions:
+                if c.source_file != rel_path:
+                    continue
+                if c.find in snippet_fix and c.replace not in snippet_fix:
+                    if c.replace in full_text:
+                        full_text = full_text.replace(c.replace, c.find, 1)
+            full_fixed[rel_path] = full_text
 
     if not full_fixed:
         return 0.0
@@ -116,11 +123,11 @@ def score_completion(
                capture_output=True)
 
 
-def make_reward_fn(healthy: list, tfail_cache: dict, cfg: dict, catalog_by_id: dict):
+def make_reward_fn(healthy: list, tfail_cache: dict, cfg: dict, catalog_by_id: dict,
+                   fmt: str = "full_file"):
     """Return a reward function compatible with TRL GRPOTrainer."""
     sandbox = cfg["sandbox"]
     git_target = cfg["git_target"]
-    library = cfg["library"]
 
     def reward_fn(prompts, completions, corruption_ids_json, **kwargs):
         scores = []
@@ -132,7 +139,7 @@ def make_reward_fn(healthy: list, tfail_cache: dict, cfg: dict, catalog_by_id: d
                     scores.append(0.0)
                     continue
                 score = score_completion(
-                    completion, corruptions, sandbox, tfail_cache, git_target
+                    completion, corruptions, sandbox, tfail_cache, git_target, fmt=fmt
                 )
             except Exception as e:
                 print(f"    [reward] error: {e}")
@@ -152,6 +159,7 @@ def build_training_dataset(
     diversity_modes: list[str],
     total_examples: int,
     seed: int = 42,
+    fmt: str = "full_file",
 ) -> list[dict]:
     """Build GRPO training examples with a curriculum over bug counts.
 
@@ -189,7 +197,8 @@ def build_training_dataset(
         snippets = load_snippet_files(selected)
         corrupted = apply_corruptions(snippets, selected)
         descs = [c.description for c in selected]
-        user_prompt = build_domain_prompt(corrupted, n, descs, library)
+        prompt_fn = build_findreplace_prompt if fmt == "find_replace" else build_domain_prompt
+        user_prompt = prompt_fn(corrupted, n, descs, library)
 
         examples.append({
             "prompt": user_prompt,
@@ -223,8 +232,8 @@ def main() -> None:
                     help="number of rollouts per prompt (GRPO group size)")
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--lora-rank", type=int, default=16)
-    ap.add_argument("--max-tokens", type=int, default=4096,
-                    help="max new tokens per rollout")
+    ap.add_argument("--max-tokens", type=int, default=8192,
+                    help="max new tokens per rollout (8192 prevents clipped_ratio=1 on full-file outputs)")
     ap.add_argument("--out", default=None,
                     help="output checkpoint dir (default: checkpoints/rl_{model_slug}_{domain})")
     ap.add_argument("--eval-interval", type=int, default=20,
@@ -232,6 +241,9 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--total-examples", type=int, default=400,
                     help="total training examples in the dataset")
+    ap.add_argument("--format", default="find_replace",
+                    choices=["full_file", "find_replace"],
+                    help="output format for training (default: find_replace — short outputs, no clipping)")
     args = ap.parse_args()
 
     cfg = DOMAIN_CONFIG[args.domain]
@@ -281,6 +293,9 @@ def main() -> None:
     eval_pool = shuffled[:n_eval]
     train_pool = shuffled[n_eval:]
     print(f"Train pool: {len(train_pool)}, Eval pool: {len(eval_pool)}")
+    # Persist held-out IDs so run_eval_local.py can filter to clean held-out set
+    _held_out_ids = [c.corruption_id for c in eval_pool]
+    _train_ids = [c.corruption_id for c in train_pool]
 
     # Build dataset
     dataset_list = build_training_dataset(
@@ -289,6 +304,7 @@ def main() -> None:
         diversity_modes=args.diversity.split(","),
         total_examples=args.total_examples,
         seed=args.seed,
+        fmt=args.format,
     )
     print(f"Training examples: {len(dataset_list)}")
 
@@ -331,7 +347,7 @@ def main() -> None:
     model.print_trainable_parameters()
 
     # ── Build reward function ─────────────────────────────────────────────────
-    reward_fn = make_reward_fn(healthy, tfail, cfg, catalog_by_id)
+    reward_fn = make_reward_fn(healthy, tfail, cfg, catalog_by_id, fmt=args.format)
 
     # ── TRL GRPOTrainer ───────────────────────────────────────────────────────
     from datasets import Dataset
@@ -391,7 +407,7 @@ def main() -> None:
     eval_llm = LLM(
         model=str(out_dir / "merged"),
         tensor_parallel_size=1,
-        gpu_memory_utilization=0.5,
+        gpu_memory_utilization=0.35,
         max_model_len=8192,
         dtype="bfloat16",
         download_dir=os.environ["HF_HOME"],
@@ -418,18 +434,21 @@ def main() -> None:
     acc = correct / max(1, len(eval_pool))
     print(f"\nPost-RL eval: {correct}/{len(eval_pool)} = {acc:.0%} on n=1 held-out")
 
-    # Save eval results
+    # Save eval results + held-out/train split IDs for clean downstream eval
     (out_dir / "eval_results.json").write_text(json.dumps({
         "model": args.model,
         "post_rl_model": str(out_dir / "merged"),
         "domain": args.domain,
         "catalog": args.catalog,
+        "format": args.format,
         "train_ns": args.train_ns,
         "steps": args.steps,
         "G": args.G,
         "n1_accuracy_held_out": acc,
         "n_eval_examples": len(eval_pool),
         "training_time_h": round(elapsed / 3600, 2),
+        "held_out_ids": _held_out_ids,
+        "train_ids": _train_ids,
     }, indent=2))
     print(f"Results saved to {out_dir}/eval_results.json")
 
