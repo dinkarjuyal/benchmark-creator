@@ -81,56 +81,34 @@ def fig_degradation():
 # ── Figure 2: Iterative repair ─────────────────────────────────────────────────
 
 def fig_iterative():
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4.0))
+    fig, ax = plt.subplots(figsize=(6.5, 4.0))
 
-    # Left: per-round accuracy for 7B+fs+RL (full feedback)
-    ax = axes[0]
-    rounds = [0, 1, 2, 3]
-    # round 0 greedy; round 1+ adds repair context; rounds 2-3 identical to 1
-    # from results: r0: n3=40%, n5=32%, n7=33%; best(r1): n3=47%, n5=43%, n7=44%
-    # rounds 2,3 identical to round 1 for all N (confirmed in training log analysis)
-    per_round = {
-        "N=3": [40, 47, 47, 47],
-        "N=5": [32, 43, 43, 43],
-        "N=7": [33, 44, 44, 44],
-    }
-    colors = {"N=3": "#4878cf", "N=5": "#e87722", "N=7": "#2ca02c"}
-    for label, vals in per_round.items():
-        ax.plot(rounds, vals, marker="o", label=label, color=colors[label], lw=2)
-
-    ax.set_xlabel("Repair round", fontsize=11)
-    ax.set_ylabel("Accuracy (%)", fontsize=11)
-    ax.set_title("7B+fs+RL: per-round accuracy", fontsize=11)
-    ax.set_xticks([0, 1, 2, 3])
-    ax.set_ylim(20, 58)
-    ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=100, decimals=0))
-    ax.legend(fontsize=10)
-    ax.grid(True, alpha=0.3)
-
-    # Right: full feedback vs. prev-only (test name ablation)
-    ax = axes[1]
     ns = [3, 5, 7]
-    full_r0   = [40, 32, 33]
-    full_best = [47, 43, 44]
-    prev_r0   = [40, 32, 33]
-    prev_best = [43, 43, 41]
 
-    x = np.arange(len(ns))
-    w = 0.2
-    ax.bar(x - 1.5*w, full_r0,   w, label="Full — round 0", color="#4878cf", alpha=0.6)
-    ax.bar(x - 0.5*w, full_best, w, label="Full — best",    color="#4878cf")
-    ax.bar(x + 0.5*w, prev_r0,   w, label="Prev-only — round 0", color="#e87722", alpha=0.6)
-    ax.bar(x + 1.5*w, prev_best, w, label="Prev-only — best",    color="#e87722")
+    # Round-0 and best-of-3 for 7B+fs+RL
+    r0   = [40, 32, 33]
+    best = [47, 43, 44]
 
-    ax.set_xlabel("Bug count $N$", fontsize=11)
-    ax.set_ylabel("Accuracy (%)", fontsize=11)
-    ax.set_title("Test names vs. stochastic exploration", fontsize=11)
-    ax.set_xticks(x)
-    ax.set_xticklabels([f"N={n}" for n in ns])
-    ax.set_ylim(0, 60)
+    # 32B+fs ceiling at same N values
+    ceiling = [93, 68, 77]
+
+    ax.plot(ns, r0,      color="#e87722", ls="--", marker="o", lw=1.8, ms=7,
+            label="7B+fs+RL  round 0")
+    ax.plot(ns, best,    color="#e87722", ls="-",  marker="o", lw=2.2, ms=7,
+            label="7B+fs+RL  best-of-3")
+    ax.fill_between(ns, r0, best, color="#e87722", alpha=0.12)
+
+    ax.plot(ns, ceiling, color="#2ca02c", ls="-",  marker="*", lw=2.0, ms=10,
+            label="32B+fs  (ceiling)")
+
+    ax.set_xlabel("Bug count $N$", fontsize=12)
+    ax.set_ylabel("Functional accuracy (%)", fontsize=12)
+    ax.set_title("Iterative repair flattens the degradation cliff", fontsize=12)
+    ax.set_xticks(ns)
+    ax.set_ylim(20, 100)
     ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=100, decimals=0))
-    ax.legend(fontsize=8.5)
-    ax.grid(True, alpha=0.3, axis="y")
+    ax.legend(fontsize=10, loc="lower left")
+    ax.grid(True, alpha=0.3)
 
     fig.tight_layout()
     fig.savefig(os.path.join(OUT, "iterative_repair.pdf"), bbox_inches="tight")

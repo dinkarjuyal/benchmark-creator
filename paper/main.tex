@@ -17,12 +17,10 @@
 \usepackage{subcaption}
 \usepackage[numbers,compress]{natbib}
 
-\title{CDBench: Controlled Multi-Fault Debugging with\\Reinforcement Learning and Iterative Repair}
+\title{CDBench: Controlled Multi-Fault Debugging with\\Reinforcement Learning and Iterative Repair%
+\thanks{Code and data: \url{https://github.com/dinkarjuyal/cdbench}}}
 
-\author{
-  Dinkar Juyal \\
-  \texttt{dinkarjuyal@gmail.com}
-}
+\author{Anonymous}
 
 \begin{document}
 \maketitle
@@ -103,7 +101,7 @@ means most GRPO rollouts score 0 and contribute no gradient. Adopting a compact 
 A simple inference-time loop---re-prompt with failing test names after each
 round---adds 7--11\,pp at $N{=}3$--7 and produces near-flat accuracy (43--47\%)
 across that range, eliminating the visible degradation cliff. Ablations show
-that test names add only ${\sim}6$\,pp;the gain is equivalent to best-of-$k$ sampling: stochastic re-sampling at temperature 0.6 produces diverse attempts, and oracle selection of the best round accounts for most of the improvement. Training stability is gated by whether the model can occasionally succeed during rollouts — a criterion that explains the asymmetric effects across $N$ and points directly to difficulty-filtered training data as the next lever.
+that test names add only ${\sim}6$\,pp; the gain is equivalent to best-of-$k$ sampling: stochastic re-sampling at temperature 0.6 produces diverse attempts, and oracle selection of the best round accounts for most of the improvement. Training stability is gated by whether the model can occasionally succeed during rollouts — a criterion that explains the asymmetric effects across $N$ and points directly to difficulty-filtered training data as the next lever.
 
 
 \paragraph{Contributions.}
@@ -195,7 +193,7 @@ scoring ${\leq}2$ (immediate syntax errors, trivially obvious type mismatches,
 signature-level detection) are rejected. Mutations scoring ${\geq}3$ enter the
 catalog.
 
-Applied to scikit-learn library, the pipeline
+Applied to the scikit-learn library, the pipeline
 produces 173 candidates at a 65\% acceptance rate, yielding 139 healthy
 corruptions after filtering for stable T\_fail sets.
 
@@ -369,25 +367,25 @@ $N{=}1,3$.
 The 3B model with RL (no few-shot, balanced curriculum) improves $N{=}1$ from
 40\% to 70\% (+30\,pp) with no regression at $N{=}3$, reaching parity with the
 untuned 7B baseline. Few-shot RL training for 3B fails: the few-shot prompt
-causes the model to generate 8K+ token outputs (clipped\_ratio$>$0.8
-throughout), indicating the 3B lacks capacity to follow format constraints from
+causes the model to generate 8K+ token outputs (over 80\% of rollouts hit
+the token ceiling), indicating the 3B lacks capacity to follow format constraints from
 the demonstration under RL generation pressure.
 
 \subsection{Iterative Repair and Repair-Conditioned Training}
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figs/iterative_repair.pdf}
-\caption{Iterative repair eliminates the degradation cliff. Left: per-round
-  accuracy for 7B+fs+RL at $N{=}3,5,7$ (best-of-rounds is oracle).
-  Right: full-feedback vs.\ prev-only ablation showing test names add ${\sim}6$\,pp.}
+\includegraphics[width=0.75\linewidth]{figs/iterative_repair.pdf}
+\caption{Iterative repair (best-of-3 rounds) produces near-flat accuracy
+  across $N{=}3$--7, eliminating the degradation cliff visible in the round-0
+  curve. The shaded region shows the gain from stochastic re-sampling;
+  the 32B ceiling is shown for reference.}
 \label{fig:iterative}
 \end{figure}
 
 \begin{table}[h]
 \centering
-\caption{Iterative repair: single-shot vs.\ best-of-3-rounds for 7B+fs+RL.
-  Round-0 uses greedy; rounds 1--3 use temperature 0.6 with failing test names.
-  20 trials per $N$.}
+\caption{Iterative repair: round-0 vs.\ best-of-3-rounds, and test-name
+  ablation (full feedback vs.\ previous attempt only). 20 trials per $N$.}
 \label{tab:iterative}
 \begin{tabular}{lcccccc}
 \toprule
@@ -397,7 +395,7 @@ the demonstration under RL generation pressure.
 \midrule
 7B+fs+RL (full feedback)  & 40\% & 47\%  & 32\% & 43\%  & 33\% & 44\%  \\
 7B+fs+RL (prev only)      & 40\% & 43\%  & 32\% & 43\%  & 33\% & 41\%  \\
-32B+fs (full feedback)    & 80\% & 80\%  & 58\% & 64\%  & 56\% & 67\%  \\
+32B+fs                    & 93\% & 93\%  & 68\% & 68\%  & 77\% & 77\%  \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -451,7 +449,7 @@ examples sit in the tractable regime---the model occasionally completes them,
 gradient flows, and learned priors transfer to single-shot $N{=}3$ performance.
 $N{=}5$ repair examples are too hard; the $+3$\,pp iterative gain there comes
 from format transfer learned on $N{=}3$ examples, not from $N{=}5$-specific
-gradient. This has a design implication : repair examples must be sampled from the
+gradient. This has a design implication: repair examples must be sampled from the
 difficulty regime where the model can occasionally succeed.
 %% ─────────────────────────────────────────────────────────────
 \subsection{Cross-Library Transfer}
@@ -489,7 +487,7 @@ benefit does not transfer---the RL model regresses to 52\% (from the 62\%
 baseline, $-10$\,pp), widening rather than closing the gap to the 32B ceiling
 at that fault count. This suggests the RL model learned scikit-learn-specific
 bug patterns during training rather than a general multi-fault strategy.
-Inspection of the training corpus suggests a mechanism: 54\% of the 146
+Inspection of the training corpus suggests a mechanism: 54\% of the 112
 training corruptions are simple operator or constant perturbations
 (\texttt{comparison\_flip}, \texttt{arith\_operator}, \texttt{logic\_operator},
 \texttt{constant\_change}), and RL rewards this fix vocabulary heavily.
